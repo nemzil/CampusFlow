@@ -1,0 +1,220 @@
+'use client';
+
+import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
+} from '@/components/ui/sidebar';
+
+export default function Sidebar({ role }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const { toggleSidebar, state } = useSidebar();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const getNavigationLinks = () => {
+    const baseLinks = [
+      { path: `/${role.toLowerCase()}`, label: 'Dashboard', Icon: Home },
+    ];
+
+    if (role === 'STUDENT') {
+      baseLinks.push({ path: '/student/todos', label: 'My Todos', Icon: CheckSquare });
+      baseLinks.push({ path: '/student/exams', label: 'Exams', Icon: GraduationCap });
+    }
+
+    if (role === 'TEACHER') {
+      baseLinks.push({ path: '/teacher/todos', label: 'My Todos', Icon: CheckSquare });
+      baseLinks.push({ path: '/teacher/exams', label: 'Exams', Icon: GraduationCap });
+    }
+
+    if (role === 'ADMIN') {
+      baseLinks.push({ path: '/admin/users', label: 'User Management', Icon: Users });
+    }
+
+    baseLinks.push({ path: `/${role.toLowerCase()}/messages`, label: 'Chat', Icon: MessageSquare });
+
+    return baseLinks;
+  };
+
+  const links = getNavigationLinks();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
+  return (
+    <ShadcnSidebar 
+      collapsible="icon" 
+      className="border-r-0 bg-[rgba(10,15,30,0.4)] backdrop-blur-[24px] shadow-[10px_0_30px_rgba(0,0,0,0.3)] !sticky !top-0 !h-screen"
+    >
+      {/* Floating Collapse Toggle Button */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-violet-600 hover:bg-violet-500 flex items-center justify-center text-white shadow-lg z-50 transition-colors"
+      >
+        {state === 'collapsed' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+      </button>
+
+      <SidebarHeader className="border-b border-white/5 p-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
+            <GraduationCap className="w-5 h-5 text-white" />
+          </div>
+          <div className="group-data-[collapsible=icon]:hidden min-w-0">
+            <h2 className="text-lg font-bold font-heading text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500 tracking-tight">
+              CampusFlow
+            </h2>
+            <p className="text-[9px] uppercase font-bold tracking-widest text-violet-400">SSUET Portal</p>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-3 py-3">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1 relative">
+              {/* Animated background indicator */}
+              {links.map((link, index) => {
+                const isActive = pathname === link.path;
+                if (isActive) {
+                  return (
+                    <motion.div
+                      key="active-bg"
+                      layoutId="active-nav-bg"
+                      className="absolute h-10 bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 rounded-xl shadow-[0_0_20px_rgba(139,92,246,0.1)]"
+                      initial={false}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 400, 
+                        damping: 35,
+                        mass: 0.8
+                      }}
+                      style={{
+                        top: `${index * 44}px`,
+                        left: 0,
+                        right: 0,
+                        willChange: 'transform'
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })}
+              
+              {links.map((link) => {
+                const LinkIcon = link.Icon;
+                const isActive = pathname === link.path;
+                
+                return (
+                  <SidebarMenuItem key={link.path}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={link.label}
+                      className={`
+                        relative rounded-xl transition-all duration-300 h-10
+                        ${isActive 
+                          ? 'text-white' 
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }
+                        ${isActive ? 'before:absolute before:left-0 before:top-[20%] before:bottom-[20%] before:w-1 before:bg-gradient-to-b before:from-violet-500 before:to-indigo-500 before:rounded-r before:shadow-[0_0_10px_rgba(139,92,246,0.8)] group-data-[collapsible=icon]:before:hidden' : ''}
+                      `}
+                    >
+                      <Link href={link.path} className="flex items-center gap-3 w-full">
+                        <LinkIcon className="w-6 h-6 flex-shrink-0" />
+                        <span className="font-medium">{link.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-white/5 p-3">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="relative">
+              <SidebarMenuButton 
+                size="lg" 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="data-[state=open]:bg-white/5 hover:bg-white/5 border border-white/5 rounded-xl bg-white/[0.03] transition-all duration-300 w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
+              >
+                <Avatar className="h-10 w-10 rounded-full border-2 border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.2)] flex-shrink-0">
+                  <AvatarImage src={user?.profile_picture_url} alt={user?.first_name} />
+                  <AvatarFallback className="rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white font-bold">
+                    {user?.first_name?.[0]}{user?.last_name?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-semibold text-white">{user?.first_name} {user?.last_name}</span>
+                  <span className="truncate text-xs text-violet-400 uppercase tracking-wider font-semibold">{role}</span>
+                </div>
+              </SidebarMenuButton>
+              
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: 8, height: 0 }}
+                    transition={{ 
+                      duration: 0.2,
+                      ease: [0.25, 0.1, 0.25, 1]
+                    }}
+                    className="absolute bottom-full left-0 right-0 mb-2 rounded-xl bg-[#0a0b14] border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden"
+                    style={{ willChange: 'transform, opacity' }}
+                  >
+                    <Link href={`/${role.toLowerCase()}/profile`}>
+                      <motion.div
+                        whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                        className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors cursor-pointer border-b border-white/5"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <User className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm font-medium">Edit Profile</span>
+                      </motion.div>
+                    </Link>
+                    <motion.div
+                      whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                      className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        handleLogout();
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-sm font-medium">Logout</span>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
+      <SidebarRail />
+    </ShadcnSidebar>
+  );
+}
