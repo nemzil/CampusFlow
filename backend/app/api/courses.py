@@ -138,7 +138,29 @@ async def get_course(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     
-    return course
+    return CourseResponse(
+        id=str(course.id),
+        course_code=course.course_code,
+        course_name=course.course_name,
+        course_type=course.course_type,
+        category=course.category,
+        semester=course.semester,
+        credit_hours=course.credit_hours,
+        prerequisites=course.prerequisites,
+        max_marks=course.max_marks,
+        grading_scale=course.grading_scale,
+        description=course.description,
+        objectives=course.objectives,
+        teacher_id=course.teacher_id,
+        teacher_name=course.teacher_name,
+        term=course.term,
+        max_students=course.max_students,
+        enrolled_count=course.enrolled_count,
+        is_active=course.is_active,
+        created_at=course.created_at,
+        updated_at=course.updated_at,
+        created_by=course.created_by
+    )
 
 # ═══════════════════════════════════════════════════════════════════
 # ADMIN-ONLY ENDPOINTS
@@ -200,7 +222,29 @@ async def create_course(
     
     await course.insert()
     
-    return course
+    return CourseResponse(
+        id=str(course.id),
+        course_code=course.course_code,
+        course_name=course.course_name,
+        course_type=course.course_type,
+        category=course.category,
+        semester=course.semester,
+        credit_hours=course.credit_hours,
+        prerequisites=course.prerequisites,
+        max_marks=course.max_marks,
+        grading_scale=course.grading_scale,
+        description=course.description,
+        objectives=course.objectives,
+        teacher_id=course.teacher_id,
+        teacher_name=course.teacher_name,
+        term=course.term,
+        max_students=course.max_students,
+        enrolled_count=course.enrolled_count,
+        is_active=course.is_active,
+        created_at=course.created_at,
+        updated_at=course.updated_at,
+        created_by=course.created_by
+    )
 
 @router.put("/{course_code}", response_model=CourseResponse)
 async def update_course(
@@ -258,7 +302,29 @@ async def update_course(
     await course.set(update_data)
     await course.sync()
     
-    return course
+    return CourseResponse(
+        id=str(course.id),
+        course_code=course.course_code,
+        course_name=course.course_name,
+        course_type=course.course_type,
+        category=course.category,
+        semester=course.semester,
+        credit_hours=course.credit_hours,
+        prerequisites=course.prerequisites,
+        max_marks=course.max_marks,
+        grading_scale=course.grading_scale,
+        description=course.description,
+        objectives=course.objectives,
+        teacher_id=course.teacher_id,
+        teacher_name=course.teacher_name,
+        term=course.term,
+        max_students=course.max_students,
+        enrolled_count=course.enrolled_count,
+        is_active=course.is_active,
+        created_at=course.created_at,
+        updated_at=course.updated_at,
+        created_by=course.created_by
+    )
 
 @router.delete("/{course_code}")
 async def delete_course(
@@ -326,7 +392,29 @@ async def assign_teacher_to_course(
     })
     await course.sync()
     
-    return course
+    return CourseResponse(
+        id=str(course.id),
+        course_code=course.course_code,
+        course_name=course.course_name,
+        course_type=course.course_type,
+        category=course.category,
+        semester=course.semester,
+        credit_hours=course.credit_hours,
+        prerequisites=course.prerequisites,
+        max_marks=course.max_marks,
+        grading_scale=course.grading_scale,
+        description=course.description,
+        objectives=course.objectives,
+        teacher_id=course.teacher_id,
+        teacher_name=course.teacher_name,
+        term=course.term,
+        max_students=course.max_students,
+        enrolled_count=course.enrolled_count,
+        is_active=course.is_active,
+        created_at=course.created_at,
+        updated_at=course.updated_at,
+        created_by=course.created_by
+    )
 
 @router.post("/{course_code}/unassign-teacher", response_model=CourseResponse)
 async def unassign_teacher_from_course(
@@ -354,7 +442,29 @@ async def unassign_teacher_from_course(
     })
     await course.sync()
     
-    return course
+    return CourseResponse(
+        id=str(course.id),
+        course_code=course.course_code,
+        course_name=course.course_name,
+        course_type=course.course_type,
+        category=course.category,
+        semester=course.semester,
+        credit_hours=course.credit_hours,
+        prerequisites=course.prerequisites,
+        max_marks=course.max_marks,
+        grading_scale=course.grading_scale,
+        description=course.description,
+        objectives=course.objectives,
+        teacher_id=course.teacher_id,
+        teacher_name=course.teacher_name,
+        term=course.term,
+        max_students=course.max_students,
+        enrolled_count=course.enrolled_count,
+        is_active=course.is_active,
+        created_at=course.created_at,
+        updated_at=course.updated_at,
+        created_by=course.created_by
+    )
 
 # ═══════════════════════════════════════════════════════════════════
 # BULK OPERATIONS
