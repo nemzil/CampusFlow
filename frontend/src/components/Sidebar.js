@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight, BookOpen, Megaphone, BookMarked, Calendar, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -34,23 +34,37 @@ export default function Sidebar({ role }) {
     ];
 
     if (role === 'STUDENT') {
+      baseLinks.push({ path: '/student/courses', label: 'Course Catalog', Icon: BookOpen });
+      baseLinks.push({ path: '/student/enrollment', label: 'Enrollment', Icon: BookMarked });
+      baseLinks.push({ path: '/student/assignments', label: 'Assignments', Icon: ClipboardList });
+      baseLinks.push({ path: '/student/attendance', label: 'Attendance', Icon: Calendar });
       baseLinks.push({ path: '/student/todos', label: 'My Todos', Icon: CheckSquare });
       baseLinks.push({ path: '/student/exams', label: 'Exams', Icon: GraduationCap });
+      baseLinks.push({ path: '/student/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     if (role === 'TEACHER') {
+      baseLinks.push({ path: '/teacher/courses', label: 'My Courses', Icon: BookOpen });
+      baseLinks.push({ path: '/teacher/assignments', label: 'Assignments', Icon: ClipboardList });
+      baseLinks.push({ path: '/teacher/attendance', label: 'Attendance', Icon: Calendar });
       baseLinks.push({ path: '/teacher/todos', label: 'My Todos', Icon: CheckSquare });
       baseLinks.push({ path: '/teacher/exams', label: 'Exams', Icon: GraduationCap });
+      baseLinks.push({ path: '/teacher/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     if (role === 'ADMIN') {
+      baseLinks.push({ path: '/admin/courses', label: 'Courses', Icon: BookOpen });
+      baseLinks.push({ path: '/admin/enrollment', label: 'Enrollments', Icon: BookMarked });
+      baseLinks.push({ path: '/admin/attendance', label: 'Attendance', Icon: Calendar });
       baseLinks.push({ path: '/admin/users', label: 'User Management', Icon: Users });
+      baseLinks.push({ path: '/admin/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     baseLinks.push({ path: `/${role.toLowerCase()}/messages`, label: 'Chat', Icon: MessageSquare });
 
     return baseLinks;
   };
+
 
   const links = getNavigationLinks();
 

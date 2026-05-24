@@ -93,8 +93,8 @@ async def websocket_endpoint(
                     },
                     exclude_user=username
                 )
-    except Exception as e:
-        print(f"Error marking messages as delivered on connect: {e}")
+    except Exception:
+        pass
     
     try:
         while True:
@@ -141,7 +141,7 @@ async def websocket_endpoint(
         await manager.broadcast_offline_and_disconnect(username)
     
     except Exception as e:
-        print(f"WebSocket error for {username}: {e}")
+        print(f"ws error: {username}")
         await manager.broadcast_offline_and_disconnect(username)
 
 
@@ -347,8 +347,8 @@ async def handle_mark_delivered(username: str, data: dict):
             exclude_user=username
         )
     
-    except Exception as e:
-        print(f"Error marking delivered: {e}")
+    except Exception:
+        pass
 
 
 async def handle_mark_read(username: str, data: dict):
@@ -399,8 +399,8 @@ async def handle_mark_read(username: str, data: dict):
         # Broadcast conversation update (unread count changed)
         await manager.broadcast_conversation_update(conversation_id, conv.participants)
     
-    except Exception as e:
-        print(f"Error marking read: {e}")
+    except Exception:
+        pass
 
 
 async def handle_edit_message(username: str, data: dict):

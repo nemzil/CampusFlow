@@ -17,9 +17,6 @@ const getAuthHeaders = () => {
 // Error handling wrapper
 async function apiRequest(url, options = {}) {
   try {
-    console.log('API Request:', url, options); // Debug log
-    console.log('Request body:', options.body); // Debug log
-    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (increased)
     
@@ -34,7 +31,6 @@ async function apiRequest(url, options = {}) {
     });
     
     clearTimeout(timeoutId);
-    console.log('API Response status:', response.status); // Debug log
     
     if (response.status === 401) {
       // Token expired, redirect to login
@@ -48,9 +44,6 @@ async function apiRequest(url, options = {}) {
       let error;
       try {
         error = await response.json();
-        console.error('API Error:', error); // Debug log
-        console.error('API Error detail:', error.detail); // Debug log
-        console.error('API Error detail type:', typeof error.detail, Array.isArray(error.detail)); // Debug log
         
         // Handle FastAPI validation errors (array format)
         if (error.detail && Array.isArray(error.detail)) {
@@ -58,21 +51,20 @@ async function apiRequest(url, options = {}) {
             const location = err.loc ? err.loc.join('.') : 'unknown';
             return `${location}: ${err.msg}`;
           }).join('; ');
-          console.error('Validation errors:', messages);
-          throw new Error(messages);
+          throw new Error(`API Error (${url}): ${messages}`);
         }
         
         // Handle string error detail
         if (typeof error.detail === 'string') {
-          throw new Error(error.detail);
+          throw new Error(`API Error (${url}): ${error.detail}`);
         }
         
         // Handle object error detail
         if (typeof error.detail === 'object') {
-          throw new Error(JSON.stringify(error.detail));
+          throw new Error(`API Error (${url}): ${JSON.stringify(error.detail)}`);
         }
         
-        throw new Error(error.message || JSON.stringify(error) || 'Request failed');
+        throw new Error(`API Error (${url}): ${error.message || JSON.stringify(error) || 'Request failed'}`);
       } catch (e) {
         if (e.message && !e.message.includes('JSON')) {
           // It's our thrown error, re-throw it
@@ -86,7 +78,6 @@ async function apiRequest(url, options = {}) {
     }
     
     const data = await response.json();
-    console.log('API Response data:', data); // Debug log
     return data;
   } catch (error) {
     // Handle abort errors specifically
@@ -513,3 +504,305 @@ export async function getTeacherExamStats() {
 export async function getStudentExamStats() {
   return apiRequest(`${API_BASE}/ai-exams/student/statistics`);
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// COURSES & SECTIONS (MODULE 06)
+// ═══════════════════════════════════════════════════════════════════
+
+export async function getCourses(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.semester) params.append('semester', filters.semester);
+  if (filters.term) params.append('term', filters.term);
+  if (filters.type) params.append('type', filters.type);
+  if (filters.category) params.append('category', filters.category);
+  if (filters.department) params.append('department', filters.department);
+  if (filters.search) params.append('search', filters.search);
+  
+  return apiRequest(`${API_BASE}/courses?${params}`);
+}
+
+export async function getCourse(courseCode) {
+  return apiRequest(`${API_BASE}/courses/${courseCode}`);
+}
+
+export async function createCourse(courseData) {
+  return apiRequest(`${API_BASE}/courses`, {
+    method: 'POST',
+    body: JSON.stringify(courseData)
+  });
+}
+
+export async function updateCourse(courseCode, updates) {
+  return apiRequest(`${API_BASE}/courses/${courseCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  });
+}
+
+export async function deleteCourse(courseCode) {
+  return apiRequest(`${API_BASE}/courses/${courseCode}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function assignTeacher(courseCode, teacherUsername) {
+  return apiRequest(`${API_BASE}/courses/${courseCode}/assign-teacher`, {
+    method: 'POST',
+    body: JSON.stringify({ teacher_username: teacherUsername })
+  });
+}
+
+export async function unassignTeacher(courseCode) {
+  return apiRequest(`${API_BASE}/courses/${courseCode}/unassign-teacher`, {
+    method: 'POST'
+  });
+}
+
+export async function getMyCourses() {
+  return apiRequest(`${API_BASE}/courses/my-courses`);
+}
+
+export async function getAvailableCourses() {
+  // For students, this returns courses for their current semester
+  return apiRequest(`${API_BASE}/courses/my-courses`);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ANNOUNCEMENTS (MODULE 13)
+// ═══════════════════════════════════════════════════════════════════
+
+export async function getAnnouncements(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.skip !== undefined) params.append('skip', filters.skip);
+  if (filters.limit) params.append('limit', filters.limit);
+  if (filters.category && filters.category !== 'ALL') params.append('category', filters.category.toLowerCase());
+  
+  return apiRequest(`${API_BASE}/announcements?${params}`);
+}
+
+export async function getAnnouncement(announcementId) {
+  return apiRequest(`${API_BASE}/announcements/${announcementId}`);
+}
+
+export async function createAnnouncement(announcementData) {
+  return apiRequest(`${API_BASE}/announcements`, {
+    method: 'POST',
+    body: JSON.stringify(announcementData)
+  });
+}
+
+export async function updateAnnouncement(announcementId, updates) {
+  return apiRequest(`${API_BASE}/announcements/${announcementId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  });
+}
+
+export async function deleteAnnouncement(announcementId) {
+  return apiRequest(`${API_BASE}/announcements/${announcementId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function markAnnouncementAsRead(announcementId) {
+  return apiRequest(`${API_BASE}/announcements/${announcementId}/read`, {
+    method: 'POST'
+  });
+}
+
+export async function getUnreadAnnouncementsCount() {
+  return apiRequest(`${API_BASE}/announcements/unread/count`);
+}
+
+// ==========================================
+// MODULE 07: ENROLLMENT SYSTEM
+// ==========================================
+export async function openRegistration(windowData) {
+  return apiRequest(`${API_BASE}/enrollment/registration/open`, {
+    method: 'POST',
+    body: JSON.stringify(windowData)
+  });
+}
+
+export async function closeRegistration(term) {
+  return apiRequest(`${API_BASE}/enrollment/registration/close?term=${term}`, {
+    method: 'POST'
+  });
+}
+
+export async function getRegistrationStatus(term) {
+  return apiRequest(`${API_BASE}/enrollment/registration/status?term=${term}`);
+}
+
+export async function getEnrollmentAvailableCourses(term) {
+  return apiRequest(`${API_BASE}/enrollment/available-courses?term=${term}`);
+}
+
+export async function registerForCourse(courseId, term) {
+  return apiRequest(`${API_BASE}/enrollment/register?term=${term}`, {
+    method: 'POST',
+    body: JSON.stringify({ course_id: courseId })
+  });
+}
+
+export async function dropCourse(enrollmentId, term) {
+  return apiRequest(`${API_BASE}/enrollment/${enrollmentId}?term=${term}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function getMyEnrollments(term) {
+  return apiRequest(`${API_BASE}/enrollment/my-enrollments?term=${term}`);
+}
+
+export async function getCourseEnrollments(courseId) {
+  return apiRequest(`${API_BASE}/enrollment/course/${courseId}/students`);
+}
+
+export async function forceEnrollStudent(studentId, courseId, reason, term) {
+  return apiRequest(`${API_BASE}/enrollment/admin/force-enroll?term=${term}`, {
+    method: 'POST',
+    body: JSON.stringify({ student_id: studentId, course_id: courseId, reason })
+  });
+}
+
+export async function removeStudentEnrollment(enrollmentId, reason) {
+  return apiRequest(`${API_BASE}/enrollment/admin/remove`, {
+    method: 'DELETE',
+    body: JSON.stringify({ enrollment_id: enrollmentId, reason })
+  });
+}
+
+// ==========================================
+// MODULE 08: ATTENDANCE MANAGEMENT
+// ==========================================
+export async function createAttendanceSession(sessionData, term) {
+  return apiRequest(`${API_BASE}/attendance/session?term=${term}`, {
+    method: 'POST',
+    body: JSON.stringify(sessionData)
+  });
+}
+
+export async function getCourseSessions(courseId, dateFrom = null, dateTo = null) {
+  let url = `${API_BASE}/attendance/course/${courseId}/sessions`;
+  const params = [];
+  if (dateFrom) params.push(`date_from=${dateFrom}`);
+  if (dateTo) params.push(`date_to=${dateTo}`);
+  if (params.length > 0) url += `?${params.join('&')}`;
+  return apiRequest(url);
+}
+
+export async function getSessionDetails(sessionId) {
+  return apiRequest(`${API_BASE}/attendance/session/${sessionId}`);
+}
+
+export async function markAttendance(sessionId, attendanceList) {
+  return apiRequest(`${API_BASE}/attendance/session/${sessionId}/mark`, {
+    method: 'POST',
+    body: JSON.stringify({ attendance: attendanceList })
+  });
+}
+
+export async function markAllAttendance(sessionId, status) {
+  return apiRequest(`${API_BASE}/attendance/session/${sessionId}/mark-all`, {
+    method: 'POST',
+    body: JSON.stringify({ status })
+  });
+}
+
+export async function getMyAttendance(courseId) {
+  return apiRequest(`${API_BASE}/attendance/my-attendance?course_id=${courseId}`);
+}
+
+export async function getMyAttendanceSummary(term) {
+  return apiRequest(`${API_BASE}/attendance/my-attendance/summary?term=${term}`);
+}
+
+export async function getCourseAttendanceReport(courseId) {
+  return apiRequest(`${API_BASE}/attendance/course/${courseId}/report`);
+}
+
+export async function lockAttendance(courseId, term) {
+  return apiRequest(`${API_BASE}/attendance/admin/lock`, {
+    method: 'POST',
+    body: JSON.stringify({ course_id: courseId, term })
+  });
+}
+
+export async function unlockAttendance(courseId, reason) {
+  return apiRequest(`${API_BASE}/attendance/admin/unlock`, {
+    method: 'POST',
+    body: JSON.stringify({ course_id: courseId, reason })
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ASSIGNMENTS & QUIZZES (MODULE 09)
+// ═══════════════════════════════════════════════════════════════════
+
+export async function createAssignment(assignmentData, term) {
+  return apiRequest(`${API_BASE}/assignments?term=${term}`, {
+    method: 'POST',
+    body: JSON.stringify(assignmentData)
+  });
+}
+
+export async function getCourseAssignments(courseId, type = null) {
+  const query = type ? `?assignment_type=${type}` : '';
+  return apiRequest(`${API_BASE}/assignments/course/${courseId}${query}`);
+}
+
+export async function getAssignmentDetails(assignmentId) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}`);
+}
+
+export async function updateAssignment(assignmentId, updateData) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updateData)
+  });
+}
+
+export async function deleteAssignment(assignmentId) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function getStudentAssignments(courseId = null) {
+  const query = courseId ? `?course_id=${courseId}` : '';
+  return apiRequest(`${API_BASE}/assignments/my-assignments/list${query}`);
+}
+
+export async function submitAssignment(assignmentId, submissionData) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(submissionData)
+  });
+}
+
+export async function getAssignmentSubmissions(assignmentId) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}/submissions`);
+}
+
+export async function getSubmissionDetails(submissionId) {
+  return apiRequest(`${API_BASE}/assignments/submissions/${submissionId}`);
+}
+
+export async function gradeSubmission(submissionId, marksObtained, feedback) {
+  return apiRequest(`${API_BASE}/assignments/submissions/${submissionId}/grade`, {
+    method: 'PUT',
+    body: JSON.stringify({ marks_obtained: marksObtained, feedback })
+  });
+}
+
+export async function bulkGradeSubmissions(assignmentId, gradesList) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}/bulk-grade`, {
+    method: 'POST',
+    body: JSON.stringify({ grades: gradesList })
+  });
+}
+
+
+
+

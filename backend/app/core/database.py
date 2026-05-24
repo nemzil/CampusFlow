@@ -6,6 +6,16 @@ from app.models.todo import Todo
 from app.models.message import Message, Conversation
 from app.models.exam import ManualExam, ManualExamSubmission
 from app.models.ai_exam import AiExam, AiExamSubmission, ExamResult
+from app.models.course import Course
+from app.models.announcement import Announcement
+from app.models.enrollment import Enrollment, RegistrationWindow
+from app.models.attendance import AttendanceSession, AttendanceRecord
+from app.models.assignment import Assignment, Submission
+from app.models.forum import ForumChannel, ForumThread, ForumReply, ForumReadStatus
+from app.models.timetable import CourseSchedule
+from app.models.grading import Grade, SemesterGPA, CGPA
+from app.models.fee import Fee, FeeConfig
+from app.models.admit_card import AdmitCard
 
 async def init_db():
     # Create Motor client
@@ -33,6 +43,25 @@ async def init_db():
             AiExam,
             AiExamSubmission,
             ExamResult,
+            Course,
+            Announcement,
+            Enrollment,
+            RegistrationWindow,
+            AttendanceSession,
+            AttendanceRecord,
+            Assignment,
+            Submission,
+            ForumChannel,
+            ForumThread,
+            ForumReply,
+            ForumReadStatus,
+            CourseSchedule,
+            Grade,
+            SemesterGPA,
+            CGPA,
+            Fee,
+            FeeConfig,
+            AdmitCard,
         ]
     )
-    print("Database initialized successfully.")
+    print("db initialized")

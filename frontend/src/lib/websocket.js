@@ -21,7 +21,6 @@ class ChatWebSocket {
 
   connect(token) {
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      console.log('WebSocket already connected or connecting');
       return;
     }
 
@@ -33,11 +32,10 @@ class ChatWebSocket {
     const hostname = isClient ? window.location.hostname : 'localhost';
     const wsUrl = `${protocol}://${hostname}:8000/api/ws?token=${token}`;
 
-    console.log('Connecting WebSocket to', wsUrl);
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log('ws connected');
       this.reconnectAttempts = 0;
       this.emit('connected', {});
     };
@@ -47,12 +45,12 @@ class ChatWebSocket {
         const data = JSON.parse(event.data);
         this.emit(data.type, data);
       } catch (error) {
-        console.error('WebSocket message parse error:', error);
+        console.error('ws parse error:', error);
       }
     };
 
     this.ws.onclose = (event) => {
-      console.log('WebSocket disconnected', event.code, event.reason);
+      console.log('ws disconnected');
       this.ws = null;
       this.emit('disconnected', {});
       if (!this.manuallyDisconnected) {
@@ -61,7 +59,7 @@ class ChatWebSocket {
     };
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('ws error:', error);
       this.emit('error', { error });
       // onclose will fire after onerror, which will trigger reconnect
     };
@@ -69,14 +67,14 @@ class ChatWebSocket {
 
   _scheduleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached');
+      console.error('max reconnect attempts reached');
       this.emit('max_reconnect_failed', {});
       return;
     }
 
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    console.log(`reconnecting in ${delay}ms (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
     this.reconnectTimeout = setTimeout(() => {
       if (!this.manuallyDisconnected && this.token) {

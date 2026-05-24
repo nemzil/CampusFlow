@@ -51,7 +51,6 @@ export default function TodoForm({ isOpen, onClose, onSave, initialData }) {
     }
 
     setLoading(true);
-    console.log('Form data before processing:', formData); // Debug log
 
     try {
       const todoData = {
@@ -69,15 +68,9 @@ export default function TodoForm({ isOpen, onClose, onSave, initialData }) {
         todoData.due_date = new Date(formData.due_date).toISOString();
       }
       
-      console.log('Submitting todo data:', todoData); // Debug log
-      console.log('Calling onSave with data:', JSON.stringify(todoData)); // Debug log
-      
       const result = await onSave(todoData);
-      console.log('onSave result:', result); // Debug log
       // Close is handled by parent on success
     } catch (err) {
-      console.error('Todo save error:', err); // Debug log
-      console.error('Error message:', err.message); // Debug log
       console.error('Error stack:', err.stack); // Debug log
       setError(err.message || 'Failed to save todo');
       setLoading(false);

@@ -483,8 +483,14 @@ async def list_users(
     # Fetch users
     users = await User.find(query).skip(skip).limit(limit).to_list()
     
-    # Return without password_hash
-    return [user.dict(exclude={"password_hash"}) for user in users]
+    # Return without password_hash, with id as string
+    return [
+        {
+            **user.model_dump(exclude={"password_hash"}),
+            "id": str(user.id)
+        }
+        for user in users
+    ]
 
 @router.delete("/users/{username}")
 async def delete_user(

@@ -77,7 +77,7 @@ Make questions clear, specific, and appropriate for university-level students.
         return questions
         
     except Exception as e:
-        print(f"AI question generation failed: {e}. Using fallback questions.")
+        print(f"ai question gen failed, using fallback")
         
         # Fallback to mock questions
         questions_raw = []
@@ -165,7 +165,7 @@ Max Marks: {max_marks}
         return data_json
         
     except Exception as e:
-        print(f"AI grading failed: {e}. Using fallback grading.")
+        print(f"ai grading failed, using fallback")
         
         # Fallback to mock grading (80% marks)
         results = []
@@ -262,7 +262,7 @@ Max Marks: {q.get('max_marks', 5)}
         return {"results": results_out}
         
     except Exception as e:
-        print(f"AI grading failed for generic exam: {e}. Using fallback grading.")
+        print(f"ai grading failed, using fallback")
         
         # Fallback to mock grading
         results_out = []

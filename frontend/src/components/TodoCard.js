@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 
 export default function TodoCard({ todo, onToggleComplete, onEdit, onDelete }) {
   const formatDate = (dateString) => {
+    if (!dateString) return 'No deadline';
+    
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
@@ -20,7 +22,7 @@ export default function TodoCard({ todo, onToggleComplete, onEdit, onDelete }) {
     return `Due in ${diffDays} days`;
   };
 
-  const isOverdue = !todo.completed && new Date(todo.due_date) < new Date();
+  const isOverdue = !todo.completed && todo.due_date && new Date(todo.due_date) < new Date();
 
   const priorityConfig = {
     high: { label: 'High Priority', class: 'badge-rose' },

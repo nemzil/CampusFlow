@@ -61,7 +61,7 @@ export default function Home() {
     {
       icon: Users,
       title: 'Enrollment System',
-      description: '2-week registration window with seat capacity and prerequisite validation',
+      description: 'Flexible registration windows with seat capacity and prerequisite validation',
       status: 'Planned',
     },
     {

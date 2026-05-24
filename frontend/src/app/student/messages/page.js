@@ -82,8 +82,6 @@ export default function MessagesPage() {
 
     // Handle new messages - Update conversation list optimistically
     chatWS.on('new_message', (data) => {
-      console.log('New message received:', data);
-      
       if (!data.message) return;
       
       const message = data.message;
@@ -126,14 +124,11 @@ export default function MessagesPage() {
 
     // Handle conversation updates - Refresh silently in the background
     chatWS.on('conversation_updated', (data) => {
-      console.log('Conversation updated:', data);
       fetchConversations(false);
     });
 
     // Handle presence status updates
     chatWS.on('user_status', (data) => {
-      console.log('User status changed:', data);
-      
       setConversations(prev => prev.map(conv => {
         const updatedParticipantInfo = conv.participant_info?.map(p => {
           if (p.username === data.username) {
@@ -161,8 +156,6 @@ export default function MessagesPage() {
 
     // Handle message status updates - Update unread count
     chatWS.on('message_status', (data) => {
-      console.log('Message status updated:', data);
-      
       if (data.status === 'read' && data.conversation_id) {
         // When messages are marked as read, update unread count
         setConversations(prev => prev.map(conv => {
@@ -175,7 +168,6 @@ export default function MessagesPage() {
     });
 
     chatWS.on('message_edited', (data) => {
-      console.log('Message edited:', data);
       // Update last message if it was edited
       if (data.message) {
         setConversations(prev => prev.map(conv => {
@@ -194,20 +186,15 @@ export default function MessagesPage() {
     });
 
     chatWS.on('message_deleted', (data) => {
-      console.log('Message deleted:', data);
       fetchConversations(false);
     });
 
-    chatWS.on('connected', () => {
-      console.log('WebSocket connected successfully');
-    });
+    chatWS.on('connected', () => {});
 
-    chatWS.on('disconnected', () => {
-      console.log('WebSocket disconnected');
-    });
+    chatWS.on('disconnected', () => {});
 
     chatWS.on('error', (data) => {
-      console.error('WebSocket error:', data);
+      console.error('ws error:', data);
     });
   };
 
@@ -216,14 +203,12 @@ export default function MessagesPage() {
       if (showLoader) {
         setLoading(true);
       }
-      console.log('Fetching conversations...');
       const startTime = Date.now();
       
       // Fetch both active and archived conversations
       const data = await getConversations(true);
       
       const endTime = Date.now();
-      console.log(`Conversations fetched in ${endTime - startTime}ms`, data);
       
       setConversations(data);
     } catch (err) {

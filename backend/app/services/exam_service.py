@@ -190,7 +190,7 @@ async def mark_manual_submission(
             )
             await result.insert()
     except Exception as e:
-        print(f"Failed to save manual exam result: {e}")
+        print(f"exam result save failed: {e}")
     
     await submission.sync()
     return submission

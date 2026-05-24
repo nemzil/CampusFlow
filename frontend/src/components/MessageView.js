@@ -100,7 +100,6 @@ export default function MessageView({ conversationId, otherUser, currentUsername
       };
 
       const handleConnected = () => {
-        console.log('WS connected, joining conversation room:', conversationId);
         chatWS.send('join_conversation', { conversation_id: conversationId });
       };
 
@@ -585,7 +584,6 @@ export default function MessageView({ conversationId, otherUser, currentUsername
             accept="image/*,application/pdf,.doc,.docx"
             onChange={(e) => {
               // TODO: Handle file upload
-              console.log('File selected:', e.target.files[0]);
             }}
           />
         </form>

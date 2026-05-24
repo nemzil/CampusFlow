@@ -19,9 +19,14 @@ app = FastAPI(
 
 # CORS configuration
 origins = [
-    "http://localhost:5173",  # React default port
-    "http://127.0.0.1:5173",
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
 ]
 
 app.add_middleware(
@@ -31,6 +36,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 async def root():
@@ -43,6 +49,16 @@ from app.api.chat import router as chat_router
 from app.api.websocket import router as websocket_router
 from app.api.manual_exams import router as manual_exams_router
 from app.api.ai_exams import router as ai_exams_router
+from app.api.courses import router as courses_router
+from app.api.announcements import router as announcements_router
+from app.api.enrollment import router as enrollment_router
+from app.api.attendance import router as attendance_router
+from app.api.assignments import router as assignments_router
+from app.api.forum import router as forum_router
+from app.api.timetable import router as timetable_router
+from app.api.grading import router as grading_router
+from app.api.fees import router as fees_router
+from app.api.admit_cards import router as admit_cards_router
 
 # Register routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
@@ -51,4 +67,14 @@ app.include_router(chat_router, prefix="/api/chat", tags=["Chat"])
 app.include_router(websocket_router, prefix="/api/ws", tags=["WebSocket"])
 app.include_router(manual_exams_router, prefix="/api/manual-exams", tags=["Manual Exams"])
 app.include_router(ai_exams_router, prefix="/api/ai-exams", tags=["AI Exams"])
+app.include_router(courses_router, prefix="/api/courses", tags=["Courses"])
+app.include_router(announcements_router, prefix="/api/announcements", tags=["Announcements"])
+app.include_router(enrollment_router, prefix="/api/enrollment", tags=["Enrollment"])
+app.include_router(attendance_router, prefix="/api/attendance", tags=["Attendance"])
+app.include_router(assignments_router, prefix="/api/assignments", tags=["Assignments & Quizzes"])
+app.include_router(forum_router, prefix="/api/forum", tags=["Discussion Forum"])
+app.include_router(timetable_router, prefix="/api/timetable", tags=["Timetable"])
+app.include_router(grading_router, prefix="/api/grades", tags=["Grading & GPA"])
+app.include_router(fees_router, prefix="/api/fees", tags=["Fee Management"])
+app.include_router(admit_cards_router, prefix="/api/admit-cards", tags=["Admit Cards"])
 
