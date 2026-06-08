@@ -1,0 +1,39 @@
+# Environment files - never commit secrets
+backend/.env
+.env
+*.env
+
+# Python / Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+backend/venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/*/__pycache__/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# IDE & OS
+.vscode/
+.idea/
+.kiro
+.DS_Store
+.agents
+
+#nem
+nemdocs
+contextdocs
+frontend.old
+backend/scripts/
+backend/tests/
