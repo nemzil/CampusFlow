@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import FeeDashboard from '@/components/FeeDashboard';
+import { isCourseManagementAdmin, isExamManagementAdmin } from '@/lib/adminAccess';
 
 const DEPARTMENTS = [
   'Software Engineering', 'Computer Science', 'Civil Engineering',
@@ -91,6 +92,7 @@ function AdminFeesContent() {
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) router.push('/login');
+    else if (!authLoading && user && (isCourseManagementAdmin(user) || isExamManagementAdmin(user))) router.push('/admin');
     else if (!authLoading && user) {
       if (activeTab === 'structures') load();
       else loadPendingPayments();

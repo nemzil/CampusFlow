@@ -13,6 +13,7 @@ from app.models.course import Course
 from app.api.deps import get_current_user
 from app.services import assignment_service
 from app.services.ai_grading_service import generate_exam_questions
+from app.utils.academic_term import resolve_term, get_current_academic_term
 
 router = APIRouter()
 
@@ -34,7 +35,7 @@ async def get_current_user_object(username: str) -> User:
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_assignment(
     assignment_data: AssignmentCreate,
-    term: str = Query(..., description="Academic term (e.g., 2024F)"),
+    term: str = Query(..., description="Academic term (e.g., 2024F, Fall, Spring)"),
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -53,13 +54,16 @@ async def create_assignment(
     if user.role == "TEACHER" and course.teacher_id != user.username:
         raise HTTPException(status_code=403, detail="Not authorized for this course")
     
+    # Resolve term
+    resolved_term = resolve_term(term)
+    
     # Create assignment
     teacher_name = f"{user.first_name} {user.last_name}"
     assignment = await assignment_service.create_assignment(
         assignment_data=assignment_data.model_dump(),
         teacher_id=user.username,
         teacher_name=teacher_name,
-        term=term
+        term=resolved_term
     )
     
     return {
@@ -144,6 +148,7 @@ async def list_course_assignments(
 @router.get("/my-assignments/list")
 async def get_my_assignments(
     course_id: Optional[str] = Query(None, description="Filter by course"),
+    term: Optional[str] = Query(None, description="Filter by academic term"),
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -154,10 +159,14 @@ async def get_my_assignments(
     if user.role != "STUDENT":
         raise HTTPException(status_code=403, detail="Only students can view their assignments")
     
+    # Resolve term or default to current session
+    resolved_term = resolve_term(term) if term else get_current_academic_term()
+    
     # Get assignments
     assignments = await assignment_service.get_student_assignments(
         student_id=str(user.id),
-        course_id=course_id
+        course_id=course_id,
+        term=resolved_term
     )
     
     return {
@@ -492,7 +501,7 @@ async def grade_submission(
 @router.post("/ai-generate", status_code=status.HTTP_201_CREATED)
 async def ai_generate_assignment(
     request: AiGenerateAssignmentRequest,
-    term: str = Query(..., description="Academic term (e.g., 2024F)"),
+    term: str = Query(..., description="Academic term (e.g., 2024F, Fall, Spring)"),
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -508,6 +517,9 @@ async def ai_generate_assignment(
 
     if user.role == "TEACHER" and course.teacher_id != user.username:
         raise HTTPException(status_code=403, detail="Not authorized for this course")
+
+    # Resolve term
+    resolved_term = resolve_term(term)
 
     # Generate questions via AI
     ai_questions = await generate_exam_questions(
@@ -546,7 +558,7 @@ async def ai_generate_assignment(
         assignment_data=assignment_data,
         teacher_id=user.username,
         teacher_name=teacher_name,
-        term=term
+        term=resolved_term
     )
 
     return {

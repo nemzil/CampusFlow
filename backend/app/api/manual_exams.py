@@ -86,8 +86,27 @@ async def list_manual_exams(
         limit=limit
     )
     
-    return [
-        ManualExamResponse(
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    
+    result = []
+    for exam in exams:
+        # Determine status based on live flag and times
+        status = "draft"
+        if exam.live:
+            if exam.startTime and exam.endTime:
+                start = exam.startTime.replace(tzinfo=timezone.utc) if exam.startTime.tzinfo is None else exam.startTime
+                end = exam.endTime.replace(tzinfo=timezone.utc) if exam.endTime.tzinfo is None else exam.endTime
+                if now >= start and now <= end:
+                    status = "live"
+                elif now < start:
+                    status = "live"  # Still shows as live (upcoming) in frontend
+                elif now > end:
+                    status = "ended"
+            else:
+                status = "live"
+        
+        result.append(ManualExamResponse(
             id=str(exam.id),
             class_name=exam.className,
             subject=exam.subject,
@@ -96,10 +115,11 @@ async def list_manual_exams(
             start_time=exam.startTime,
             end_time=exam.endTime,
             live=exam.live,
+            status=status,
             questions=[convert_to_schema_question(q) for q in exam.questions]
-        )
-        for exam in exams
-    ]
+        ))
+    
+    return result
 
 
 # ═══════════════════════════════════════════════════════════
@@ -138,6 +158,7 @@ async def create_manual_exam(
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
+        status="draft",
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -157,10 +178,27 @@ async def get_manual_exam(exam_id: str):
         raise HTTPException(status_code=400, detail="Invalid exam ID format")
     
     from app.models.exam import ManualExam
+    from datetime import datetime, timezone
     exam = await ManualExam.get(oid)
     
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
+    
+    # Determine status
+    now = datetime.now(timezone.utc)
+    status = "draft"
+    if exam.live:
+        if exam.startTime and exam.endTime:
+            start = exam.startTime.replace(tzinfo=timezone.utc) if exam.startTime.tzinfo is None else exam.startTime
+            end = exam.endTime.replace(tzinfo=timezone.utc) if exam.endTime.tzinfo is None else exam.endTime
+            if now >= start and now <= end:
+                status = "live"
+            elif now < start:
+                status = "live"
+            elif now > end:
+                status = "ended"
+        else:
+            status = "live"
     
     return ManualExamResponse(
         id=str(exam.id),
@@ -171,6 +209,7 @@ async def get_manual_exam(exam_id: str):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
+        status=status,
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -198,6 +237,15 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    status = "live"
+    if exam.startTime and exam.endTime:
+        start = exam.startTime.replace(tzinfo=timezone.utc) if exam.startTime.tzinfo is None else exam.startTime
+        end = exam.endTime.replace(tzinfo=timezone.utc) if exam.endTime.tzinfo is None else exam.endTime
+        if now > end:
+            status = "ended"
+    
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
@@ -207,6 +255,7 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
+        status=status,
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -239,6 +288,7 @@ async def end_manual_exam(exam_id: str):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
+        status="ended",
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 

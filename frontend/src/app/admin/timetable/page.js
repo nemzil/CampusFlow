@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { canViewExamManagement, canEditExamManagement } from '@/lib/adminAccess';
 
 // Load the panel client-side only (uses framer-motion, localStorage, etc.)
 const TimetableAdminPanel = dynamic(
@@ -23,6 +24,7 @@ export default function AdminTimetablePage() {
   useEffect(() => {
     if (!loading && !user) router.push('/login');
     else if (!loading && user && user.role !== 'ADMIN') router.push('/login');
+    else if (!loading && user && !canViewExamManagement(user)) router.push('/admin');
   }, [user, loading, router]);
 
   if (loading || !user) {
@@ -36,6 +38,9 @@ export default function AdminTimetablePage() {
   return (
     // The panel is a full-overlay modal; we just render it here
     // Pass a no-op for onClose (user uses the X button inside)
-    <TimetableAdminPanel onClose={() => router.push('/admin')} />
+    <TimetableAdminPanel
+      readOnly={!canEditExamManagement(user)}
+      onClose={() => router.push('/admin')}
+    />
   );
 }

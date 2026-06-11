@@ -157,6 +157,7 @@ export default function Home() {
             </span>
           </motion.div>
 
+          <div className="flex items-center gap-2">
           <motion.button
             whileHover={{ scale: 1.05, y: -1 }}
             whileTap={{ scale: 0.96 }}
@@ -166,6 +167,16 @@ export default function Home() {
           >
             Get Started
           </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05, y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => (window.location.href = '/exam-portal/login')}
+            className="btn btn-ghost"
+            style={{ borderRadius: 'var(--radius-full)', paddingInline: '20px' }}
+          >
+            Exam Portal
+          </motion.button>
+          </div>
         </div>
       </motion.nav>
 

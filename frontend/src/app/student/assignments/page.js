@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { motion } from 'framer-motion';
 import { getStudentAssignments, submitAssignment, getMyEnrollments, uploadPdf } from '@/lib/api';
+import { getCurrentAcademicTerm } from '@/lib/utils';
 import {
   ClipboardList, Clock, AlertCircle, Loader2, Calendar, Search,
   MessageSquare, UploadCloud, CheckSquare, Award, X, FileUp, CheckCircle2, Eye
@@ -21,7 +22,7 @@ export default function StudentAssignmentsPage() {
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const [term, setTerm] = useState('2024F');
+  const term = getCurrentAcademicTerm();
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('ALL');
   const [assignments, setAssignments] = useState([]);
@@ -41,7 +42,7 @@ export default function StudentAssignmentsPage() {
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'STUDENT')) router.push('/login');
     else if (!authLoading && user) loadInitialData();
-  }, [user, authLoading, term, selectedCourseId]);
+  }, [user, authLoading, selectedCourseId]);
 
   const loadInitialData = async () => {
     setLoading(true);
@@ -157,15 +158,12 @@ export default function StudentAssignmentsPage() {
         <div>
           <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">My Assessments</Badge>
           <h1 className="text-3xl font-bold font-heading tracking-tight">Assignments & Quizzes</h1>
-          <p className="text-slate-400 mt-1 text-sm">Submit coursework and view grading results.</p>
+          <p className="text-slate-400 mt-1 text-sm">Submit coursework and view grading results for the current session.</p>
         </div>
-        <div className="flex items-center gap-1 bg-white/[0.02] border border-white/5 p-1 rounded-lg">
-          {['2024F', '2024S'].map(t => (
-            <button key={t} onClick={() => setTerm(t)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono tracking-wider transition-all ${term === t ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
-              {t}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
+            {term}
+          </Badge>
         </div>
       </div>
 

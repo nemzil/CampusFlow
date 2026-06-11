@@ -13,7 +13,7 @@ class Grade(Document):
     student_username: str  # "2024F-BSE-001"
     course_id: str  # Reference to courses
     course_code: str  # "CS-101T"
-    term: str  # "2024F"
+    term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
     credit_hours: int  # 3
     
     # ═══ Component Marks ═══
@@ -36,7 +36,14 @@ class Grade(Document):
     
     # ═══ Status ═══
     status: str = Field(default="CALCULATED")  # "CALCULATED", "PUBLISHED"
+    workflow_status: str = Field(default="DRAFT")  # DRAFT, SUBMITTED, EXAM_REVIEWED, PUBLISHED
     is_complete: bool = Field(default=False)  # All components graded
+    component_feedback: Dict[str, Optional[str]] = Field(default_factory=dict)
+    teacher_remarks: Optional[str] = None
+    submitted_to_exam_at: Optional[datetime] = None
+    submitted_by: Optional[str] = None
+    exam_reviewed_at: Optional[datetime] = None
+    exam_reviewed_by: Optional[str] = None
     published_at: Optional[datetime] = None
     published_by: Optional[str] = None
     
@@ -69,7 +76,7 @@ class SemesterGPA(Document):
     # ═══ Student & Term ═══
     student_id: str  # Reference to users
     student_username: str  # "2024F-BSE-001"
-    term: str  # "2024F"
+    term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
     
     # ═══ GPA Calculation ═══
     courses: List[Dict] = Field(default_factory=list)
@@ -158,6 +165,16 @@ class GradeResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UpdateResultMarks(BaseModel):
+    """Teacher/exam dept update for component marks and feedback"""
+    student_id: str
+    course_id: str
+    term: str
+    components: Optional[Dict[str, Optional[float]]] = None
+    component_feedback: Optional[Dict[str, Optional[str]]] = None
+    teacher_remarks: Optional[str] = None
+
 
 class GradeOverride(BaseModel):
     """Schema for admin grade override"""

@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight, BookOpen, Megaphone, BookMarked, Calendar, ClipboardList, Video, FileQuestion, DollarSign, CalendarDays, ShieldCheck } from 'lucide-react';
+import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight, BookOpen, Megaphone, BookMarked, Calendar, ClipboardList, Video, FileQuestion, DollarSign, CalendarDays, ShieldCheck, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -57,10 +57,10 @@ function SidebarComponent({ role }) {
       baseLinks.push({ path: '/student/attendance', label: 'Attendance', Icon: Calendar });
       baseLinks.push({ path: '/student/todos', label: 'My Todos', Icon: CheckSquare });
       baseLinks.push({ path: '/student/lectures', label: 'Lectures', Icon: Video });
-      baseLinks.push({ path: '/student/exams', label: 'Exams', Icon: GraduationCap });
       baseLinks.push({ path: '/student/fees', label: 'Fee Voucher', Icon: DollarSign });
       baseLinks.push({ path: '/student/timetable', label: 'My Timetable', Icon: CalendarDays });
       baseLinks.push({ path: '/student/admit-card', label: 'Admit Card', Icon: ClipboardList });
+      baseLinks.push({ path: '/student/results', label: 'Results', Icon: GraduationCap });
       baseLinks.push({ path: '/student/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
@@ -72,18 +72,26 @@ function SidebarComponent({ role }) {
       baseLinks.push({ path: '/teacher/todos', label: 'My Todos', Icon: CheckSquare });
       baseLinks.push({ path: '/teacher/lectures', label: 'Lectures', Icon: Video });
       baseLinks.push({ path: '/teacher/exams', label: 'Exams', Icon: GraduationCap });
+      baseLinks.push({ path: '/teacher/manage-results', label: 'Manage Results', Icon: BarChart3 });
       baseLinks.push({ path: '/teacher/timetable', label: 'My Schedule', Icon: CalendarDays });
       baseLinks.push({ path: '/teacher/invigilation', label: 'Invigilation', Icon: ShieldCheck });
       baseLinks.push({ path: '/teacher/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     if (role === 'ADMIN') {
-      if (user?.admin_level === 'FEE_MANAGEMENT_ADMIN') {
+      if (user?.admin_level === 'COURSE_MANAGEMENT_ADMIN') {
+        baseLinks.push({ path: '/admin/courses', label: 'Courses', Icon: BookOpen });
+        baseLinks.push({ path: '/admin/enrollment', label: 'Enrollments', Icon: BookMarked });
+        baseLinks.push({ path: '/admin/attendance', label: 'Attendance', Icon: Calendar });
+      } else if (user?.admin_level === 'EXAM_MANAGEMENT_ADMIN') {
+        baseLinks.push({ path: '/admin/timetable', label: 'Timetable', Icon: CalendarDays });
+        baseLinks.push({ path: '/admin/admit-card', label: 'Admit Card', Icon: ClipboardList });
+        baseLinks.push({ path: '/admin/manage-results', label: 'Manage Results', Icon: GraduationCap });
+      } else if (user?.admin_level === 'FEE_MANAGEMENT_ADMIN') {
         baseLinks.push({ path: '/admin/fees?tab=structures', label: 'Fee Structure', Icon: DollarSign });
         baseLinks.push({ path: '/admin/fees?tab=verification', label: 'Fee Verification', Icon: ShieldCheck });
       } else {
         baseLinks.push({ path: '/admin/courses', label: 'Courses', Icon: BookOpen });
-        baseLinks.push({ path: '/admin/enrollment', label: 'Enrollments', Icon: BookMarked });
         baseLinks.push({ path: '/admin/attendance', label: 'Attendance', Icon: Calendar });
         baseLinks.push({ path: '/admin/users', label: 'User Management', Icon: Users });
         baseLinks.push({ path: '/admin/timetable', label: 'Timetable', Icon: CalendarDays });

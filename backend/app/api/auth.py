@@ -254,7 +254,7 @@ class RegisterAdminRequest(BaseModel):
     first_name: str
     last_name: str
     cell_no: str  # Required
-    admin_level: str  # "SUPER_ADMIN", "ADMIN", "MODERATOR"
+    admin_level: str  # "SUPER_ADMIN", "ADMIN", "FEE_MANAGEMENT_ADMIN", "COURSE_MANAGEMENT_ADMIN", "EXAM_MANAGEMENT_ADMIN"
 
 @router.post("/register/student")
 async def register_student(

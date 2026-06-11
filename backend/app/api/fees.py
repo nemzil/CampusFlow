@@ -13,6 +13,7 @@ from app.models.fee import (
 from app.models.user import User
 from app.api.deps import get_current_user
 from app.services import fee_service
+from app.utils.academic_term import resolve_term, get_current_academic_term
 
 router = APIRouter()
 
@@ -117,8 +118,14 @@ async def calculate_fees(
     elif user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Convert semester to term if needed
+    if semester.isdigit():
+        resolved_semester = get_current_academic_term()
+    else:
+        resolved_semester = resolve_term(semester)
+    
     # Calculate fees
-    result = await fee_service.calculate_fees(student_id, semester)
+    result = await fee_service.calculate_fees(student_id, resolved_semester)
     
     return result
 
@@ -170,10 +177,19 @@ async def submit_payment(
     if str(user.id) != payment_data.student_id:
         raise HTTPException(status_code=403, detail="Can only submit your own payment")
     
+    # Convert semester to current academic term if needed
+    semester = payment_data.semester
+    # If semester is just a number (like "1"), convert to current term
+    if semester.isdigit():
+        semester = get_current_academic_term()
+    else:
+        # Otherwise resolve the term (Fall -> 2026F, etc.)
+        semester = resolve_term(semester)
+    
     # Submit payment
     result = await fee_service.submit_payment(
         student_id=payment_data.student_id,
-        semester=payment_data.semester,
+        semester=semester,
         receipt_url=payment_data.receipt_url,
         payment_date=payment_data.payment_date,
         bank_name=payment_data.bank_name,
@@ -200,6 +216,12 @@ async def get_payment_status(
             raise HTTPException(status_code=403, detail="Can only view your own payment status")
     elif user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Convert semester to term if needed
+    if semester.isdigit():
+        semester = get_current_academic_term()
+    else:
+        semester = resolve_term(semester)
     
     # Get payment status
     result = await fee_service.get_payment_status(student_id, semester)
@@ -324,6 +346,41 @@ async def generate_fee_report(
     
     return result
 
+
+@router.post("/admin/recalculate/{student_id}")
+async def admin_recalculate_fees(
+    student_id: str,
+    semester: str = Query(..., description="Semester or term"),
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Force recalculate fees for a student (ADMIN ONLY)
+    This will update the fee record even if payment is pending verification.
+    Use with caution!
+    """
+    # Verify admin permission
+    user = await get_current_user_object(current_user)
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can recalculate fees")
+    
+    # Convert semester to term if needed
+    if semester.isdigit():
+        semester = get_current_academic_term()
+    else:
+        semester = resolve_term(semester)
+    
+    # Recalculate fees
+    result = await fee_service.calculate_fees(student_id, semester)
+    
+    return {
+        "message": "Fees recalculated successfully",
+        "student_id": student_id,
+        "semester": semester,
+        "new_total": result["total_fee"],
+        "details": result
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════
 # UTILITY ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════
@@ -387,6 +444,7 @@ async def save_fee_structure(
             DepartmentFeeStructure.security_deposit: data.security_deposit,
             DepartmentFeeStructure.updated_at: datetime.now(timezone.utc),
         })
+        await existing.save()
         return {"message": f"Fee structure updated for {data.department}"}
     else:
         fs = DepartmentFeeStructure(
@@ -440,7 +498,7 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
         DepartmentFeeStructure.department == dept
     )
 
-    # Get enrolled courses
+    # Get ALL enrolled courses (don't filter by term since registration is open for any term)
     enrollments = await Enrollment.find(
         Enrollment.student_id == str(student.id),
         Enrollment.status == "ENROLLED"
@@ -448,6 +506,7 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
 
     line_items = []
     core_total = elective_total = compulsory_total = 0
+    current_term = get_current_academic_term()
 
     for enr in enrollments:
         course = await Course.get(enr.course_id)
@@ -486,22 +545,42 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
     security_deposit = structure.security_deposit if structure else 0
     grand_total = core_total + elective_total + compulsory_total + lab_charges + security_deposit
 
-    # Get fee record status
+    # Get fee record status for current term
     fee_record = await Fee.find_one(
         Fee.student_id == str(student.id),
-        Fee.semester == str(student.current_semester)
+        Fee.semester == current_term
     )
     
-    if not fee_record:
+    # Update or create the fee record with current enrollment data
+    # BUT only if payment hasn't been submitted yet (status is "pending")
+    if fee_record:
+        # Only update if status is "pending" (not submitted yet)
+        if fee_record.status == "pending":
+            await fee_record.set({
+                Fee.courses: [{
+                    "course_code": item["course_code"],
+                    "course_name": item["course_name"],
+                    "credit_hours": item["credit_hours"],
+                    "fee_per_credit": item["rate_per_credit"],
+                    "total": item["subtotal"]
+                } for item in line_items],
+                Fee.total_credit_hours: sum(item["credit_hours"] for item in line_items),
+                Fee.tuition_fee: core_total + elective_total + compulsory_total,
+                Fee.additional_fees: lab_charges + security_deposit,
+                Fee.total_fee: grand_total,
+                Fee.updated_at: datetime.now(timezone.utc)
+            })
+            await fee_record.save()
+    else:
+        # Create new fee record
         from app.services.fee_service import get_or_create_fee_config
-        # Determine current deadline from config or default to 30 days
-        config = await get_or_create_fee_config(student.batch or "2024F")
+        config = await get_or_create_fee_config(current_term)
         deadline = config.payment_deadline if config else datetime.now(timezone.utc)
         
         fee_record = Fee(
             student_id=str(student.id),
             student_username=student.username,
-            semester=str(student.current_semester),
+            semester=current_term,
             courses=[{
                 "course_code": item["course_code"],
                 "course_name": item["course_name"],
@@ -533,6 +612,7 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
         "semester": student.current_semester,
         "line_items": line_items,
         "status": status,
+        "enrolled_courses_count": len(line_items),
         "summary": {
             "core_total": core_total if status != "paid" else 0,
             "elective_total": elective_total if status != "paid" else 0,
@@ -542,6 +622,11 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
             "grand_total": grand_total,
         },
         "fee_structure_found": structure is not None,
+        "fee_structure": {
+            "core_per_credit": structure.core_per_credit if structure else 0,
+            "elective_per_credit": structure.elective_per_credit if structure else 0,
+            "compulsory_per_credit": structure.compulsory_per_credit if structure else 0,
+        } if structure else None,
     }
 
 
@@ -561,7 +646,7 @@ async def get_fee_dashboard_stats(current_user: str = Depends(get_current_user))
     all_fees = await Fee.find_all().to_list()
     
     total_collected = 0
-    total_pending = 0
+    total_pending = 0  # Only count pending_verification (submitted slips)
     
     # Graphs calculation
     current_year = datetime.now(timezone.utc).year
@@ -581,7 +666,8 @@ async def get_fee_dashboard_stats(current_user: str = Depends(get_current_user))
                 if p_date.year == current_year:
                     month_name = months[p_date.month - 1]
                     monthly_data[month_name] += fee.total_fee
-        else:
+        elif fee.status == "pending_verification":
+            # Only count submitted slips pending verification, not unpaid fees
             total_pending += fee.total_fee
             
     total_fees = total_collected + total_pending
@@ -676,4 +762,3 @@ async def get_fee_statement(
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
-

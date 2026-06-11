@@ -33,10 +33,10 @@ async function apiRequest(url, options = {}) {
     clearTimeout(timeoutId);
     
     if (response.status === 401) {
-      // Token expired, redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      const portal = localStorage.getItem('portal');
+      window.location.href = portal === 'exam-portal' ? '/exam-portal/login' : '/login';
       throw new Error('Session expired');
     }
     
@@ -455,13 +455,22 @@ export async function endAiExam(examId) {
 }
 
 export async function loadAiExam(examId, className) {
-  return apiRequest(`${API_BASE}/ai-exams/student/load`, {
+  console.log('loadAiExam called with:', { examId, className });
+  const url = `${API_BASE}/ai-exams/student/load`;
+  console.log('Request URL:', url);
+  console.log('Request body:', { exam_id: examId, class_name: className });
+  
+  return apiRequest(url, {
     method: 'POST',
     body: JSON.stringify({ exam_id: examId, class_name: className })
   });
 }
 
 export async function submitAiExam(examId, className, answers) {
+  console.log('submitAiExam called with:', { examId, className, answersCount: answers.length });
+  console.log('Request URL:', `${API_BASE}/ai-exams/student/submit`);
+  console.log('Request body:', { exam_id: examId, class_name: className, answers });
+  
   return apiRequest(`${API_BASE}/ai-exams/student/submit`, {
     method: 'POST',
     body: JSON.stringify({ exam_id: examId, class_name: className, answers })
@@ -944,6 +953,53 @@ export async function getMyFeeVoucher() {
 
 export async function getMyCgpa() {
   return apiRequest(`${API_BASE}/grades/cgpa`);
+}
+
+// ── Manage Results (Teacher / Exam Dept / Student) ────────────────
+export async function getManageResults(courseId, term) {
+  const params = new URLSearchParams({ term });
+  return apiRequest(`${API_BASE}/grades/manage-results/course/${courseId}?${params}`);
+}
+
+export async function updateManageResult(data) {
+  return apiRequest(`${API_BASE}/grades/manage-results/student`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function submitResultsToExamDept(courseId, term) {
+  const params = new URLSearchParams({ course_id: courseId, term });
+  return apiRequest(`${API_BASE}/grades/manage-results/submit?${params}`, { method: 'POST' });
+}
+
+export async function getExamDeptPendingResults(term = null) {
+  const params = new URLSearchParams();
+  if (term) params.append('term', term);
+  const qs = params.toString();
+  return apiRequest(`${API_BASE}/grades/exam-dept/pending${qs ? '?' + qs : ''}`);
+}
+
+export async function examDeptUpdateResult(data) {
+  return apiRequest(`${API_BASE}/grades/exam-dept/student`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function examDeptPublishResults(courseId, term) {
+  const params = new URLSearchParams({ course_id: courseId, term });
+  return apiRequest(`${API_BASE}/grades/exam-dept/publish?${params}`, { method: 'POST' });
+}
+
+export async function getMyResults(term) {
+  const params = new URLSearchParams({ term });
+  return apiRequest(`${API_BASE}/grades/my-results?${params}`);
+}
+
+export async function getMyTranscript(term) {
+  const params = new URLSearchParams({ term });
+  return apiRequest(`${API_BASE}/grades/my-results/transcript?${params}`);
 }
 
 export async function submitPayment(paymentData) {

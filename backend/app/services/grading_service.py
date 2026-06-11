@@ -10,6 +10,8 @@ from app.models.grading import Grade, SemesterGPA, CGPA, convert_to_letter_grade
 from app.models.course import Course
 from app.models.enrollment import Enrollment
 from app.models.assignment import Assignment, Submission
+from app.models.ai_exam import ExamResult
+from app.models.user import User
 
 
 async def fetch_component_marks(student_id: str, course_id: str, term: str) -> Dict[str, Optional[float]]:
@@ -73,10 +75,31 @@ async def fetch_component_marks(student_id: str, course_id: str, term: str) -> D
             if submission and submission.marks_obtained is not None:
                 components[f"assignment{i}"] = submission.marks_obtained
     
-    # TODO: Fetch midterm and final exam marks from exam module
-    # This requires integration with the exam system
-    # For now, these will remain None until exam marks are available
-    
+    # Fetch midterm and final exam marks from exam results
+    course = await Course.get(course_id)
+    if course:
+        student = await User.get(student_id)
+        if student:
+            results = await ExamResult.find(
+                ExamResult.student_username == student.username
+            ).to_list()
+
+            for result in results:
+                class_ref = (result.class_name or result.subject or "").upper()
+                if course.course_code.upper() not in class_ref and class_ref not in course.course_code.upper():
+                    continue
+
+                title = (result.title or result.subject or "").lower()
+                obtained = float(result.obtained_marks)
+                if "mid" in title or result.total_marks == 30:
+                    components["midterm"] = obtained
+                elif "final" in title or result.total_marks == 50:
+                    components["final"] = obtained
+                elif components["midterm"] is None and result.total_marks <= 30:
+                    components["midterm"] = obtained
+                elif components["final"] is None:
+                    components["final"] = obtained
+
     return components
 
 
@@ -182,15 +205,18 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
         )
         
         if existing_grade:
-            # Update existing grade
-            await existing_grade.set({
+            # Update existing grade (preserve workflow if already submitted)
+            update_fields = {
                 Grade.components: components,
                 Grade.total_marks: total_marks,
                 Grade.letter_grade: letter_grade,
                 Grade.grade_points: grade_points,
                 Grade.is_complete: is_complete,
                 Grade.updated_at: datetime.now(timezone.utc)
-            })
+            }
+            if existing_grade.workflow_status == "DRAFT":
+                update_fields[Grade.status] = "CALCULATED"
+            await existing_grade.set(update_fields)
         else:
             # Create new grade
             grade = Grade(
@@ -562,3 +588,365 @@ async def override_grade(
     })
     
     return grade
+
+
+def _recalculate_grade_fields(grade: Grade) -> None:
+    """Recalculate totals from grade components in-place."""
+    total_marks = calculate_total_marks(grade.components)
+    grade.is_complete = is_grade_complete(grade.components)
+    grade.total_marks = total_marks
+    if total_marks is not None:
+        letter, points = convert_to_letter_grade(total_marks)
+        grade.letter_grade = letter
+        grade.grade_points = points
+    else:
+        grade.letter_grade = None
+        grade.grade_points = None
+
+
+async def upsert_course_grade(
+    student_id: str,
+    course_id: str,
+    term: str,
+    components: Optional[Dict[str, Optional[float]]] = None,
+    component_feedback: Optional[Dict[str, Optional[str]]] = None,
+    teacher_remarks: Optional[str] = None,
+) -> Grade:
+    """Create or update a grade record with optional component overrides."""
+    course = await Course.get(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    student = await User.get(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    existing = await Grade.find_one(
+        Grade.student_id == student_id,
+        Grade.course_id == course_id,
+        Grade.term == term,
+    )
+
+    if existing:
+        if existing.workflow_status == "PUBLISHED":
+            raise HTTPException(status_code=400, detail="Published results cannot be edited by teacher")
+        merged_components = existing.components.copy()
+        if components:
+            merged_components.update({k: v for k, v in components.items() if v is not None})
+        merged_feedback = existing.component_feedback.copy()
+        if component_feedback:
+            merged_feedback.update(component_feedback)
+        existing.components = merged_components
+        existing.component_feedback = merged_feedback
+        if teacher_remarks is not None:
+            existing.teacher_remarks = teacher_remarks
+        _recalculate_grade_fields(existing)
+        existing.updated_at = datetime.now(timezone.utc)
+        await existing.save()
+        return existing
+
+    base_components = await fetch_component_marks(student_id, course_id, term)
+    if components:
+        base_components.update({k: v for k, v in components.items() if v is not None})
+
+    grade = Grade(
+        student_id=student_id,
+        student_username=student.username,
+        course_id=course_id,
+        course_code=course.course_code,
+        term=term,
+        credit_hours=course.credit_hours,
+        components=base_components,
+        component_feedback=component_feedback or {},
+        teacher_remarks=teacher_remarks,
+        status="CALCULATED",
+        workflow_status="DRAFT",
+    )
+    _recalculate_grade_fields(grade)
+    await grade.insert()
+    return grade
+
+
+async def get_course_grades_for_manage(course_id: str, term: str) -> Dict:
+    """Return course grades formatted for teacher manage-results panel."""
+    course = await Course.get(course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    grades = await Grade.find(
+        Grade.course_id == course_id,
+        Grade.term == term,
+    ).to_list()
+
+    students = []
+    for grade in grades:
+        student = await User.get(grade.student_id)
+        students.append({
+            "student_id": grade.student_id,
+            "registration_no": grade.student_username,
+            "student_name": f"{student.first_name} {student.last_name}" if student else "Unknown",
+            "components": grade.components,
+            "component_feedback": grade.component_feedback,
+            "teacher_remarks": grade.teacher_remarks,
+            "total_marks": grade.total_marks,
+            "letter_grade": grade.letter_grade,
+            "is_complete": grade.is_complete,
+            "workflow_status": grade.workflow_status,
+        })
+
+    return {
+        "course_id": course_id,
+        "course_code": course.course_code,
+        "course_name": course.course_name,
+        "term": term,
+        "students": students,
+    }
+
+
+async def submit_course_results_to_exam_dept(
+    course_id: str,
+    term: str,
+    teacher_username: str,
+) -> Dict:
+    """Teacher submits compiled course results to exam department."""
+    await calculate_course_grades(course_id, term)
+
+    grades = await Grade.find(
+        Grade.course_id == course_id,
+        Grade.term == term,
+    ).to_list()
+
+    if not grades:
+        raise HTTPException(status_code=404, detail="No grades found for this course")
+
+    submitted = 0
+    for grade in grades:
+        if grade.workflow_status == "PUBLISHED":
+            continue
+        await grade.set({
+            Grade.workflow_status: "SUBMITTED",
+            Grade.submitted_to_exam_at: datetime.now(timezone.utc),
+            Grade.submitted_by: teacher_username,
+            Grade.updated_at: datetime.now(timezone.utc),
+        })
+        submitted += 1
+
+    course = await Course.get(course_id)
+    return {
+        "message": f"Submitted {submitted} student results to exam department",
+        "course_code": course.course_code if course else course_id,
+        "submitted_count": submitted,
+    }
+
+
+async def get_submitted_results_for_exam_dept(term: Optional[str] = None) -> List[Dict]:
+    """List all results submitted to exam department."""
+    query = Grade.find(Grade.workflow_status.in_(["SUBMITTED", "EXAM_REVIEWED"]))
+    if term:
+        query = query.find(Grade.term == term)
+    grades = await query.to_list()
+
+    grouped: Dict[str, Dict] = {}
+    for grade in grades:
+        key = f"{grade.course_id}:{grade.term}"
+        if key not in grouped:
+            course = await Course.get(grade.course_id)
+            grouped[key] = {
+                "course_id": grade.course_id,
+                "course_code": grade.course_code,
+                "course_name": course.course_name if course else "Unknown",
+                "term": grade.term,
+                "workflow_status": grade.workflow_status,
+                "students": [],
+            }
+        student = await User.get(grade.student_id)
+        grouped[key]["students"].append({
+            "grade_id": str(grade.id),
+            "student_id": grade.student_id,
+            "registration_no": grade.student_username,
+            "student_name": f"{student.first_name} {student.last_name}" if student else "Unknown",
+            "components": grade.components,
+            "component_feedback": grade.component_feedback,
+            "teacher_remarks": grade.teacher_remarks,
+            "total_marks": grade.total_marks,
+            "letter_grade": grade.letter_grade,
+            "is_complete": grade.is_complete,
+            "workflow_status": grade.workflow_status,
+        })
+
+    return list(grouped.values())
+
+
+async def exam_dept_update_grade(
+    student_id: str,
+    course_id: str,
+    term: str,
+    components: Optional[Dict[str, Optional[float]]] = None,
+    component_feedback: Optional[Dict[str, Optional[str]]] = None,
+    teacher_remarks: Optional[str] = None,
+    reviewer_username: str = "",
+) -> Grade:
+    """Exam department edits submitted results."""
+    grade = await Grade.find_one(
+        Grade.student_id == student_id,
+        Grade.course_id == course_id,
+        Grade.term == term,
+    )
+    if not grade:
+        raise HTTPException(status_code=404, detail="Grade not found")
+    if grade.workflow_status not in ["SUBMITTED", "EXAM_REVIEWED"]:
+        raise HTTPException(status_code=400, detail="Result is not with exam department")
+
+    if components:
+        merged = grade.components.copy()
+        merged.update({k: v for k, v in components.items() if v is not None})
+        grade.components = merged
+    if component_feedback:
+        merged_fb = grade.component_feedback.copy()
+        merged_fb.update(component_feedback)
+        grade.component_feedback = merged_fb
+    if teacher_remarks is not None:
+        grade.teacher_remarks = teacher_remarks
+
+    _recalculate_grade_fields(grade)
+    grade.workflow_status = "EXAM_REVIEWED"
+    grade.exam_reviewed_at = datetime.now(timezone.utc)
+    grade.exam_reviewed_by = reviewer_username
+    grade.updated_at = datetime.now(timezone.utc)
+    await grade.save()
+    return grade
+
+
+async def _student_enrolled_courses_count(student_id: str, term: str) -> int:
+    return await Enrollment.find(
+        Enrollment.student_id == student_id,
+        Enrollment.term == term,
+        Enrollment.status == "ENROLLED",
+    ).count()
+
+
+async def _student_published_complete_count(student_id: str, term: str) -> int:
+    return await Grade.find(
+        Grade.student_id == student_id,
+        Grade.term == term,
+        Grade.workflow_status == "PUBLISHED",
+        Grade.is_complete == True,
+    ).count()
+
+
+async def publish_course_results_to_students(
+    course_id: str,
+    term: str,
+    publisher_username: str,
+) -> Dict:
+    """Exam department publishes all reviewed results for a course."""
+    grades = await Grade.find(
+        Grade.course_id == course_id,
+        Grade.term == term,
+        Grade.workflow_status.in_(["SUBMITTED", "EXAM_REVIEWED"]),
+    ).to_list()
+
+    if not grades:
+        raise HTTPException(status_code=404, detail="No reviewed results to publish")
+
+    student_ids = set()
+    for grade in grades:
+        await grade.set({
+            Grade.workflow_status: "PUBLISHED",
+            Grade.status: "PUBLISHED",
+            Grade.published_at: datetime.now(timezone.utc),
+            Grade.published_by: publisher_username,
+            Grade.updated_at: datetime.now(timezone.utc),
+        })
+        student_ids.add(grade.student_id)
+
+    cgpa_generated = []
+    for sid in student_ids:
+        enrolled_count = await _student_enrolled_courses_count(sid, term)
+        published_count = await _student_published_complete_count(sid, term)
+        if enrolled_count > 0 and published_count >= enrolled_count:
+            await calculate_semester_gpa(sid, term)
+            cgpa_record = await calculate_cgpa(sid)
+            student = await User.get(sid)
+            cgpa_generated.append({
+                "student_username": student.username if student else sid,
+                "cgpa": cgpa_record.cgpa,
+            })
+
+    course = await Course.get(course_id)
+    return {
+        "message": f"Published results for {len(grades)} students",
+        "course_code": course.course_code if course else course_id,
+        "published_count": len(grades),
+        "cgpa_generated": cgpa_generated,
+    }
+
+
+async def get_student_results_summary(student_id: str, term: str) -> Dict:
+    """Student-facing results: partial marks always; CGPA/transcript when all courses complete."""
+    user = await User.get(student_id)
+    grades = await Grade.find(
+        Grade.student_id == student_id,
+        Grade.term == term,
+        Grade.workflow_status == "PUBLISHED",
+    ).to_list()
+
+    courses = []
+    for grade in grades:
+        course = await Course.get(grade.course_id)
+        courses.append({
+            "course_code": grade.course_code,
+            "course_name": course.course_name if course else "Unknown",
+            "credit_hours": grade.credit_hours,
+            "components": grade.components,
+            "component_feedback": grade.component_feedback,
+            "teacher_remarks": grade.teacher_remarks,
+            "total_marks": grade.total_marks,
+            "letter_grade": grade.letter_grade,
+            "grade_points": grade.grade_points,
+            "is_complete": grade.is_complete,
+        })
+
+    enrolled_count = await _student_enrolled_courses_count(student_id, term)
+    complete_published = await _student_published_complete_count(student_id, term)
+    all_courses_complete = enrolled_count > 0 and complete_published >= enrolled_count
+
+    semester_gpa = None
+    cgpa = None
+    if all_courses_complete:
+        try:
+            gpa_record = await calculate_semester_gpa(student_id, term)
+            semester_gpa = gpa_record.semester_gpa
+        except HTTPException:
+            pass
+        try:
+            cgpa_record = await calculate_cgpa(student_id)
+            cgpa = cgpa_record.cgpa
+        except HTTPException:
+            pass
+
+    return {
+        "term": term,
+        "student_username": user.username if user else student_id,
+        "student_name": f"{user.first_name} {user.last_name}" if user else "Unknown",
+        "department": user.department if user else None,
+        "program": user.program if user else None,
+        "courses": courses,
+        "enrolled_courses": enrolled_count,
+        "published_courses": len(grades),
+        "all_courses_complete": all_courses_complete,
+        "semester_gpa": semester_gpa,
+        "cgpa": cgpa,
+        "transcript_available": all_courses_complete,
+    }
+
+
+async def get_student_transcript(student_id: str, term: str) -> Dict:
+    """Full transcript data when all courses for the term are published."""
+    summary = await get_student_results_summary(student_id, term)
+    if not summary["transcript_available"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Transcript available only when all course marks are published",
+        )
+    return summary

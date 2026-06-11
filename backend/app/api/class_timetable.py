@@ -11,6 +11,7 @@ from typing import Optional, List
 from app.models.class_timetable import ClassTimetable, ClassTimetableCreate, ClassTimetableUpdate
 from app.models.user import User
 from app.api.deps import get_current_user
+from app.api.permissions import require_exam_management_edit, require_exam_management_view
 
 router = APIRouter()
 
@@ -55,8 +56,7 @@ async def admin_create_timetable(
 ):
     """Admin only – create a new timetable entry."""
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     # Validate teacher exists
     teacher = await User.find_one(User.username == data.teacher_username)
@@ -100,8 +100,7 @@ async def admin_list_timetables(
 ):
     """Admin only – list all timetable entries with optional filters."""
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_view(user)
 
     query_filters = []
     if department:
@@ -129,8 +128,7 @@ async def admin_update_timetable(
 ):
     """Admin only – update a timetable entry."""
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     tt = await ClassTimetable.find_one(ClassTimetable.tt_id == tt_id)
     if not tt:
@@ -168,8 +166,7 @@ async def admin_delete_timetable(
 ):
     """Admin only – delete a timetable entry."""
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     tt = await ClassTimetable.find_one(ClassTimetable.tt_id == tt_id)
     if not tt:
@@ -194,6 +191,21 @@ async def student_my_timetable(
 
     if not user.department or not user.current_semester:
         return {"timetables": [], "message": "Profile incomplete – department/semester not set"}
+
+    # Check if student has any active enrollments
+    from app.models.enrollment import Enrollment
+    enrollments = await Enrollment.find(
+        Enrollment.student_id == str(user.id),
+        Enrollment.status == "ENROLLED"
+    ).to_list()
+    
+    if not enrollments or len(enrollments) == 0:
+        return {
+            "department": user.department,
+            "semester": user.current_semester,
+            "timetables": [],
+            "message": "You must be enrolled in courses to view the timetable"
+        }
 
     entries = await ClassTimetable.find(
         ClassTimetable.department == user.department,
@@ -239,8 +251,7 @@ async def teacher_my_timetable(
 async def list_teachers(current_user: str = Depends(get_current_user)):
     """Admin only – return all teachers for the dropdown."""
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_view(user)
 
     teachers = await User.find(User.role == "TEACHER", User.is_active == True).to_list()
     return [

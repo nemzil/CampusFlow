@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { canViewExamManagement, canEditExamManagement } from '@/lib/adminAccess';
 
 const AdmitCardAdminPanel = dynamic(
   () => import('@/components/AdmitCardAdminPanel'),
@@ -25,6 +26,7 @@ export default function AdminAdmitCardPage() {
   useEffect(() => {
     if (!loading && !user) router.push('/login');
     else if (!loading && user && user.role !== 'ADMIN') router.push('/login');
+    else if (!loading && user && !canViewExamManagement(user)) router.push('/admin');
   }, [user, loading, router]);
 
   if (loading || !user) {
@@ -35,5 +37,10 @@ export default function AdminAdmitCardPage() {
     );
   }
 
-  return <AdmitCardAdminPanel onClose={() => router.push('/admin')} />;
+  return (
+    <AdmitCardAdminPanel
+      readOnly={!canEditExamManagement(user)}
+      onClose={() => router.push('/admin')}
+    />
+  );
 }

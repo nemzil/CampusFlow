@@ -23,6 +23,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { canAccessEnrollment } from '@/lib/adminAccess';
 
 export default function AdminEnrollmentPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function AdminEnrollmentPage() {
   // Form states
   const [openWinForm, setOpenWinForm] = useState({
     semester: 1,
-    term: '2025S',
+    term: 'Fall',
     start_date: '',
     end_date: ''
   });
@@ -65,8 +66,8 @@ export default function AdminEnrollmentPage() {
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'ADMIN')) {
-      router.push('/login');
+    if (!authLoading && (!user || !canAccessEnrollment(user))) {
+      router.push('/admin');
     } else if (!authLoading && user) {
       loadInitialData();
     }
@@ -76,7 +77,7 @@ export default function AdminEnrollmentPage() {
     setLoading(true);
     try {
       // Check all known terms to find any open registration window
-      const termsToCheck = ['ALL', openWinForm.term, '2025S', '2025F', '2026S', '2024F'];
+      const termsToCheck = ['ALL', openWinForm.term];
       let statusData = null;
       for (const t of [...new Set(termsToCheck)]) {
         try {
@@ -371,10 +372,8 @@ export default function AdminEnrollmentPage() {
                         onChange={(e) => setOpenWinForm({...openWinForm, term: e.target.value})}
                         className="w-full h-9 rounded-lg bg-black/40 border border-white/10 px-3 text-xs text-white"
                       >
-                        <option value="2025S" className="bg-slate-900">Spring 2025 (2025S)</option>
-                        <option value="2025F" className="bg-slate-900">Fall 2025 (2025F)</option>
-                        <option value="2026S" className="bg-slate-900">Spring 2026 (2026S)</option>
-                        <option value="2026F" className="bg-slate-900">Fall 2026 (2026F)</option>
+                        <option value="Fall" className="bg-slate-900">Fall</option>
+                        <option value="Spring" className="bg-slate-900">Spring</option>
                       </select>
                     </div>
                     <div className="space-y-1.5">

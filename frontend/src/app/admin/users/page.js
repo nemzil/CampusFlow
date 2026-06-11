@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { canAccessFullAdminConsole } from '@/lib/adminAccess';
 
 export default function UsersManagementPage() {
   const router = useRouter();
@@ -50,6 +51,8 @@ export default function UsersManagementPage() {
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
       router.push('/login');
+    } else if (!authLoading && user && !canAccessFullAdminConsole(user)) {
+      router.push('/admin');
     } else if (!authLoading && user) {
       fetchUsers();
     }
@@ -460,6 +463,8 @@ function RegisterModal({ type, onClose, onSuccess }) {
                             <SelectItem value="ADMIN">Admin</SelectItem>
                             <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                             <SelectItem value="FEE_MANAGEMENT_ADMIN">Fee Management Admin</SelectItem>
+                            <SelectItem value="COURSE_MANAGEMENT_ADMIN">Course Management Admin</SelectItem>
+                            <SelectItem value="EXAM_MANAGEMENT_ADMIN">Exam Management Admin</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -607,6 +612,8 @@ function EditModal({ user, onClose, onSuccess }) {
                           <SelectItem value="ADMIN">Admin</SelectItem>
                           <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                           <SelectItem value="FEE_MANAGEMENT_ADMIN">Fee Management Admin</SelectItem>
+                          <SelectItem value="COURSE_MANAGEMENT_ADMIN">Course Management Admin</SelectItem>
+                          <SelectItem value="EXAM_MANAGEMENT_ADMIN">Exam Management Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -659,7 +666,7 @@ function BulkUploadModal({ onClose, onSuccess }) {
     } else if (type === 'teacher') {
       csv = 'username,password,email,first_name,last_name,employee_id,department,designation,qualification,specialization,office_location,cell_no,address\nahmedkhan,teacher123,akhan@ssuet.edu.pk,Ahmed,Khan,EMP-001,CS,Lecturer,PhD,ML,Room 301,0300-1234567,Karachi\n';
     } else if (type === 'admin') {
-      csv = 'username,password,email,first_name,last_name,admin_level,cell_no\nadmin2,admin123,a2@ssuet.edu.pk,Sarah,Ahmed,ADMIN,0300-1234567\n';
+      csv = 'username,password,email,first_name,last_name,admin_level,cell_no\nadmin2,admin123,a2@ssuet.edu.pk,Sarah,Ahmed,COURSE_MANAGEMENT_ADMIN,0300-1234567\n';
     }
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

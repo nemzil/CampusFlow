@@ -5,6 +5,8 @@ from app.models.course import Course
 from app.models.user import User
 from app.schemas.course import CourseCreate, CourseUpdate, TeacherAssignment, CourseResponse
 from app.api.deps import get_current_user
+from app.api.permissions import require_course_management_edit
+from app.utils.academic_term import resolve_term
 
 router = APIRouter()
 
@@ -52,7 +54,7 @@ async def list_courses(
     if semester is not None:
         query["semester"] = semester
     if term:
-        query["term"] = term
+        query["term"] = resolve_term(term)
     if type:
         query["course_type"] = type.lower()
     if category:
@@ -176,18 +178,20 @@ async def create_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can create courses")
+    require_course_management_edit(user)
+    
+    # Resolve term first
+    resolved_term = resolve_term(course_data.term)
     
     # Check if course code already exists for this term
     existing = await Course.find_one(
         Course.course_code == course_data.course_code,
-        Course.term == course_data.term
+        Course.term == resolved_term
     )
     if existing:
         raise HTTPException(
             status_code=400,
-            detail=f"Course '{course_data.course_code}' already exists for term '{course_data.term}'"
+            detail=f"Course '{course_data.course_code}' already exists for term '{resolved_term}'"
         )
     
     # Validate course type
@@ -198,7 +202,7 @@ async def create_course(
     if course_data.category.upper() not in ["TH", "LAB"]:
         raise HTTPException(status_code=400, detail="Category must be 'TH' or 'LAB'")
     
-    # Create course
+    # Create course (term already resolved above)
     course = Course(
         course_code=course_data.course_code,
         course_name=course_data.course_name,
@@ -211,7 +215,7 @@ async def create_course(
         grading_scale=get_grading_scale(course_data.category.upper()),
         description=course_data.description,
         objectives=course_data.objectives,
-        term=course_data.term,
+        term=resolved_term,
         max_students=course_data.max_students,
         enrolled_count=0,
         is_active=True,
@@ -257,8 +261,7 @@ async def update_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can update courses")
+    require_course_management_edit(user)
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -300,7 +303,7 @@ async def update_course(
     
     # Apply updates
     await course.set(update_data)
-    await course.sync()
+    await course.save()
     
     return CourseResponse(
         id=str(course.id),
@@ -337,8 +340,7 @@ async def delete_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can delete courses")
+    require_course_management_edit(user)
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -368,8 +370,7 @@ async def assign_teacher_to_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can assign teachers")
+    require_course_management_edit(user)
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -390,7 +391,7 @@ async def assign_teacher_to_course(
         Course.teacher_name: f"{teacher.first_name} {teacher.last_name}",
         Course.updated_at: datetime.now(timezone.utc)
     })
-    await course.sync()
+    await course.save()
     
     return CourseResponse(
         id=str(course.id),
@@ -426,8 +427,7 @@ async def unassign_teacher_from_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can unassign teachers")
+    require_course_management_edit(user)
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -440,7 +440,7 @@ async def unassign_teacher_from_course(
         Course.teacher_name: None,
         Course.updated_at: datetime.now(timezone.utc)
     })
-    await course.sync()
+    await course.save()
     
     return CourseResponse(
         id=str(course.id),
@@ -481,8 +481,7 @@ async def bulk_create_courses(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can bulk create courses")
+    require_course_management_edit(user)
     
     success_count = 0
     error_count = 0
@@ -490,10 +489,13 @@ async def bulk_create_courses(
     
     for course_data in courses:
         try:
+            # Resolve term
+            resolved_term = resolve_term(course_data.term)
+            
             # Check if exists
             existing = await Course.find_one(
                 Course.course_code == course_data.course_code,
-                Course.term == course_data.term
+                Course.term == resolved_term
             )
             if existing:
                 error_count += 1
@@ -513,7 +515,7 @@ async def bulk_create_courses(
                 grading_scale=get_grading_scale(course_data.category.upper()),
                 description=course_data.description,
                 objectives=course_data.objectives,
-                term=course_data.term,
+                term=resolved_term,
                 max_students=course_data.max_students,
                 enrolled_count=0,
                 is_active=True,

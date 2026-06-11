@@ -52,7 +52,7 @@ class User(Document):
     joining_date: Optional[datetime] = None
     
     # ═══ Admin-Specific (For role="ADMIN") ═══
-    admin_level: Optional[str] = None  # "SUPER_ADMIN", "DEPARTMENT_ADMIN"
+    admin_level: Optional[str] = None  # "SUPER_ADMIN", "ADMIN", "FEE_MANAGEMENT_ADMIN", "COURSE_MANAGEMENT_ADMIN", "EXAM_MANAGEMENT_ADMIN"
 
     @model_validator(mode="before")
     @classmethod

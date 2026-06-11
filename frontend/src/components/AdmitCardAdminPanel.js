@@ -69,7 +69,7 @@ function dayFromDate(dateStr) {
 }
 
 // ── Vertical Course Row ────────────────────────────────────────────────────────
-function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) {
+function CourseRow({ course, slot, teachers, onChange, onSave, saving, index, readOnly = false }) {
   const saved = Boolean(slot?.schedule_id);
   const catStyle = CATEGORY_STYLE[course.category] || { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)', text: '#94a3b8' };
 
@@ -179,6 +179,7 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) 
             value={slot?.invigilator_username || ''}
             onChange={e => onChange({ invigilator_username: e.target.value })}
             className="ac-row-input"
+            disabled={readOnly}
           >
             <option value="">Select Teacher</option>
             {teachers.map(t => (
@@ -202,6 +203,8 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) 
               exam_day: dayFromDate(e.target.value),
             })}
             className="ac-row-input"
+            disabled={readOnly}
+            readOnly={readOnly}
           />
         </div>
 
@@ -221,9 +224,9 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) 
             <Clock size={10} /> Time
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <input type="time" value={slot?.exam_time_start || ''} onChange={e => onChange({ exam_time_start: e.target.value })} className="ac-row-input" style={{ flex: 1 }} />
+            <input type="time" value={slot?.exam_time_start || ''} onChange={e => onChange({ exam_time_start: e.target.value })} className="ac-row-input" style={{ flex: 1 }} disabled={readOnly} readOnly={readOnly} />
             <span style={{ color: '#475569', fontSize: 12 }}>–</span>
-            <input type="time" value={slot?.exam_time_end || ''} onChange={e => onChange({ exam_time_end: e.target.value })} className="ac-row-input" style={{ flex: 1 }} />
+            <input type="time" value={slot?.exam_time_end || ''} onChange={e => onChange({ exam_time_end: e.target.value })} className="ac-row-input" style={{ flex: 1 }} disabled={readOnly} readOnly={readOnly} />
           </div>
         </div>
 
@@ -240,7 +243,10 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) 
               onChange={e => onChange({ room_no: e.target.value })}
               className="ac-row-input"
               style={{ width: 90 }}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
+            {!readOnly && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -261,6 +267,7 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index }) 
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               {saved ? 'Update' : 'Save'}
             </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -275,7 +282,7 @@ const labelStyle = {
 };
 
 // ── Main Panel ────────────────────────────────────────────────────────────────
-export default function AdmitCardAdminPanel({ onClose }) {
+export default function AdmitCardAdminPanel({ onClose, readOnly = false }) {
   const [dept, setDept]         = useState('');
   const [sem, setSem]           = useState('');
   const [courses, setCourses]   = useState([]);
@@ -416,7 +423,7 @@ export default function AdmitCardAdminPanel({ onClose }) {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#f1f5f9' }}>
-                  Admit Card Admin
+                  Admit Card Admin{readOnly ? ' (View Only)' : ''}
                 </h2>
                 <p style={{ margin: 0, fontSize: 12, color: '#64748b', marginTop: 2 }}>
                   {sem && dept ? `Semester ${sem} · ${dept}` : 'Select department & semester to configure exam schedule'}
@@ -553,6 +560,7 @@ export default function AdmitCardAdminPanel({ onClose }) {
                   onChange={patch => updateSlot(course.course_code, patch)}
                   onSave={() => saveSlot(course)}
                   saving={savingId === course.course_code}
+                  readOnly={readOnly}
                 />
               ))}
             </AnimatePresence>

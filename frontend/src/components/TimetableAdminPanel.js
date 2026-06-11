@@ -78,11 +78,13 @@ function Toast({ msg, type, onClose }) {
 }
 
 // ─── Day Picker ───────────────────────────────────────────────────────────────
-function DayPicker({ selected, onChange }) {
-  const toggle = (d) =>
+function DayPicker({ selected, onChange, disabled = false }) {
+  const toggle = (d) => {
+    if (disabled) return;
     onChange(selected.includes(d) ? selected.filter(x => x !== d) : [...selected, d]);
+  };
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, opacity: disabled ? 0.7 : 1 }}>
       {DAYS_OPTIONS.map(({ value, label }) => {
         const active = selected.includes(value);
         const c = DAY_COLORS[value];
@@ -91,6 +93,7 @@ function DayPicker({ selected, onChange }) {
             key={value}
             type="button"
             onClick={() => toggle(value)}
+            disabled={disabled}
             style={{
               padding: '4px 10px',
               borderRadius: 8,
@@ -98,7 +101,7 @@ function DayPicker({ selected, onChange }) {
               background: active ? c.bg : 'rgba(255,255,255,0.04)',
               color: active ? c.text : '#64748b',
               fontSize: 11, fontWeight: 700,
-              cursor: 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s ease',
               transform: active ? 'scale(1.06)' : 'scale(1)',
             }}
@@ -112,7 +115,7 @@ function DayPicker({ selected, onChange }) {
 }
 
 // ─── Vertical Course Row ──────────────────────────────────────────────────────
-function CourseRow({ course, slot, onChange, onSave, saving, index }) {
+function CourseRow({ course, slot, onChange, onSave, saving, index, readOnly = false }) {
   const saved = Boolean(slot?.tt_id);
   const catStyle = CATEGORY_STYLE[course.category] || { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)', text: '#94a3b8' };
 
@@ -232,6 +235,7 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
           <DayPicker
             selected={slot?.days || []}
             onChange={(days) => onChange({ days })}
+            disabled={readOnly}
           />
         </div>
 
@@ -247,6 +251,8 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
               value={slot?.time_start || ''}
               onChange={e => onChange({ time_start: e.target.value })}
               className="tt-sm-input"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
             <span style={{ color: '#475569', fontSize: 12 }}>–</span>
             <input
@@ -254,6 +260,8 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
               value={slot?.time_end || ''}
               onChange={e => onChange({ time_end: e.target.value })}
               className="tt-sm-input"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
           </div>
         </div>
@@ -272,7 +280,10 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
               onChange={e => onChange({ class_no: e.target.value })}
               className="tt-sm-input"
               style={{ width: 72 }}
+              disabled={readOnly}
+              readOnly={readOnly}
             />
+            {!readOnly && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -293,6 +304,7 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               {saved ? 'Update' : 'Save'}
             </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -301,7 +313,7 @@ function CourseRow({ course, slot, onChange, onSave, saving, index }) {
 }
 
 // ─── Main Panel ───────────────────────────────────────────────────────────────
-export default function TimetableAdminPanel({ onClose }) {
+export default function TimetableAdminPanel({ onClose, readOnly = false }) {
   const [dept, setDept]         = useState('');
   const [sem, setSem]           = useState('');
   const [courses, setCourses]   = useState([]);
@@ -444,7 +456,7 @@ export default function TimetableAdminPanel({ onClose }) {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#f1f5f9' }}>
-                  Timetable Admin
+                  Timetable Admin{readOnly ? ' (View Only)' : ''}
                 </h2>
                 <p style={{ margin: 0, fontSize: 12, color: '#64748b', marginTop: 2 }}>
                   {sem && dept
@@ -626,6 +638,7 @@ export default function TimetableAdminPanel({ onClose }) {
                   onChange={(patch) => updateSlot(course.course_code, patch)}
                   onSave={() => saveSlot(course)}
                   saving={savingId === course.course_code}
+                  readOnly={readOnly}
                 />
               ))}
             </AnimatePresence>

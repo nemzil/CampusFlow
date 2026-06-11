@@ -16,6 +16,7 @@ from app.models.course import Course
 from app.models.attendance import AttendanceRecord, AttendanceSession
 from app.models.enrollment import Enrollment
 from app.api.deps import get_current_user
+from app.api.permissions import require_exam_management_edit, require_exam_management_view
 
 router = APIRouter()
 
@@ -72,8 +73,7 @@ async def _calc_attendance(student_id: str, course_id: str) -> float:
 @router.get("/admin/teachers/list")
 async def admin_list_teachers(current_user: str = Depends(get_current_user)):
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_view(user)
     teachers = await User.find(User.role == "TEACHER", User.is_active == True).to_list()
     return [
         {
@@ -96,8 +96,7 @@ async def admin_create_schedule(
     current_user: str = Depends(get_current_user)
 ):
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     # Validate invigilator
     inv = await User.find_one(User.username == data.invigilator_username)
@@ -136,8 +135,7 @@ async def admin_list_schedules(
     current_user: str = Depends(get_current_user)
 ):
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_view(user)
 
     filters = []
     if department:
@@ -162,8 +160,7 @@ async def admin_update_schedule(
     current_user: str = Depends(get_current_user)
 ):
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     es = await ExamSchedule.find_one(ExamSchedule.schedule_id == schedule_id)
     if not es:
@@ -199,8 +196,7 @@ async def admin_delete_schedule(
     current_user: str = Depends(get_current_user)
 ):
     user = await _get_user(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Admins only")
+    require_exam_management_edit(user)
 
     es = await ExamSchedule.find_one(ExamSchedule.schedule_id == schedule_id)
     if not es:

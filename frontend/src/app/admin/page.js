@@ -4,11 +4,12 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
-import { ShieldCheck, User, Users, MessageSquare, ArrowRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, User, Users, MessageSquare, ArrowRight, Loader2, BookOpen, BookMarked, Calendar, CalendarDays, ClipboardList, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import FeeDashboard from '@/components/FeeDashboard';
+import { isCourseManagementAdmin, isExamManagementAdmin, isFeeManagementAdmin, isFullAdmin } from '@/lib/adminAccess';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -33,18 +34,40 @@ export default function AdminDashboard() {
     );
   }
 
-  const isFeeAdmin = user?.admin_level === 'FEE_MANAGEMENT_ADMIN';
+  const isFeeAdmin = isFeeManagementAdmin(user);
+  const isCourseAdmin = isCourseManagementAdmin(user);
+  const isExamAdmin = isExamManagementAdmin(user);
+  const isSystemAdmin = isFullAdmin(user);
 
   const stats = [
     { label: 'Admin Level', value: user.admin_level || 'SUPER_ADMIN', Icon: ShieldCheck, colorClass: 'text-rose-400 bg-rose-500/10 border-rose-500/20' },
     { label: 'Username/ID', value: user.username, Icon: User, colorClass: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
   ];
 
-  const quickActions = [
-    { href: '/admin/users', label: 'User Management', desc: 'Register, edit, and manage accounts', Icon: Users, colorTheme: 'violet' },
-    { href: '/admin/messages', label: 'Messages', desc: 'System chats & announcements', Icon: MessageSquare, colorTheme: 'cyan' },
-    { href: '/admin/profile', label: 'My Profile', desc: 'Edit admin personal info', Icon: User, colorTheme: 'emerald' },
-  ];
+  const quickActions = isCourseAdmin
+    ? [
+        { href: '/admin/courses', label: 'Courses', desc: 'Create and manage course catalog', Icon: BookOpen, colorTheme: 'violet' },
+        { href: '/admin/enrollment', label: 'Enrollments', desc: 'Registration windows and student enrollment', Icon: BookMarked, colorTheme: 'cyan' },
+        { href: '/admin/attendance', label: 'Attendance', desc: 'Lock and unlock attendance sessions', Icon: Calendar, colorTheme: 'emerald' },
+      ]
+    : isExamAdmin
+    ? [
+        { href: '/admin/timetable', label: 'Timetable', desc: 'Create and manage class timetables', Icon: CalendarDays, colorTheme: 'violet' },
+        { href: '/admin/admit-card', label: 'Admit Card', desc: 'Manage exam schedules and admit cards', Icon: ClipboardList, colorTheme: 'cyan' },
+        { href: '/admin/manage-results', label: 'Manage Results', desc: 'Review and publish compiled CGPA to students', Icon: GraduationCap, colorTheme: 'emerald' },
+      ]
+    : isSystemAdmin
+    ? [
+        { href: '/admin/users', label: 'User Management', desc: 'Register, edit, and manage accounts', Icon: Users, colorTheme: 'violet' },
+        { href: '/admin/courses', label: 'Courses', desc: 'View course catalog (read-only)', Icon: BookOpen, colorTheme: 'cyan' },
+        { href: '/admin/attendance', label: 'Attendance', desc: 'View attendance status (read-only)', Icon: Calendar, colorTheme: 'emerald' },
+        { href: '/admin/timetable', label: 'Timetable', desc: 'View class timetables (read-only)', Icon: CalendarDays, colorTheme: 'violet' },
+        { href: '/admin/admit-card', label: 'Admit Card', desc: 'View exam schedules (read-only)', Icon: ClipboardList, colorTheme: 'cyan' },
+        { href: '/admin/messages', label: 'Messages', desc: 'System chats & announcements', Icon: MessageSquare, colorTheme: 'emerald' },
+      ]
+    : [
+        { href: '/admin/profile', label: 'My Profile', desc: 'Edit admin personal info', Icon: User, colorTheme: 'emerald' },
+      ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -71,7 +94,7 @@ export default function AdminDashboard() {
         <motion.div variants={itemVariants} className="space-y-2">
           <div className="flex items-center gap-2 mb-1.5">
             <Badge variant="outline" className="badge-rose text-xs">
-              {isFeeAdmin ? 'Finance Console' : 'System Console'}
+              {isFeeAdmin ? 'Finance Console' : isCourseAdmin ? 'Course Console' : isExamAdmin ? 'Exam Console' : 'System Console'}
             </Badge>
             <Badge variant="outline" className="badge-violet font-mono text-xs">
               {user.admin_level || 'L1'}
@@ -83,6 +106,10 @@ export default function AdminDashboard() {
           <p className="text-slate-400 text-sm max-w-2xl">
             {isFeeAdmin 
               ? 'Fee Department Dashboard — Monitor revenue statements, set fee configurations, and process transactions.'
+              : isCourseAdmin
+              ? 'Course Management Dashboard — Manage courses, enrollment windows, and attendance controls.'
+              : isExamAdmin
+              ? 'Exam Management Dashboard — Manage class timetables and exam schedules for admit cards.'
               : 'System Administration Console — Manage users, monitor permissions, and configure system preferences.'
             }
           </p>
@@ -127,7 +154,7 @@ export default function AdminDashboard() {
             {/* Quick Actions */}
             <motion.div variants={itemVariants} className="space-y-4">
               <h2 className="text-xl font-bold tracking-tight text-white font-heading">
-                System Directories
+                {isCourseAdmin ? 'Course Directories' : isExamAdmin ? 'Exam Directories' : 'System Directories'}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {quickActions.map((action, i) => {

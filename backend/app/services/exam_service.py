@@ -211,7 +211,7 @@ async def create_ai_exam(
         topic=topic,
         teacher_username=teacher_username,
         questions=questions,
-        status="DRAFT"
+        status="draft"
     )
     await exam.insert()
     return exam
@@ -250,7 +250,7 @@ async def set_ai_exam_live(
     
     update_data = {
         AiExam.is_live: True,
-        AiExam.status: "LIVE"
+        AiExam.status: "live"
     }
     
     if start_time:
@@ -271,7 +271,7 @@ async def end_ai_exam(exam_id: str) -> AiExam:
     
     await exam.set({
         AiExam.is_live: False,
-        AiExam.status: "COMPLETED",
+        AiExam.status: "ended",
         AiExam.ended_at: datetime.now(timezone.utc).isoformat()
     })
     

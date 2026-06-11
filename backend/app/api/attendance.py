@@ -9,6 +9,7 @@ from app.models.attendance import (
 from app.models.user import User
 from app.models.course import Course
 from app.api.deps import get_current_user
+from app.api.permissions import require_course_management_edit
 from app.services import attendance_service
 
 router = APIRouter()
@@ -382,8 +383,7 @@ async def lock_attendance(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can lock attendance")
+    require_course_management_edit(user)
     
     # Lock attendance
     result = await attendance_service.lock_course_attendance(
@@ -404,8 +404,7 @@ async def unlock_attendance(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can unlock attendance")
+    require_course_management_edit(user)
     
     # Unlock attendance
     result = await attendance_service.unlock_course_attendance(

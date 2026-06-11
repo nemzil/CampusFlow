@@ -181,8 +181,12 @@ export default function TeacherExamsPage() {
     e.preventDefault(); setSettingLive(true);
     try {
       const { exam, type } = liveTarget;
-      if (type === 'ai') await setAiExamLive(exam.exam_id, liveForm.start_time, liveForm.end_time);
-      else await setManualExamLive(exam.id, liveForm.start_time, liveForm.end_time);
+      // Convert datetime-local to ISO string (includes timezone)
+      const startISO = new Date(liveForm.start_time).toISOString();
+      const endISO = new Date(liveForm.end_time).toISOString();
+      
+      if (type === 'ai') await setAiExamLive(exam.exam_id, startISO, endISO);
+      else await setManualExamLive(exam.id, startISO, endISO);
       showSuccess('Exam is live!');
       setLiveTarget(null);
       await loadAll();

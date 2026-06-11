@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { canViewCourseManagement, canEditCourseManagement } from '@/lib/adminAccess';
 
 export default function AdminCoursesPage() {
   const router = useRouter();
@@ -50,12 +51,14 @@ export default function AdminCoursesPage() {
   const [selectedCourseForTeacher, setSelectedCourseForTeacher] = useState(null);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'ADMIN')) {
+    if (!authLoading && (!user || !canViewCourseManagement(user))) {
       router.push('/login');
     } else if (!authLoading && user) {
       fetchData();
     }
   }, [user, authLoading, router, semesterFilter, termFilter, typeFilter, categoryFilter]);
+
+  const canEdit = canEditCourseManagement(user);
 
   const fetchData = async () => {
     setLoading(true);
@@ -166,14 +169,22 @@ export default function AdminCoursesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Academics</Badge>
+          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">
+            {canEdit ? 'Academics' : 'View Only'}
+          </Badge>
           <h1 className="text-3xl font-bold font-heading text-white tracking-tight">Course Management</h1>
-          <p className="text-slate-400 mt-1 font-sans">Create and manage course configurations, prerequisite trees, and faculty assignments.</p>
+          <p className="text-slate-400 mt-1 font-sans">
+            {canEdit
+              ? 'Create and manage course configurations, prerequisite trees, and faculty assignments.'
+              : 'View course catalog and faculty assignments (read-only).'}
+          </p>
         </div>
         
+        {canEdit && (
         <Button onClick={openCreateModal} className="bg-violet-600 hover:bg-violet-500 text-white shadow-[0_0_15px_rgba(124,58,237,0.4)] shrink-0 self-start sm:self-center">
           <Plus className="w-4 h-4 mr-2" /> Add Course
         </Button>
+        )}
       </div>
 
       {/* Filters & Search Control */}
@@ -235,8 +246,8 @@ export default function AdminCoursesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Terms</SelectItem>
-                <SelectItem >Fall</SelectItem>
-                <SelectItem >Spring </SelectItem>
+                <SelectItem value="Fall">Fall</SelectItem>
+                <SelectItem value="Spring">Spring</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -351,6 +362,7 @@ export default function AdminCoursesPage() {
                       )}
 
                       {/* Action buttons */}
+                      {canEdit && (
                       <div className="flex gap-2 pt-3 border-t border-white/5 mt-auto shrink-0">
                         <Button variant="secondary" size="sm" onClick={() => openEditModal(course)} className="flex-1 bg-white/5 hover:bg-white/10 text-white h-8 text-xs">
                           <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
@@ -386,6 +398,7 @@ export default function AdminCoursesPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -436,7 +449,7 @@ function CourseModal({ course, allCourseCodes, onClose, onSuccess }) {
     category: course ? course.category : 'TH',
     semester: course ? course.semester : 1,
     credit_hours: course ? course.credit_hours : 3,
-    term: course ? course.term : '2024F',
+    term: course ? course.term : 'Fall',
     department: course ? (course.department || 'Software Engineering') : 'Software Engineering',
     max_students: course ? (course.max_students || 60) : 60,
     description: course ? (course.description || '') : '',
@@ -644,10 +657,8 @@ function CourseModal({ course, allCourseCodes, onClose, onSuccess }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2024F">Fall</SelectItem>
-                    <SelectItem value="2025S">Spring</SelectItem>
-                    <SelectItem value="2025F">Fall</SelectItem>
-                    <SelectItem value="2026S">Spring</SelectItem>
+                    <SelectItem value="Fall">Fall</SelectItem>
+                    <SelectItem value="Spring">Spring</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

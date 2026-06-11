@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { canViewCourseManagement, canEditCourseManagement } from '@/lib/adminAccess';
 
 export default function AdminAttendancePage() {
   const router = useRouter();
@@ -40,9 +41,11 @@ export default function AdminAttendancePage() {
   });
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'ADMIN')) router.push('/login');
+    if (!authLoading && (!user || !canViewCourseManagement(user))) router.push('/login');
     else if (!authLoading && user) load();
   }, [user, authLoading]);
+
+  const canEdit = canEditCourseManagement(user);
 
   const load = async () => {
     setLoading(true);
@@ -157,9 +160,15 @@ export default function AdminAttendancePage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 text-white min-h-screen">
       {/* Header */}
       <div>
-        <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Registrar Admin</Badge>
+        <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">
+          {canEdit ? 'Registrar Admin' : 'View Only'}
+        </Badge>
         <h1 className="text-3xl font-bold font-heading tracking-tight">Attendance Audit Lock</h1>
-        <p className="text-slate-400 mt-1 text-sm">Freeze or unfreeze attendance sheets by department or individual course.</p>
+        <p className="text-slate-400 mt-1 text-sm">
+          {canEdit
+            ? 'Freeze or unfreeze attendance sheets by department or individual course.'
+            : 'View attendance lock status by course (read-only).'}
+        </p>
       </div>
 
       {/* Toolbar */}
@@ -180,6 +189,7 @@ export default function AdminAttendancePage() {
             placeholder="Search course, instructor..." className="h-9 pl-9 bg-background/50 border-white/10 text-white text-xs" />
         </div>
 
+        {canEdit && (
         <div className="flex gap-2 ml-auto">
           <Button onClick={handleBulkLock} disabled={submitting}
             className="h-9 text-xs bg-rose-600 hover:bg-rose-500 text-white font-semibold">
@@ -196,6 +206,7 @@ export default function AdminAttendancePage() {
             <Unlock className="w-3.5 h-3.5 mr-1.5" />Unlock All
           </Button>
         </div>
+        )}
       </div>
 
       {/* Table */}
@@ -211,13 +222,13 @@ export default function AdminAttendancePage() {
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
                   <tr className="border-b border-white/5 bg-white/[0.02] text-slate-400 font-semibold uppercase tracking-wider">
-                    <th className="p-4 w-10"></th>
+                    <th className="p-4 w-10">{canEdit ? '' : null}</th>
                     <th className="p-4">Course</th>
                     <th className="p-4">Department</th>
                     <th className="p-4">Instructor</th>
                     <th className="p-4 text-center">Sessions</th>
                     <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Action</th>
+                    <th className="p-4 text-right">{canEdit ? 'Action' : ''}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -227,7 +238,7 @@ export default function AdminAttendancePage() {
                     return (
                       <tr key={id} className="hover:bg-white/[0.01] transition-colors">
                         <td className="p-4 w-10">
-                          {info.fullyLocked && (
+                          {canEdit && info.fullyLocked && (
                             <input
                               type="checkbox"
                               checked={selectedIds.has(id)}
@@ -255,7 +266,7 @@ export default function AdminAttendancePage() {
                           }
                         </td>
                         <td className="p-4 text-right">
-                          {info.count > 0 && (
+                          {canEdit && info.count > 0 && (
                             <div className="flex gap-1.5 justify-end">
                               {!info.fullyLocked && (
                                 <Button size="sm" onClick={() => handleLock(course)} disabled={submitting}

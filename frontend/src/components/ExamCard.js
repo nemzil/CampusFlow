@@ -27,6 +27,14 @@ export default function ExamCard({ exam, role, onSetLive, onEnd, onView, onTake 
   const isLive = exam.status === 'live';
   const isDraft = exam.status === 'draft';
   const isEnded = exam.status === 'ended';
+  
+  // For students: check if exam is currently takeable (between start and end time)
+  const now = new Date();
+  const start = exam.start_time ? new Date(exam.start_time) : null;
+  const end = exam.end_time ? new Date(exam.end_time) : null;
+  const isCurrentlyTakeable = isLive && start && end && now >= start && now <= end;
+  const isUpcoming = isLive && start && now < start;
+  const hasEnded = isEnded || (end && now > end);
 
   return (
     <motion.div
@@ -84,15 +92,15 @@ export default function ExamCard({ exam, role, onSetLive, onEnd, onView, onTake 
       </div>
 
       <div className="exam-card-actions">
-        {role === 'student' && isLive && (
+        {role === 'student' && isCurrentlyTakeable && (
           <button className="btn-primary" onClick={() => onTake(exam.id)}>
             Take Exam
           </button>
         )}
         
-        {role === 'student' && !isLive && (
+        {role === 'student' && !isCurrentlyTakeable && (
           <button className="btn-secondary" disabled>
-            {isDraft ? 'Not Available' : isEnded ? 'Ended' : 'Upcoming'}
+            {isDraft ? 'Not Available' : hasEnded ? 'Ended' : isUpcoming ? 'Upcoming' : 'Not Available'}
           </button>
         )}
 

@@ -162,6 +162,15 @@ async def register_student(
     
     # Increment course enrolled_count atomically
     await course.set({Course.enrolled_count: course.enrolled_count + 1})
+    await course.save()
+    
+    # Automatically recalculate fees for the student
+    try:
+        from app.services import fee_service
+        await fee_service.calculate_fees(student_id, term)
+    except Exception as e:
+        # Don't fail enrollment if fee calculation fails, just log it
+        print(f"Warning: Failed to update fees after enrollment: {e}")
     
     return enrollment
 
@@ -203,11 +212,21 @@ async def drop_course(enrollment_id: str, student_id: str, term: str) -> Dict:
         Enrollment.dropped_at: datetime.now(timezone.utc),
         Enrollment.updated_at: datetime.now(timezone.utc)
     })
+    await enrollment.save()
     
     # Decrement course enrolled_count
     course = await Course.get(enrollment.course_id)
     if course:
         await course.set({Course.enrolled_count: max(0, course.enrolled_count - 1)})
+        await course.save()
+    
+    # Automatically recalculate fees for the student
+    try:
+        from app.services import fee_service
+        await fee_service.calculate_fees(student_id, term)
+    except Exception as e:
+        # Don't fail drop if fee calculation fails, just log it
+        print(f"Warning: Failed to update fees after dropping course: {e}")
     
     return {
         "message": "Course dropped successfully",
@@ -230,11 +249,18 @@ async def get_available_courses(student_id: str, student: User, term: str) -> Li
         List of courses with eligibility information
     """
     # Get courses for student's semester
-    courses = await Course.find(
-        Course.semester == student.current_semester,
-        Course.term == term,
-        Course.is_active == True
-    ).to_list()
+    # If term is 'ALL', don't filter by term
+    if term == "ALL":
+        courses = await Course.find(
+            Course.semester == student.current_semester,
+            Course.is_active == True
+        ).to_list()
+    else:
+        courses = await Course.find(
+            Course.semester == student.current_semester,
+            Course.term == term,
+            Course.is_active == True
+        ).to_list()
     
     # Get student's current enrollments for this term
     enrollments = await Enrollment.find(

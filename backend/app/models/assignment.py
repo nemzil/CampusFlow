@@ -38,7 +38,7 @@ class Assignment(Document):
     
     # ═══ Status ═══
     status: str = Field(default="DRAFT")  # "DRAFT", "PUBLISHED"
-    term: str
+    term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
     
     # ═══ Statistics ═══
     submission_count: int = Field(default=0)

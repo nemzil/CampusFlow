@@ -10,7 +10,7 @@ from pymongo import IndexModel, ASCENDING, DESCENDING
 class RegistrationWindow(Document):
     # ═══ Window Details ═══
     semester: int = Field(..., ge=1, le=8)  # 1-8
-    term: str  # "2024F", "2025S"
+    term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
     start_date: datetime
     end_date: datetime
     status: str = Field(default="OPEN")  # "OPEN", "CLOSED"
@@ -39,7 +39,7 @@ class Enrollment(Document):
     student_username: str  # "2024F-BSE-001"
     course_id: str  # Reference to courses
     course_code: str  # "CS-101T" (denormalized for quick access)
-    term: str  # "2024F"
+    term: str  # Auto-resolved: "Fall" -> "2025F"
     
     # ═══ Status ═══
     status: str = Field(default="ENROLLED")  # "ENROLLED", "DROPPED", "COMPLETED"
@@ -73,7 +73,7 @@ class Enrollment(Document):
 class RegistrationWindowCreate(BaseModel):
     """Schema for creating registration window"""
     semester: int = Field(..., ge=1, le=8, description="Semester number (1-8)")
-    term: str = Field(..., description="Term (e.g., 2024F, 2025S)")
+    term: str = Field(..., description="Term: 'Fall' or 'Spring' (auto-resolved with current year)")
     start_date: datetime = Field(..., description="Registration start date")
     end_date: datetime = Field(..., description="Registration end date")
 

@@ -66,7 +66,7 @@ class AiExamSubmission(Document):
     checked: bool = False
 
     class Settings:
-        name = "submissions"
+        name = "ai_exam_submissions"
         indexes = [
             IndexModel([("exam_id", ASCENDING)]),
             IndexModel([("student_username", ASCENDING)]),

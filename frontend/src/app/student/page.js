@@ -71,10 +71,10 @@ export default function StudentDashboard() {
       colorTheme: 'cyan' 
     },
     { 
-      href: '/student/exams', 
+      href: '/student/results', 
       label: 'CGPA', 
       value: cgpa !== null ? cgpa.toFixed(2) : '—',
-      desc: 'Cumulative Grade Point Average', 
+      desc: 'View results and cumulative GPA', 
       Icon: GraduationCap, 
       colorTheme: 'emerald' 
     },

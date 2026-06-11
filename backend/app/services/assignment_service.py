@@ -504,7 +504,8 @@ async def bulk_grade_submissions(
 
 async def get_student_assignments(
     student_id: str,
-    course_id: Optional[str] = None
+    course_id: Optional[str] = None,
+    term: Optional[str] = None
 ) -> List[Dict]:
     """
     Get assignments for student with submission status
@@ -512,28 +513,37 @@ async def get_student_assignments(
     Args:
         student_id: Student's user ID
         course_id: Optional course filter
+        term: Optional term filter
     
     Returns:
         List of assignments with submission info
     """
-    # Build query
+    # Get student's enrolled courses
+    from app.models.enrollment import Enrollment
+    enrolled_courses = await Enrollment.find(
+        Enrollment.student_id == student_id,
+        Enrollment.status == "ENROLLED"
+    ).to_list()
+    
+    enrolled_course_ids = [enr.course_id for enr in enrolled_courses]
+    
+    if not enrolled_course_ids:
+        return []
+    
+    # Build query - only get published assignments
     query = Assignment.find(Assignment.status == "PUBLISHED")
     
+    # Optional: filter by specific course
     if course_id:
         query = query.find(Assignment.course_id == course_id)
-    
+        
     assignments = await query.to_list()
     
+    # Filter to only enrolled courses
     result = []
     for assignment in assignments:
-        # Check if student is enrolled in course
-        enrollment = await Enrollment.find_one(
-            Enrollment.student_id == student_id,
-            Enrollment.course_id == assignment.course_id,
-            Enrollment.status == "ENROLLED"
-        )
-        
-        if not enrollment:
+        # Skip if not enrolled in this course
+        if assignment.course_id not in enrolled_course_ids:
             continue
         
         # Get student's submission if exists
