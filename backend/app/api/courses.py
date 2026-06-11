@@ -5,8 +5,11 @@ from app.models.course import Course
 from app.models.user import User
 from app.schemas.course import CourseCreate, CourseUpdate, TeacherAssignment, CourseResponse
 from app.api.deps import get_current_user
+<<<<<<< HEAD
 from app.api.permissions import require_course_management_edit
 from app.utils.academic_term import resolve_term
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 router = APIRouter()
 
@@ -54,7 +57,11 @@ async def list_courses(
     if semester is not None:
         query["semester"] = semester
     if term:
+<<<<<<< HEAD
         query["term"] = resolve_term(term)
+=======
+        query["term"] = term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     if type:
         query["course_type"] = type.lower()
     if category:
@@ -178,31 +185,53 @@ async def create_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
     
     # Resolve term first
     resolved_term = resolve_term(course_data.term)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can create courses")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Check if course code already exists for this term
     existing = await Course.find_one(
         Course.course_code == course_data.course_code,
+<<<<<<< HEAD
         Course.term == resolved_term
+=======
+        Course.term == course_data.term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     )
     if existing:
         raise HTTPException(
             status_code=400,
+<<<<<<< HEAD
             detail=f"Course '{course_data.course_code}' already exists for term '{resolved_term}'"
         )
     
     # Validate course type
     if course_data.course_type.lower() not in ["core", "elective", "compulsory"]:
         raise HTTPException(status_code=400, detail="Course type must be 'core', 'elective', or 'compulsory'")
+=======
+            detail=f"Course '{course_data.course_code}' already exists for term '{course_data.term}'"
+        )
+    
+    # Validate course type
+    if course_data.course_type.lower() not in ["core", "elective"]:
+        raise HTTPException(status_code=400, detail="Course type must be 'core' or 'elective'")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Validate category
     if course_data.category.upper() not in ["TH", "LAB"]:
         raise HTTPException(status_code=400, detail="Category must be 'TH' or 'LAB'")
     
+<<<<<<< HEAD
     # Create course (term already resolved above)
+=======
+    # Create course
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     course = Course(
         course_code=course_data.course_code,
         course_name=course_data.course_name,
@@ -215,7 +244,11 @@ async def create_course(
         grading_scale=get_grading_scale(course_data.category.upper()),
         description=course_data.description,
         objectives=course_data.objectives,
+<<<<<<< HEAD
         term=resolved_term,
+=======
+        term=course_data.term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         max_students=course_data.max_students,
         enrolled_count=0,
         is_active=True,
@@ -261,7 +294,12 @@ async def update_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can update courses")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -274,8 +312,13 @@ async def update_course(
     if updates.course_name is not None:
         update_data[Course.course_name] = updates.course_name
     if updates.course_type is not None:
+<<<<<<< HEAD
         if updates.course_type.lower() not in ["core", "elective", "compulsory"]:
             raise HTTPException(status_code=400, detail="Course type must be 'core', 'elective', or 'compulsory'")
+=======
+        if updates.course_type.lower() not in ["core", "elective"]:
+            raise HTTPException(status_code=400, detail="Course type must be 'core' or 'elective'")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         update_data[Course.course_type] = updates.course_type.lower()
     if updates.category is not None:
         if updates.category.upper() not in ["TH", "LAB"]:
@@ -303,7 +346,11 @@ async def update_course(
     
     # Apply updates
     await course.set(update_data)
+<<<<<<< HEAD
     await course.save()
+=======
+    await course.sync()
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return CourseResponse(
         id=str(course.id),
@@ -340,7 +387,12 @@ async def delete_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can delete courses")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -370,7 +422,12 @@ async def assign_teacher_to_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can assign teachers")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -391,7 +448,11 @@ async def assign_teacher_to_course(
         Course.teacher_name: f"{teacher.first_name} {teacher.last_name}",
         Course.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await course.save()
+=======
+    await course.sync()
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return CourseResponse(
         id=str(course.id),
@@ -427,7 +488,12 @@ async def unassign_teacher_from_course(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can unassign teachers")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Find course
     course = await Course.find_one(Course.course_code == course_code)
@@ -440,7 +506,11 @@ async def unassign_teacher_from_course(
         Course.teacher_name: None,
         Course.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await course.save()
+=======
+    await course.sync()
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return CourseResponse(
         id=str(course.id),
@@ -481,7 +551,12 @@ async def bulk_create_courses(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
+<<<<<<< HEAD
     require_course_management_edit(user)
+=======
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can bulk create courses")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     success_count = 0
     error_count = 0
@@ -489,6 +564,7 @@ async def bulk_create_courses(
     
     for course_data in courses:
         try:
+<<<<<<< HEAD
             # Resolve term
             resolved_term = resolve_term(course_data.term)
             
@@ -496,6 +572,12 @@ async def bulk_create_courses(
             existing = await Course.find_one(
                 Course.course_code == course_data.course_code,
                 Course.term == resolved_term
+=======
+            # Check if exists
+            existing = await Course.find_one(
+                Course.course_code == course_data.course_code,
+                Course.term == course_data.term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             )
             if existing:
                 error_count += 1
@@ -515,7 +597,11 @@ async def bulk_create_courses(
                 grading_scale=get_grading_scale(course_data.category.upper()),
                 description=course_data.description,
                 objectives=course_data.objectives,
+<<<<<<< HEAD
                 term=resolved_term,
+=======
+                term=course_data.term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                 max_students=course_data.max_students,
                 enrolled_count=0,
                 is_active=True,

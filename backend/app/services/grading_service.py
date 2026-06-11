@@ -10,8 +10,11 @@ from app.models.grading import Grade, SemesterGPA, CGPA, convert_to_letter_grade
 from app.models.course import Course
 from app.models.enrollment import Enrollment
 from app.models.assignment import Assignment, Submission
+<<<<<<< HEAD
 from app.models.ai_exam import ExamResult
 from app.models.user import User
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 
 async def fetch_component_marks(student_id: str, course_id: str, term: str) -> Dict[str, Optional[float]]:
@@ -75,6 +78,7 @@ async def fetch_component_marks(student_id: str, course_id: str, term: str) -> D
             if submission and submission.marks_obtained is not None:
                 components[f"assignment{i}"] = submission.marks_obtained
     
+<<<<<<< HEAD
     # Fetch midterm and final exam marks from exam results
     course = await Course.get(course_id)
     if course:
@@ -100,6 +104,12 @@ async def fetch_component_marks(student_id: str, course_id: str, term: str) -> D
                 elif components["final"] is None:
                     components["final"] = obtained
 
+=======
+    # TODO: Fetch midterm and final exam marks from exam module
+    # This requires integration with the exam system
+    # For now, these will remain None until exam marks are available
+    
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     return components
 
 
@@ -205,18 +215,27 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
         )
         
         if existing_grade:
+<<<<<<< HEAD
             # Update existing grade (preserve workflow if already submitted)
             update_fields = {
+=======
+            # Update existing grade
+            await existing_grade.set({
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                 Grade.components: components,
                 Grade.total_marks: total_marks,
                 Grade.letter_grade: letter_grade,
                 Grade.grade_points: grade_points,
                 Grade.is_complete: is_complete,
                 Grade.updated_at: datetime.now(timezone.utc)
+<<<<<<< HEAD
             }
             if existing_grade.workflow_status == "DRAFT":
                 update_fields[Grade.status] = "CALCULATED"
             await existing_grade.set(update_fields)
+=======
+            })
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         else:
             # Create new grade
             grade = Grade(
@@ -471,6 +490,7 @@ async def calculate_cgpa(student_id: str) -> CGPA:
     ).to_list()
     
     if not semester_gpas:
+<<<<<<< HEAD
         from app.models.user import User
         user = await User.get(student_id)
         return CGPA(
@@ -481,6 +501,9 @@ async def calculate_cgpa(student_id: str) -> CGPA:
             total_credits=0,
             credits_required=130
         )
+=======
+        raise HTTPException(status_code=404, detail="No semester GPAs found")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Calculate CGPA
     total_points = 0.0
@@ -588,6 +611,7 @@ async def override_grade(
     })
     
     return grade
+<<<<<<< HEAD
 
 
 def _recalculate_grade_fields(grade: Grade) -> None:
@@ -950,3 +974,5 @@ async def get_student_transcript(student_id: str, term: str) -> Dict:
             detail="Transcript available only when all course marks are published",
         )
     return summary
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

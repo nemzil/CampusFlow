@@ -23,7 +23,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+<<<<<<< HEAD
 import { canAccessEnrollment } from '@/lib/adminAccess';
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 export default function AdminEnrollmentPage() {
   const router = useRouter();
@@ -31,8 +34,12 @@ export default function AdminEnrollmentPage() {
   const { showSuccess, showError } = useToast();
 
   const [activeTab, setActiveTab] = useState('window'); // window, force, directory
+<<<<<<< HEAD
   const [department, setDepartment] = useState('ALL');
   const [departments, setDepartments] = useState([]);
+=======
+  const [term, setTerm] = useState('2024F');
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const [windowStatus, setWindowStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +54,10 @@ export default function AdminEnrollmentPage() {
   // Form states
   const [openWinForm, setOpenWinForm] = useState({
     semester: 1,
+<<<<<<< HEAD
     term: 'Fall',
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     start_date: '',
     end_date: ''
   });
@@ -66,16 +76,26 @@ export default function AdminEnrollmentPage() {
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (!authLoading && (!user || !canAccessEnrollment(user))) {
       router.push('/admin');
     } else if (!authLoading && user) {
       loadInitialData();
     }
   }, [user, authLoading, router, department]);
+=======
+    if (!authLoading && (!user || user.role !== 'ADMIN')) {
+      router.push('/login');
+    } else if (!authLoading && user) {
+      loadInitialData();
+    }
+  }, [user, authLoading, router, term]);
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
   const loadInitialData = async () => {
     setLoading(true);
     try {
+<<<<<<< HEAD
       // Check all known terms to find any open registration window
       const termsToCheck = ['ALL', openWinForm.term];
       let statusData = null;
@@ -110,6 +130,20 @@ export default function AdminEnrollmentPage() {
       }
       setCourses(courseList);
 
+=======
+      const [statusData, coursesData, studentsData] = await Promise.all([
+        getRegistrationStatus(term),
+        getCourses({ term }),
+        listUsers('STUDENT', 0, 100)
+      ]);
+
+      setWindowStatus(statusData);
+      setCourses(coursesData.courses || coursesData || []);
+      setStudents(studentsData.users || studentsData || []);
+      
+      // Auto-select first course for directory if available
+      const courseList = coursesData.courses || coursesData || [];
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       if (courseList.length > 0) {
         setDirectoryCourseId(courseList[0].id || courseList[0]._id);
       }
@@ -145,7 +179,11 @@ export default function AdminEnrollmentPage() {
     try {
       const payload = {
         semester: parseInt(openWinForm.semester),
+<<<<<<< HEAD
         term: openWinForm.term,
+=======
+        term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         start_date: new Date(openWinForm.start_date).toISOString(),
         end_date: new Date(openWinForm.end_date).toISOString()
       };
@@ -160,10 +198,17 @@ export default function AdminEnrollmentPage() {
   };
 
   const handleCloseWindow = async () => {
+<<<<<<< HEAD
     if (!confirm(`Are you sure you want to close the registration window? Students will no longer be able to modify courses.`)) return;
     setSubmitting(true);
     try {
       await closeRegistration(windowStatus?.term || openWinForm.term);
+=======
+    if (!confirm(`Are you sure you want to close registration for ${term}? Students will no longer be able to modify courses.`)) return;
+    setSubmitting(true);
+    try {
+      await closeRegistration(term);
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       showSuccess('Registration window closed successfully.');
       loadInitialData();
     } catch (err) {
@@ -185,7 +230,11 @@ export default function AdminEnrollmentPage() {
         forceEnrollForm.student_id,
         forceEnrollForm.course_id,
         forceEnrollForm.reason,
+<<<<<<< HEAD
         'ALL'
+=======
+        term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       );
       showSuccess('Student force enrolled successfully!');
       setForceEnrollForm({ student_id: '', course_id: '', reason: '' });
@@ -249,6 +298,7 @@ export default function AdminEnrollmentPage() {
           </p>
         </div>
 
+<<<<<<< HEAD
         {/* Department Filter */}
         <div className="flex items-center gap-2">
           <label className="text-xs text-slate-400 font-semibold shrink-0">Department:</label>
@@ -262,6 +312,23 @@ export default function AdminEnrollmentPage() {
               <option key={d} value={d} className="bg-slate-900">{d}</option>
             ))}
           </select>
+=======
+        {/* Term Select */}
+        <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 p-1 rounded-lg">
+          {['2024F', '2024S'].map(t => (
+            <button
+              key={t}
+              onClick={() => setTerm(t)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono tracking-wider transition-all ${
+                term === t 
+                  ? 'bg-violet-600 text-white shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         </div>
       </div>
 
@@ -304,7 +371,11 @@ export default function AdminEnrollmentPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Current Period</span>
+<<<<<<< HEAD
                       <h2 className="text-xl font-bold font-heading mt-1">Registration Window{windowStatus?.term && windowStatus.term !== 'ALL' ? ` — ${windowStatus.term}` : ''}</h2>
+=======
+                      <h2 className="text-xl font-bold font-heading mt-1">Registration Window — {term}</h2>
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                     </div>
                     <Badge className={isWindowOpen ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'}>
                       {isWindowOpen ? 'ACTIVE' : 'INACTIVE'}
@@ -336,7 +407,11 @@ export default function AdminEnrollmentPage() {
                     <div className="flex items-center gap-3 p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl text-rose-300">
                       <AlertCircle className="w-5 h-5 shrink-0" />
                       <p className="text-xs">
+<<<<<<< HEAD
                         There is no open registration window. Students cannot enroll in classes.
+=======
+                        There is no open registration window for the {term} term. Students cannot enroll in classes.
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                       </p>
                     </div>
                   )}
@@ -366,6 +441,7 @@ export default function AdminEnrollmentPage() {
                   
                   <form onSubmit={handleOpenWindow} className="space-y-4">
                     <div className="space-y-1.5">
+<<<<<<< HEAD
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Term</label>
                       <select
                         value={openWinForm.term}
@@ -377,6 +453,8 @@ export default function AdminEnrollmentPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Semester target</label>
                       <select
                         value={openWinForm.semester}

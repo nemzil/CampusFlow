@@ -10,7 +10,11 @@ from pymongo import IndexModel, ASCENDING, DESCENDING
 class RegistrationWindow(Document):
     # ═══ Window Details ═══
     semester: int = Field(..., ge=1, le=8)  # 1-8
+<<<<<<< HEAD
     term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
+=======
+    term: str  # "2024F", "2025S"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     start_date: datetime
     end_date: datetime
     status: str = Field(default="OPEN")  # "OPEN", "CLOSED"
@@ -39,7 +43,11 @@ class Enrollment(Document):
     student_username: str  # "2024F-BSE-001"
     course_id: str  # Reference to courses
     course_code: str  # "CS-101T" (denormalized for quick access)
+<<<<<<< HEAD
     term: str  # Auto-resolved: "Fall" -> "2025F"
+=======
+    term: str  # "2024F"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # ═══ Status ═══
     status: str = Field(default="ENROLLED")  # "ENROLLED", "DROPPED", "COMPLETED"
@@ -73,7 +81,11 @@ class Enrollment(Document):
 class RegistrationWindowCreate(BaseModel):
     """Schema for creating registration window"""
     semester: int = Field(..., ge=1, le=8, description="Semester number (1-8)")
+<<<<<<< HEAD
     term: str = Field(..., description="Term: 'Fall' or 'Spring' (auto-resolved with current year)")
+=======
+    term: str = Field(..., description="Term (e.g., 2024F, 2025S)")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     start_date: datetime = Field(..., description="Registration start date")
     end_date: datetime = Field(..., description="Registration end date")
 

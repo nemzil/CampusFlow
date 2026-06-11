@@ -211,7 +211,11 @@ async def create_ai_exam(
         topic=topic,
         teacher_username=teacher_username,
         questions=questions,
+<<<<<<< HEAD
         status="draft"
+=======
+        status="DRAFT"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     )
     await exam.insert()
     return exam
@@ -250,7 +254,11 @@ async def set_ai_exam_live(
     
     update_data = {
         AiExam.is_live: True,
+<<<<<<< HEAD
         AiExam.status: "live"
+=======
+        AiExam.status: "LIVE"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     }
     
     if start_time:
@@ -271,7 +279,11 @@ async def end_ai_exam(exam_id: str) -> AiExam:
     
     await exam.set({
         AiExam.is_live: False,
+<<<<<<< HEAD
         AiExam.status: "ended",
+=======
+        AiExam.status: "COMPLETED",
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         AiExam.ended_at: datetime.now(timezone.utc).isoformat()
     })
     

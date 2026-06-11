@@ -4,16 +4,23 @@ from app.models.assignment import (
     Assignment, Submission,
     AssignmentCreate, AssignmentUpdate, AssignmentResponse,
     SubmissionCreate, SubmissionResponse,
+<<<<<<< HEAD
     GradeSubmission, BulkGradeRequest,
     AiGenerateAssignmentRequest, UpdateAssignmentQuestionRequest,
     AssignmentQuestion
+=======
+    GradeSubmission, BulkGradeRequest
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 )
 from app.models.user import User
 from app.models.course import Course
 from app.api.deps import get_current_user
 from app.services import assignment_service
+<<<<<<< HEAD
 from app.services.ai_grading_service import generate_exam_questions
 from app.utils.academic_term import resolve_term, get_current_academic_term
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 router = APIRouter()
 
@@ -35,7 +42,11 @@ async def get_current_user_object(username: str) -> User:
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_assignment(
     assignment_data: AssignmentCreate,
+<<<<<<< HEAD
     term: str = Query(..., description="Academic term (e.g., 2024F, Fall, Spring)"),
+=======
+    term: str = Query(..., description="Academic term (e.g., 2024F)"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -54,16 +65,23 @@ async def create_assignment(
     if user.role == "TEACHER" and course.teacher_id != user.username:
         raise HTTPException(status_code=403, detail="Not authorized for this course")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term)
     
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     # Create assignment
     teacher_name = f"{user.first_name} {user.last_name}"
     assignment = await assignment_service.create_assignment(
         assignment_data=assignment_data.model_dump(),
         teacher_id=user.username,
         teacher_name=teacher_name,
+<<<<<<< HEAD
         term=resolved_term
+=======
+        term=term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     )
     
     return {
@@ -129,8 +147,11 @@ async def list_course_assignments(
             "max_marks": assignment.max_marks,
             "deadline": assignment.deadline,
             "status": assignment.status,
+<<<<<<< HEAD
             "creation_mode": assignment.creation_mode,
             "questions": [q.model_dump() for q in assignment.questions],
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             "submission_count": assignment.submission_count,
             "graded_count": assignment.graded_count,
             "pending_count": pending_count
@@ -141,6 +162,7 @@ async def list_course_assignments(
         "assignments": result
     }
 
+<<<<<<< HEAD
 # ═══════════════════════════════════════════════════════════════════
 # STUDENT VIEWS
 # ═══════════════════════════════════════════════════════════════════
@@ -174,6 +196,8 @@ async def get_my_assignments(
         "total_count": len(assignments)
     }
 
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 @router.get("/{assignment_id}")
 async def get_assignment(
     assignment_id: str,
@@ -282,6 +306,37 @@ async def delete_assignment(
     return result
 
 # ═══════════════════════════════════════════════════════════════════
+<<<<<<< HEAD
+=======
+# STUDENT VIEWS
+# ═══════════════════════════════════════════════════════════════════
+
+@router.get("/my-assignments/list")
+async def get_my_assignments(
+    course_id: Optional[str] = Query(None, description="Filter by course"),
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Get student's assignments with submission status
+    """
+    # Get user
+    user = await get_current_user_object(current_user)
+    if user.role != "STUDENT":
+        raise HTTPException(status_code=403, detail="Only students can view their assignments")
+    
+    # Get assignments
+    assignments = await assignment_service.get_student_assignments(
+        student_id=str(user.id),
+        course_id=course_id
+    )
+    
+    return {
+        "assignments": assignments,
+        "total_count": len(assignments)
+    }
+
+# ═══════════════════════════════════════════════════════════════════
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 # SUBMISSIONS
 # ═══════════════════════════════════════════════════════════════════
 
@@ -371,12 +426,16 @@ async def get_assignment_submissions(
             "is_late": submission.is_late,
             "status": submission.status,
             "marks_obtained": submission.marks_obtained,
+<<<<<<< HEAD
             "max_marks": submission.max_marks,
             "feedback": submission.feedback,
             "graded_at": submission.graded_at,
             "file_url": submission.file_url,
             "text_answer": submission.text_answer,
             "comments": submission.comments,
+=======
+            "graded_at": submission.graded_at
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         })
     
     return {
@@ -494,6 +553,7 @@ async def grade_submission(
         "graded_by": graded_submission.graded_by
     }
 
+<<<<<<< HEAD
 # ═══════════════════════════════════════════════════════════════════
 # AI ASSIGNMENT GENERATION
 # ═══════════════════════════════════════════════════════════════════
@@ -716,6 +776,8 @@ async def ai_grade_submission(
         "details": details
     }
 
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 @router.post("/{assignment_id}/bulk-grade")
 async def bulk_grade(
     assignment_id: str,

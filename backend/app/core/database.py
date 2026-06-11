@@ -13,6 +13,7 @@ from app.models.attendance import AttendanceSession, AttendanceRecord
 from app.models.assignment import Assignment, Submission
 from app.models.forum import ForumChannel, ForumThread, ForumReply, ForumReadStatus
 from app.models.timetable import CourseSchedule
+<<<<<<< HEAD
 from app.models.class_timetable import ClassTimetable
 from app.models.grading import Grade, SemesterGPA, CGPA
 from app.models.fee import Fee, FeeConfig, DepartmentFeeStructure
@@ -30,6 +31,15 @@ async def init_db():
         maxPoolSize=50,
         minPoolSize=5,
     )
+=======
+from app.models.grading import Grade, SemesterGPA, CGPA
+from app.models.fee import Fee, FeeConfig
+from app.models.admit_card import AdmitCard
+
+async def init_db():
+    # Create Motor client
+    client = AsyncIOMotorClient(settings.MONGODB_URI)
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Get database (fallback to "campusflow_db" if not specified in URI)
     try:
@@ -71,6 +81,7 @@ async def init_db():
             CGPA,
             Fee,
             FeeConfig,
+<<<<<<< HEAD
             DepartmentFeeStructure,
             AdmitCard,
             Lecture,
@@ -85,3 +96,9 @@ async def init_db():
         print("db connection warmed up")
     except Exception as e:
         print(f"db warmup warning: {e}")
+=======
+            AdmitCard,
+        ]
+    )
+    print("db initialized")
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

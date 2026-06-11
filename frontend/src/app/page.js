@@ -157,7 +157,10 @@ export default function Home() {
             </span>
           </motion.div>
 
+<<<<<<< HEAD
           <div className="flex items-center gap-2">
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
           <motion.button
             whileHover={{ scale: 1.05, y: -1 }}
             whileTap={{ scale: 0.96 }}
@@ -167,6 +170,7 @@ export default function Home() {
           >
             Get Started
           </motion.button>
+<<<<<<< HEAD
           <motion.button
             whileHover={{ scale: 1.05, y: -1 }}
             whileTap={{ scale: 0.96 }}
@@ -177,6 +181,8 @@ export default function Home() {
             Exam Portal
           </motion.button>
           </div>
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         </div>
       </motion.nav>
 

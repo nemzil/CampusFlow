@@ -119,6 +119,7 @@ async def create_session(
     
     await session.insert()
     
+<<<<<<< HEAD
     # Get enrolled students — check both specific term and 'ALL'
     enrollments = await Enrollment.find(
         Enrollment.course_id == course_id,
@@ -126,6 +127,14 @@ async def create_session(
     ).to_list()
     # Filter by term (support 'ALL' wildcard)
     enrollments = [e for e in enrollments if e.term == term or e.term == "ALL" or term == "ALL"]
+=======
+    # Get enrolled students
+    enrollments = await Enrollment.find(
+        Enrollment.course_id == course_id,
+        Enrollment.term == term,
+        Enrollment.status == "ENROLLED"
+    ).to_list()
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Create attendance records (all ABSENT by default)
     students = []

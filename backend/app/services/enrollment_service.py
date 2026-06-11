@@ -10,6 +10,7 @@ from app.models.user import User
 
 async def check_registration_window_open(term: str) -> RegistrationWindow:
     """Check if registration window is open, raises HTTPException if closed"""
+<<<<<<< HEAD
     # For 'ALL' term, find any open window
     if term == "ALL":
         window = await RegistrationWindow.find_one(RegistrationWindow.status == "OPEN")
@@ -18,6 +19,12 @@ async def check_registration_window_open(term: str) -> RegistrationWindow:
             RegistrationWindow.term == term,
             RegistrationWindow.status == "OPEN"
         )
+=======
+    window = await RegistrationWindow.find_one(
+        RegistrationWindow.term == term,
+        RegistrationWindow.status == "OPEN"
+    )
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     if not window:
         raise HTTPException(
@@ -162,6 +169,7 @@ async def register_student(
     
     # Increment course enrolled_count atomically
     await course.set({Course.enrolled_count: course.enrolled_count + 1})
+<<<<<<< HEAD
     await course.save()
     
     # Automatically recalculate fees for the student
@@ -171,6 +179,8 @@ async def register_student(
     except Exception as e:
         # Don't fail enrollment if fee calculation fails, just log it
         print(f"Warning: Failed to update fees after enrollment: {e}")
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return enrollment
 
@@ -212,12 +222,16 @@ async def drop_course(enrollment_id: str, student_id: str, term: str) -> Dict:
         Enrollment.dropped_at: datetime.now(timezone.utc),
         Enrollment.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await enrollment.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Decrement course enrolled_count
     course = await Course.get(enrollment.course_id)
     if course:
         await course.set({Course.enrolled_count: max(0, course.enrolled_count - 1)})
+<<<<<<< HEAD
         await course.save()
     
     # Automatically recalculate fees for the student
@@ -227,6 +241,8 @@ async def drop_course(enrollment_id: str, student_id: str, term: str) -> Dict:
     except Exception as e:
         # Don't fail drop if fee calculation fails, just log it
         print(f"Warning: Failed to update fees after dropping course: {e}")
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return {
         "message": "Course dropped successfully",
@@ -249,6 +265,7 @@ async def get_available_courses(student_id: str, student: User, term: str) -> Li
         List of courses with eligibility information
     """
     # Get courses for student's semester
+<<<<<<< HEAD
     # If term is 'ALL', don't filter by term
     if term == "ALL":
         courses = await Course.find(
@@ -261,6 +278,13 @@ async def get_available_courses(student_id: str, student: User, term: str) -> Li
             Course.term == term,
             Course.is_active == True
         ).to_list()
+=======
+    courses = await Course.find(
+        Course.semester == student.current_semester,
+        Course.term == term,
+        Course.is_active == True
+    ).to_list()
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Get student's current enrollments for this term
     enrollments = await Enrollment.find(

@@ -10,7 +10,11 @@ from app.models.assignment import Assignment, Submission
 from app.models.course import Course
 from app.models.enrollment import Enrollment
 from app.models.user import User
+<<<<<<< HEAD
 from app.models.todo import Todo, TodoSource
+=======
+from app.models.todo import Todo
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 
 def validate_max_marks(assignment_type: str, number: int, max_marks: int) -> None:
@@ -89,6 +93,7 @@ async def create_assignment_todos(assignment: Assignment) -> None:
     # Create todo for each student
     for enrollment in enrollments:
         todo = Todo(
+<<<<<<< HEAD
             username=enrollment.student_username,
             title=assignment.title,
             description=f"Submit {assignment.type.lower()} by {assignment.deadline.strftime('%B %d, %Y at %I:%M %p')}",
@@ -98,6 +103,18 @@ async def create_assignment_todos(assignment: Assignment) -> None:
             source_id=str(assignment.id),
             source_course=assignment.course_code,
             is_auto_generated=True,
+=======
+            user_id=enrollment.student_id,
+            title=assignment.title,
+            description=f"Submit {assignment.type.lower()} by {assignment.deadline.strftime('%B %d, %Y at %I:%M %p')}",
+            due_date=assignment.deadline,
+            priority="HIGH",
+            status="PENDING",
+            source="ASSIGNMENT",
+            source_id=str(assignment.id),
+            auto_generated=True,
+            course_code=assignment.course_code
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         )
         await todo.insert()
 
@@ -149,6 +166,7 @@ async def create_assignment(
             detail="Deadline cannot be in the past"
         )
     
+<<<<<<< HEAD
     from app.models.assignment import AssignmentQuestion
     # Parse questions if provided (for AI mode)
     questions = []
@@ -158,6 +176,8 @@ async def create_assignment(
         else:
             questions.append(q)
 
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     # Create assignment
     assignment = Assignment(
         course_id=assignment_data["course_id"],
@@ -172,8 +192,11 @@ async def create_assignment(
         deadline=assignment_data["deadline"],
         attachment_urls=assignment_data.get("attachment_urls", []),
         status=assignment_data.get("status", "DRAFT"),
+<<<<<<< HEAD
         creation_mode=assignment_data.get("creation_mode", "MANUAL"),
         questions=questions,
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         term=term,
         created_by=teacher_id
     )
@@ -353,10 +376,14 @@ async def submit_assignment(
     
     # Check if late
     now = datetime.now(timezone.utc)
+<<<<<<< HEAD
     deadline = assignment.deadline
     if deadline.tzinfo is None:
         deadline = deadline.replace(tzinfo=timezone.utc)
     is_late = now > deadline
+=======
+    is_late = now > assignment.deadline
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Create submission
     submission = Submission(
@@ -382,6 +409,7 @@ async def submit_assignment(
     
     # Mark todo as complete
     todo = await Todo.find_one(
+<<<<<<< HEAD
         Todo.username == student_username,
         Todo.source == TodoSource.ASSIGNMENT,
         Todo.source_id == assignment_id
@@ -389,6 +417,18 @@ async def submit_assignment(
 
     if todo:
         await todo.set({Todo.completed: True})
+=======
+        Todo.user_id == student_id,
+        Todo.source == "ASSIGNMENT",
+        Todo.source_id == assignment_id
+    )
+    
+    if todo:
+        await todo.set({
+            Todo.status: "COMPLETED",
+            Todo.completed_at: now
+        })
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return submission
 
@@ -504,8 +544,12 @@ async def bulk_grade_submissions(
 
 async def get_student_assignments(
     student_id: str,
+<<<<<<< HEAD
     course_id: Optional[str] = None,
     term: Optional[str] = None
+=======
+    course_id: Optional[str] = None
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 ) -> List[Dict]:
     """
     Get assignments for student with submission status
@@ -513,11 +557,15 @@ async def get_student_assignments(
     Args:
         student_id: Student's user ID
         course_id: Optional course filter
+<<<<<<< HEAD
         term: Optional term filter
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     Returns:
         List of assignments with submission info
     """
+<<<<<<< HEAD
     # Get student's enrolled courses
     from app.models.enrollment import Enrollment
     enrolled_courses = await Enrollment.find(
@@ -544,6 +592,26 @@ async def get_student_assignments(
     for assignment in assignments:
         # Skip if not enrolled in this course
         if assignment.course_id not in enrolled_course_ids:
+=======
+    # Build query
+    query = Assignment.find(Assignment.status == "PUBLISHED")
+    
+    if course_id:
+        query = query.find(Assignment.course_id == course_id)
+    
+    assignments = await query.to_list()
+    
+    result = []
+    for assignment in assignments:
+        # Check if student is enrolled in course
+        enrollment = await Enrollment.find_one(
+            Enrollment.student_id == student_id,
+            Enrollment.course_id == assignment.course_id,
+            Enrollment.status == "ENROLLED"
+        )
+        
+        if not enrollment:
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             continue
         
         # Get student's submission if exists
@@ -552,6 +620,7 @@ async def get_student_assignments(
             Submission.student_id == student_id
         )
         
+<<<<<<< HEAD
         # Calculate days left (handle both naive and aware datetimes)
         now = datetime.now(timezone.utc)
         deadline = assignment.deadline
@@ -559,6 +628,12 @@ async def get_student_assignments(
             deadline = deadline.replace(tzinfo=timezone.utc)
         days_left = (deadline - now).days
         is_overdue = now > deadline
+=======
+        # Calculate days left
+        now = datetime.now(timezone.utc)
+        days_left = (assignment.deadline - now).days
+        is_overdue = now > assignment.deadline
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         
         assignment_dict = {
             "id": str(assignment.id),
@@ -568,9 +643,14 @@ async def get_student_assignments(
             "title": assignment.title,
             "description": assignment.description,
             "max_marks": assignment.max_marks,
+<<<<<<< HEAD
             "deadline": deadline,
             "attachment_urls": assignment.attachment_urls,
             "questions": [q.model_dump() for q in assignment.questions],
+=======
+            "deadline": assignment.deadline,
+            "attachment_urls": assignment.attachment_urls,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             "days_left": days_left,
             "is_overdue": is_overdue,
             "my_submission": None

@@ -1,16 +1,27 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
+<<<<<<< HEAD
 from typing import Optional, List
 from app.models.grading import (
     Grade, SemesterGPA, CGPA,
     GradeResponse, GradeOverride, UpdateResultMarks,
+=======
+from typing import Optional
+from app.models.grading import (
+    Grade, SemesterGPA, CGPA,
+    GradeResponse, GradeOverride,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     SemesterGPAResponse, CGPAResponse
 )
 from app.models.user import User
 from app.models.course import Course
 from app.api.deps import get_current_user
+<<<<<<< HEAD
 from app.api.permissions import require_exam_management_edit, require_exam_management_view
 from app.services import grading_service
 from app.utils.academic_term import resolve_term, get_current_academic_term
+=======
+from app.services import grading_service
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 router = APIRouter()
 
@@ -32,7 +43,11 @@ async def get_current_user_object(username: str) -> User:
 @router.post("/calculate")
 async def calculate_grades(
     course_id: str = Query(..., description="Course ID"),
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term (e.g., 2024F, Fall, Spring)"),
+=======
+    term: str = Query(..., description="Term (e.g., 2024F)"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -49,6 +64,7 @@ async def calculate_grades(
         if not course or course.teacher_id != user.username:
             raise HTTPException(status_code=403, detail="Not authorized for this course")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -56,6 +72,12 @@ async def calculate_grades(
     result = await grading_service.calculate_course_grades(
         course_id=course_id,
         term=resolved_term
+=======
+    # Calculate grades
+    result = await grading_service.calculate_course_grades(
+        course_id=course_id,
+        term=term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     )
     
     return result
@@ -63,7 +85,11 @@ async def calculate_grades(
 @router.get("/course/{course_id}")
 async def get_course_grades(
     course_id: str,
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term (e.g., 2024F, Fall, Spring)"),
+=======
+    term: str = Query(..., description="Term (e.g., 2024F)"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -85,6 +111,7 @@ async def get_course_grades(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -92,6 +119,12 @@ async def get_course_grades(
     grades = await Grade.find(
         Grade.course_id == course_id,
         Grade.term == resolved_term
+=======
+    # Get grades
+    grades = await Grade.find(
+        Grade.course_id == course_id,
+        Grade.term == term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     ).to_list()
     
     # Build response
@@ -116,7 +149,11 @@ async def get_course_grades(
     return {
         "course_code": course.course_code,
         "course_name": course.course_name,
+<<<<<<< HEAD
         "term": resolved_term,
+=======
+        "term": term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         "status": grades[0].status if grades else "NOT_CALCULATED",
         "grades": result
     }
@@ -128,7 +165,11 @@ async def get_course_grades(
 @router.post("/publish")
 async def publish_grades(
     course_id: str = Query(..., description="Course ID"),
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term"),
+=======
+    term: str = Query(..., description="Term"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -145,6 +186,7 @@ async def publish_grades(
         if not course or course.teacher_id != user.username:
             raise HTTPException(status_code=403, detail="Not authorized for this course")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -152,6 +194,12 @@ async def publish_grades(
     result = await grading_service.publish_course_grades(
         course_id=course_id,
         term=resolved_term,
+=======
+    # Publish grades
+    result = await grading_service.publish_course_grades(
+        course_id=course_id,
+        term=term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         publisher_username=user.username
     )
     
@@ -160,7 +208,11 @@ async def publish_grades(
 @router.post("/unpublish")
 async def unpublish_grades(
     course_id: str = Query(..., description="Course ID"),
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term"),
+=======
+    term: str = Query(..., description="Term"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     reason: str = Query(..., description="Reason for unpublishing"),
     current_user: str = Depends(get_current_user)
 ):
@@ -178,6 +230,7 @@ async def unpublish_grades(
         if not course or course.teacher_id != user.username:
             raise HTTPException(status_code=403, detail="Not authorized for this course")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -185,6 +238,12 @@ async def unpublish_grades(
     result = await grading_service.unpublish_course_grades(
         course_id=course_id,
         term=resolved_term,
+=======
+    # Unpublish grades
+    result = await grading_service.unpublish_course_grades(
+        course_id=course_id,
+        term=term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         reason=reason
     )
     
@@ -261,7 +320,11 @@ async def get_my_grade(
 
 @router.get("/my-grades/all")
 async def get_all_my_grades(
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term (e.g., 2024F, Fall, Spring)"),
+=======
+    term: str = Query(..., description="Term (e.g., 2024F)"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -272,6 +335,7 @@ async def get_all_my_grades(
     if user.role != "STUDENT":
         raise HTTPException(status_code=403, detail="Only students can view their grades")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -279,6 +343,12 @@ async def get_all_my_grades(
     grades = await grading_service.get_student_grades_for_term(
         student_id=str(user.id),
         term=resolved_term
+=======
+    # Get grades
+    grades = await grading_service.get_student_grades_for_term(
+        student_id=str(user.id),
+        term=term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     )
     
     # Build response
@@ -301,7 +371,11 @@ async def get_all_my_grades(
         try:
             gpa_record = await grading_service.calculate_semester_gpa(
                 student_id=str(user.id),
+<<<<<<< HEAD
                 term=resolved_term
+=======
+                term=term
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             )
             semester_gpa = gpa_record.semester_gpa
             total_credits = gpa_record.total_credits
@@ -309,7 +383,11 @@ async def get_all_my_grades(
             pass
     
     return {
+<<<<<<< HEAD
         "term": resolved_term,
+=======
+        "term": term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         "courses": courses,
         "semester_gpa": semester_gpa,
         "total_credits": total_credits
@@ -321,7 +399,11 @@ async def get_all_my_grades(
 
 @router.get("/gpa")
 async def get_semester_gpa(
+<<<<<<< HEAD
     term: Optional[str] = Query(None, description="Term (e.g., 2024F, Fall, Spring)"),
+=======
+    term: str = Query(..., description="Term (e.g., 2024F)"),
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     current_user: str = Depends(get_current_user)
 ):
     """
@@ -332,6 +414,7 @@ async def get_semester_gpa(
     if user.role != "STUDENT":
         raise HTTPException(status_code=403, detail="Only students can view their GPA")
     
+<<<<<<< HEAD
     # Resolve term
     resolved_term = resolve_term(term) if term else get_current_academic_term()
 
@@ -343,6 +426,16 @@ async def get_semester_gpa(
     
     return {
         "term": resolved_term,
+=======
+    # Calculate/get semester GPA
+    gpa_record = await grading_service.calculate_semester_gpa(
+        student_id=str(user.id),
+        term=term
+    )
+    
+    return {
+        "term": term,
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         "courses": gpa_record.courses,
         "semester_gpa": gpa_record.semester_gpa,
         "total_credits": gpa_record.total_credits,
@@ -419,6 +512,7 @@ async def override_grade(
         "reason": override_data.reason,
         "overridden_at": grade.overridden_at
     }
+<<<<<<< HEAD
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -591,3 +685,5 @@ async def get_my_transcript(
         raise HTTPException(status_code=403, detail="Only students can download transcript")
     resolved_term = resolve_term(term) if term else get_current_academic_term()
     return await grading_service.get_student_transcript(str(user.id), resolved_term)
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

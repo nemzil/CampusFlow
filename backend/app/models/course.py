@@ -32,7 +32,11 @@ class Course(Document):
     teacher_name: Optional[str] = None  # Full name for display
     
     # ═══ Term/Semester Offering ═══
+<<<<<<< HEAD
     term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
+=======
+    term: str  # "2024F", "2025S" (Fall/Spring)
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # ═══ Enrollment Management ═══
     max_students: int = 60  # Maximum enrollment capacity
@@ -73,7 +77,11 @@ class CourseCreate(BaseModel):
     prerequisites: List[str] = []
     description: Optional[str] = None
     objectives: Optional[List[str]] = []
+<<<<<<< HEAD
     term: str  # "Fall" or "Spring" (auto-resolved to "2025F", "2025S")
+=======
+    term: str  # "2024F", "2025S"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     max_students: int = 60
 
 class CourseUpdate(BaseModel):

@@ -1,10 +1,15 @@
 from beanie import Document
 from pydantic import BaseModel, Field
+<<<<<<< HEAD
 from typing import Optional, List, Any
+=======
+from typing import Optional, List
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 from datetime import datetime, timezone
 from pymongo import IndexModel, ASCENDING, DESCENDING
 
 # ---------------------------------------------------------
+<<<<<<< HEAD
 # Assignment Question (for AI-generated assignments)
 # ---------------------------------------------------------
 class AssignmentQuestion(BaseModel):
@@ -14,10 +19,13 @@ class AssignmentQuestion(BaseModel):
     max_marks: int = Field(default=5)
 
 # ---------------------------------------------------------
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 # Assignment Model
 # ---------------------------------------------------------
 class Assignment(Document):
     # ═══ Course & Teacher ═══
+<<<<<<< HEAD
     course_id: str
     course_code: str
     teacher_id: str
@@ -39,6 +47,25 @@ class Assignment(Document):
     # ═══ Status ═══
     status: str = Field(default="DRAFT")  # "DRAFT", "PUBLISHED"
     term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
+=======
+    course_id: str  # Reference to courses
+    course_code: str  # "CS-101T" (denormalized)
+    teacher_id: str  # Reference to users
+    teacher_name: str  # Denormalized for quick access
+    
+    # ═══ Assignment Details ═══
+    type: str  # "ASSIGNMENT", "QUIZ"
+    number: int = Field(..., ge=1, le=3)  # 1, 2, or 3
+    title: str
+    description: str
+    max_marks: int  # 3, 3, or 4 based on number
+    deadline: datetime
+    attachment_urls: List[str] = Field(default_factory=list)  # Cloudinary URLs
+    
+    # ═══ Status ═══
+    status: str = Field(default="DRAFT")  # "DRAFT", "PUBLISHED"
+    term: str  # "2024F"
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # ═══ Statistics ═══
     submission_count: int = Field(default=0)
@@ -47,7 +74,11 @@ class Assignment(Document):
     # ═══ Metadata ═══
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+<<<<<<< HEAD
     created_by: str
+=======
+    created_by: str  # Teacher username
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
     class Settings:
         name = "assignments"
@@ -114,8 +145,11 @@ class AssignmentCreate(BaseModel):
     deadline: datetime = Field(..., description="Submission deadline")
     attachment_urls: List[str] = Field(default_factory=list, description="Cloudinary URLs for attachments")
     status: str = Field(default="DRAFT", description="DRAFT or PUBLISHED")
+<<<<<<< HEAD
     creation_mode: str = Field(default="MANUAL", description="MANUAL or AI")
     questions: List[Any] = Field(default_factory=list, description="AI-generated questions")
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 class AssignmentUpdate(BaseModel):
     """Schema for updating assignment"""
@@ -190,6 +224,7 @@ class BulkGrade(BaseModel):
 class BulkGradeRequest(BaseModel):
     """Schema for bulk grading request"""
     grades: List[BulkGrade]
+<<<<<<< HEAD
 
 class AiGenerateAssignmentRequest(BaseModel):
     """Schema for AI assignment generation"""
@@ -204,3 +239,5 @@ class AiGenerateAssignmentRequest(BaseModel):
 class UpdateAssignmentQuestionRequest(BaseModel):
     """Schema for updating a single AI-generated question"""
     question: str = Field(..., min_length=1)
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

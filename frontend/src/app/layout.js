@@ -35,7 +35,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+<<<<<<< HEAD
     <html lang="en" data-scroll-behavior="smooth" className={`dark ${sora.variable} ${dmSans.variable}`}>
+=======
+    <html lang="en" className={`dark ${sora.variable} ${dmSans.variable}`}>
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       <body suppressHydrationWarning
         className={`${plusJakarta.variable} ${inter.variable} antialiased`}
       >

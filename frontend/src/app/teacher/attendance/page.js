@@ -28,7 +28,11 @@ export default function TeacherAttendancePage() {
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
 
+<<<<<<< HEAD
   const [term] = useState('ALL');
+=======
+  const [term, setTerm] = useState('2024F');
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -462,9 +466,12 @@ export default function TeacherAttendancePage() {
                   {new Date(activeSession.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
                 <h3 className="font-heading font-bold text-base mt-1">Mark Attendance Sheets</h3>
+<<<<<<< HEAD
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   Total enrolled: <span className="font-bold text-white">{sessionStudents.length}</span> students
                 </p>
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
               </div>
               <button onClick={() => setShowMarkerDialog(false)} className="text-slate-400 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
@@ -534,6 +541,7 @@ export default function TeacherAttendancePage() {
             </div>
 
             {/* Save Actions */}
+<<<<<<< HEAD
             <div className="p-4 bg-black/25 border-t border-white/5 flex items-center justify-between shrink-0">
               <span className="text-[10px] text-slate-500">
                 <span className="text-emerald-400 font-bold">{sessionStudents.filter(s => s.status === 'PRESENT').length}</span> present &nbsp;/&nbsp;
@@ -541,6 +549,9 @@ export default function TeacherAttendancePage() {
                 <span className="text-white font-bold">{sessionStudents.length}</span> total
               </span>
               <div className="flex gap-2.5">
+=======
+            <div className="p-4 bg-black/25 border-t border-white/5 flex justify-end gap-2.5 shrink-0">
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
               <Button
                 variant="ghost"
                 onClick={() => setShowMarkerDialog(false)}
@@ -557,7 +568,10 @@ export default function TeacherAttendancePage() {
                   {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Save className="w-3.5 h-3.5" /> Save Sheets</>}
                 </Button>
               )}
+<<<<<<< HEAD
               </div>
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             </div>
           </motion.div>
         </div>

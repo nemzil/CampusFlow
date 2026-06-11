@@ -72,6 +72,15 @@ async def calculate_fees(student_id: str, semester: str) -> Dict:
         Enrollment.status == "ENROLLED"
     ).to_list()
     
+<<<<<<< HEAD
+=======
+    if not enrollments:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No enrollments found for semester {semester}"
+        )
+    
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     # Calculate fees
     courses_breakdown = []
     total_credit_hours = 0
@@ -100,8 +109,12 @@ async def calculate_fees(student_id: str, semester: str) -> Dict:
     )
     
     if existing_fee:
+<<<<<<< HEAD
         # Update existing fee record (even if payment is submitted)
         # Admin can force recalculate
+=======
+        # Update existing fee record
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         await existing_fee.set({
             Fee.courses: courses_breakdown,
             Fee.total_credit_hours: total_credit_hours,
@@ -111,7 +124,10 @@ async def calculate_fees(student_id: str, semester: str) -> Dict:
             Fee.deadline: config.payment_deadline,
             Fee.updated_at: datetime.now(timezone.utc)
         })
+<<<<<<< HEAD
         await existing_fee.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         fee_record = existing_fee
     else:
         # Create new fee record
@@ -183,7 +199,10 @@ async def generate_voucher(student_id: str, semester: str) -> Dict:
             Fee.voucher_generated_at: datetime.now(timezone.utc),
             Fee.updated_at: datetime.now(timezone.utc)
         })
+<<<<<<< HEAD
         await fee_record.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Note: PDF generation would happen here
     # For now, we'll return voucher details without actual PDF
@@ -257,7 +276,10 @@ async def submit_payment(
         Fee.status: "pending_verification",
         Fee.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await fee_record.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     payment_id = str(fee_record.id)
     
@@ -377,7 +399,10 @@ async def verify_payment(payment_id: str, verified_by: str, notes: Optional[str]
         Fee.verified_at: datetime.now(timezone.utc),
         Fee.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await fee_record.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return {
         "payment_id": payment_id,
@@ -425,7 +450,10 @@ async def reject_payment(payment_id: str, rejected_by: str, reason: str) -> Dict
         Fee.rejection_reason: reason,
         Fee.updated_at: datetime.now(timezone.utc)
     })
+<<<<<<< HEAD
     await fee_record.save()
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return {
         "payment_id": payment_id,

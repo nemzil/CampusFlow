@@ -37,7 +37,10 @@ class ManualExamResponse(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     live: bool
+<<<<<<< HEAD
     status: str = "draft"
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     questions: List[ManualQuestionSchema]
 
 

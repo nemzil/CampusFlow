@@ -25,7 +25,10 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+<<<<<<< HEAD
 import { canViewCourseManagement, canEditCourseManagement } from '@/lib/adminAccess';
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 export default function AdminCoursesPage() {
   const router = useRouter();
@@ -51,15 +54,22 @@ export default function AdminCoursesPage() {
   const [selectedCourseForTeacher, setSelectedCourseForTeacher] = useState(null);
 
   useEffect(() => {
+<<<<<<< HEAD
     if (!authLoading && (!user || !canViewCourseManagement(user))) {
+=======
+    if (!authLoading && (!user || user.role !== 'ADMIN')) {
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       router.push('/login');
     } else if (!authLoading && user) {
       fetchData();
     }
   }, [user, authLoading, router, semesterFilter, termFilter, typeFilter, categoryFilter]);
 
+<<<<<<< HEAD
   const canEdit = canEditCourseManagement(user);
 
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -169,6 +179,7 @@ export default function AdminCoursesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
+<<<<<<< HEAD
           <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">
             {canEdit ? 'Academics' : 'View Only'}
           </Badge>
@@ -185,6 +196,16 @@ export default function AdminCoursesPage() {
           <Plus className="w-4 h-4 mr-2" /> Add Course
         </Button>
         )}
+=======
+          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Academics</Badge>
+          <h1 className="text-3xl font-bold font-heading text-white tracking-tight">Course Management</h1>
+          <p className="text-slate-400 mt-1 font-sans">Create and manage course configurations, prerequisite trees, and faculty assignments.</p>
+        </div>
+        
+        <Button onClick={openCreateModal} className="bg-violet-600 hover:bg-violet-500 text-white shadow-[0_0_15px_rgba(124,58,237,0.4)] shrink-0 self-start sm:self-center">
+          <Plus className="w-4 h-4 mr-2" /> Add Course
+        </Button>
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       </div>
 
       {/* Filters & Search Control */}
@@ -217,7 +238,10 @@ export default function AdminCoursesPage() {
                 <SelectItem value="ALL">All Types</SelectItem>
                 <SelectItem value="CORE">Core</SelectItem>
                 <SelectItem value="ELECTIVE">Elective</SelectItem>
+<<<<<<< HEAD
                 <SelectItem value="COMPULSORY">Compulsory</SelectItem>
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
               </SelectContent>
             </Select>
           </div>
@@ -246,8 +270,14 @@ export default function AdminCoursesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Terms</SelectItem>
+<<<<<<< HEAD
                 <SelectItem value="Fall">Fall</SelectItem>
                 <SelectItem value="Spring">Spring</SelectItem>
+=======
+                <SelectItem value="2024F">Fall 2024 (2024F)</SelectItem>
+                <SelectItem value="2025S">Spring 2025 (2025S)</SelectItem>
+                <SelectItem value="2025F">Fall 2025 (2025F)</SelectItem>
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
               </SelectContent>
             </Select>
           </div>
@@ -362,7 +392,10 @@ export default function AdminCoursesPage() {
                       )}
 
                       {/* Action buttons */}
+<<<<<<< HEAD
                       {canEdit && (
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                       <div className="flex gap-2 pt-3 border-t border-white/5 mt-auto shrink-0">
                         <Button variant="secondary" size="sm" onClick={() => openEditModal(course)} className="flex-1 bg-white/5 hover:bg-white/10 text-white h-8 text-xs">
                           <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
@@ -398,7 +431,10 @@ export default function AdminCoursesPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
+<<<<<<< HEAD
                       )}
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -449,7 +485,11 @@ function CourseModal({ course, allCourseCodes, onClose, onSuccess }) {
     category: course ? course.category : 'TH',
     semester: course ? course.semester : 1,
     credit_hours: course ? course.credit_hours : 3,
+<<<<<<< HEAD
     term: course ? course.term : 'Fall',
+=======
+    term: course ? course.term : '2024F',
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     department: course ? (course.department || 'Software Engineering') : 'Software Engineering',
     max_students: course ? (course.max_students || 60) : 60,
     description: course ? (course.description || '') : '',
@@ -583,7 +623,10 @@ function CourseModal({ course, allCourseCodes, onClose, onSuccess }) {
                   <SelectContent>
                     <SelectItem value="core">Core</SelectItem>
                     <SelectItem value="elective">Elective</SelectItem>
+<<<<<<< HEAD
                     <SelectItem value="compulsory">Compulsory</SelectItem>
+=======
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                   </SelectContent>
                 </Select>
               </div>
@@ -657,8 +700,14 @@ function CourseModal({ course, allCourseCodes, onClose, onSuccess }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+<<<<<<< HEAD
                     <SelectItem value="Fall">Fall</SelectItem>
                     <SelectItem value="Spring">Spring</SelectItem>
+=======
+                    <SelectItem value="2024F">Fall 2024 (2024F)</SelectItem>
+                    <SelectItem value="2025S">Spring 2025 (2025S)</SelectItem>
+                    <SelectItem value="2025F">Fall 2025 (2025F)</SelectItem>
+>>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                   </SelectContent>
                 </Select>
               </div>
