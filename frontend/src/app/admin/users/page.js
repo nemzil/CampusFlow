@@ -30,10 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-<<<<<<< HEAD
 import { canAccessFullAdminConsole } from '@/lib/adminAccess';
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 export default function UsersManagementPage() {
   const router = useRouter();
@@ -54,11 +51,8 @@ export default function UsersManagementPage() {
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
       router.push('/login');
-<<<<<<< HEAD
     } else if (!authLoading && user && !canAccessFullAdminConsole(user)) {
       router.push('/admin');
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     } else if (!authLoading && user) {
       fetchUsers();
     }
@@ -276,15 +270,12 @@ export default function UsersManagementPage() {
                           <span className="truncate">{u.department}</span>
                         </div>
                       )}
-<<<<<<< HEAD
                       {u.role === 'ADMIN' && (
                         <div className="flex items-center gap-2 text-sm text-slate-300">
                           <ShieldCheck className="w-4 h-4 text-slate-500" />
                           <span className="truncate">Level: {u.admin_level || 'ADMIN'}</span>
                         </div>
                       )}
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                     </div>
 
                     <div className="flex gap-2 mt-auto pt-4 border-t border-white/5">
@@ -471,12 +462,9 @@ function RegisterModal({ type, onClose, onSuccess }) {
                           <SelectContent>
                             <SelectItem value="ADMIN">Admin</SelectItem>
                             <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-<<<<<<< HEAD
                             <SelectItem value="FEE_MANAGEMENT_ADMIN">Fee Management Admin</SelectItem>
                             <SelectItem value="COURSE_MANAGEMENT_ADMIN">Course Management Admin</SelectItem>
                             <SelectItem value="EXAM_MANAGEMENT_ADMIN">Exam Management Admin</SelectItem>
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                           </SelectContent>
                         </Select>
                       </div>
@@ -509,12 +497,8 @@ function EditModal({ user, onClose, onSuccess }) {
     first_name: user.first_name || '', last_name: user.last_name || '', email: user.email || '', cell_no: user.cell_no || '', address: user.address || '',
     date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : '', nic: user.nic || '', gender: user.gender || '', department: user.department || '', program: user.program || '', batch: user.batch || '', current_semester: user.current_semester || '', guardian_name: user.guardian_name || '', guardian_cnic: user.guardian_cnic || '', guardian_contact: user.guardian_contact || '',
     employee_id: user.employee_id || '', designation: user.designation || '', qualification: user.qualification || '', specialization: user.specialization || '', office_location: user.office_location || '',
-<<<<<<< HEAD
     admin_level: user.admin_level || '',
     new_username: '', new_password: '',
-=======
-    admin_level: user.admin_level || ''
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   });
 
   const handleSubmit = async (e) => {
@@ -523,15 +507,11 @@ function EditModal({ user, onClose, onSuccess }) {
     try {
       const updates = {};
       Object.keys(formData).forEach(key => {
-<<<<<<< HEAD
         if (key === 'new_username' || key === 'new_password') {
           if (formData[key] !== '') updates[key] = formData[key];
         } else if (formData[key] !== '' && formData[key] !== user[key]) {
           updates[key] = formData[key];
         }
-=======
-        if (formData[key] !== '' && formData[key] !== user[key]) updates[key] = formData[key];
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       });
       await adminEditUser(user.username, updates);
       showSuccess('User updated successfully!');
@@ -575,7 +555,6 @@ function EditModal({ user, onClose, onSuccess }) {
                   <div className="md:col-span-2">
                     <FormGroupCompact label="Address" name="address" value={formData.address} onChange={handleChange} />
                   </div>
-<<<<<<< HEAD
 
                   {/* ── Login Credentials ── */}
                   <div className="md:col-span-4 pt-1 pb-0.5">
@@ -584,8 +563,6 @@ function EditModal({ user, onClose, onSuccess }) {
                   </div>
                   <FormGroupCompact label="New Username" name="new_username" value={formData.new_username} onChange={handleChange} placeholder={`Current: ${user.username}`} />
                   <FormGroupCompact label="New Password" name="new_password" type="password" value={formData.new_password} onChange={handleChange} placeholder="Min 6 characters" />
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                   
                   {user.role === 'STUDENT' && (
                     <>
@@ -634,12 +611,9 @@ function EditModal({ user, onClose, onSuccess }) {
                         <SelectContent>
                           <SelectItem value="ADMIN">Admin</SelectItem>
                           <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-<<<<<<< HEAD
                           <SelectItem value="FEE_MANAGEMENT_ADMIN">Fee Management Admin</SelectItem>
                           <SelectItem value="COURSE_MANAGEMENT_ADMIN">Course Management Admin</SelectItem>
                           <SelectItem value="EXAM_MANAGEMENT_ADMIN">Exam Management Admin</SelectItem>
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                         </SelectContent>
                       </Select>
                     </div>
@@ -692,11 +666,7 @@ function BulkUploadModal({ onClose, onSuccess }) {
     } else if (type === 'teacher') {
       csv = 'username,password,email,first_name,last_name,employee_id,department,designation,qualification,specialization,office_location,cell_no,address\nahmedkhan,teacher123,akhan@ssuet.edu.pk,Ahmed,Khan,EMP-001,CS,Lecturer,PhD,ML,Room 301,0300-1234567,Karachi\n';
     } else if (type === 'admin') {
-<<<<<<< HEAD
       csv = 'username,password,email,first_name,last_name,admin_level,cell_no\nadmin2,admin123,a2@ssuet.edu.pk,Sarah,Ahmed,COURSE_MANAGEMENT_ADMIN,0300-1234567\n';
-=======
-      csv = 'username,password,email,first_name,last_name,admin_level,cell_no\nadmin2,admin123,a2@ssuet.edu.pk,Sarah,Ahmed,ADMIN,0300-1234567\n';
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     }
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

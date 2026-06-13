@@ -4,7 +4,6 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
-<<<<<<< HEAD
 
 /**
  * Get the current academic term based on the current date.
@@ -63,5 +62,3 @@ export function resolveTerm(term) {
   
   return term;
 }
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

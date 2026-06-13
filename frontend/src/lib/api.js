@@ -33,17 +33,10 @@ async function apiRequest(url, options = {}) {
     clearTimeout(timeoutId);
     
     if (response.status === 401) {
-<<<<<<< HEAD
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       const portal = localStorage.getItem('portal');
       window.location.href = portal === 'exam-portal' ? '/exam-portal/login' : '/login';
-=======
-      // Token expired, redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       throw new Error('Session expired');
     }
     
@@ -467,29 +460,22 @@ export async function endAiExam(examId) {
 }
 
 export async function loadAiExam(examId, className) {
-<<<<<<< HEAD
   console.log('loadAiExam called with:', { examId, className });
   const url = `${API_BASE}/ai-exams/student/load`;
   console.log('Request URL:', url);
   console.log('Request body:', { exam_id: examId, class_name: className });
   
   return apiRequest(url, {
-=======
-  return apiRequest(`${API_BASE}/ai-exams/student/load`, {
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     method: 'POST',
     body: JSON.stringify({ exam_id: examId, class_name: className })
   });
 }
 
 export async function submitAiExam(examId, className, answers) {
-<<<<<<< HEAD
   console.log('submitAiExam called with:', { examId, className, answersCount: answers.length });
   console.log('Request URL:', `${API_BASE}/ai-exams/student/submit`);
   console.log('Request body:', { exam_id: examId, class_name: className, answers });
   
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   return apiRequest(`${API_BASE}/ai-exams/student/submit`, {
     method: 'POST',
     body: JSON.stringify({ exam_id: examId, class_name: className, answers })
@@ -533,7 +519,6 @@ export async function getStudentExamStats() {
   return apiRequest(`${API_BASE}/ai-exams/student/statistics`);
 }
 
-<<<<<<< HEAD
 export async function deleteAiExam(examId) {
   return apiRequest(`${API_BASE}/ai-exams/${examId}`, { method: 'DELETE' });
 }
@@ -542,8 +527,6 @@ export async function deleteManualExam(examId) {
   return apiRequest(`${API_BASE}/manual-exams/${examId}`, { method: 'DELETE' });
 }
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 // ═══════════════════════════════════════════════════════════════════
 // COURSES & SECTIONS (MODULE 06)
 // ═══════════════════════════════════════════════════════════════════
@@ -813,7 +796,6 @@ export async function getStudentAssignments(courseId = null) {
   return apiRequest(`${API_BASE}/assignments/my-assignments/list${query}`);
 }
 
-<<<<<<< HEAD
 export async function uploadPdf(file) {
   const formData = new FormData();
   formData.append('file', file);
@@ -830,8 +812,6 @@ export async function uploadPdf(file) {
   return response.json();
 }
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 export async function submitAssignment(assignmentId, submissionData) {
   return apiRequest(`${API_BASE}/assignments/${assignmentId}/submit`, {
     method: 'POST',
@@ -854,15 +834,12 @@ export async function gradeSubmission(submissionId, marksObtained, feedback) {
   });
 }
 
-<<<<<<< HEAD
 export async function aiGradeSubmission(submissionId) {
   return apiRequest(`${API_BASE}/assignments/submissions/${submissionId}/ai-grade`, {
     method: 'POST'
   });
 }
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 export async function bulkGradeSubmissions(assignmentId, gradesList) {
   return apiRequest(`${API_BASE}/assignments/${assignmentId}/bulk-grade`, {
     method: 'POST',
@@ -870,7 +847,6 @@ export async function bulkGradeSubmissions(assignmentId, gradesList) {
   });
 }
 
-<<<<<<< HEAD
 export async function aiGenerateAssignment(requestData, term) {
   return apiRequest(`${API_BASE}/assignments/ai-generate?term=${term}`, {
     method: 'POST',
@@ -1181,8 +1157,3 @@ export async function getMyAdmitCard() {
 export async function getMyInvigilationDuties() {
   return apiRequest(`${API_BASE}/exam-schedule/teacher/my-invigilation`);
 }
-=======
-
-
-
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

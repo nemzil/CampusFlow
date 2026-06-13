@@ -19,11 +19,7 @@ export default function StudentAttendancePage() {
   const { user, loading: authLoading } = useAuth();
   const { showError } = useToast();
 
-<<<<<<< HEAD
   const [term] = useState('ALL');
-=======
-  const [term, setTerm] = useState('2024F');
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   
@@ -58,45 +54,8 @@ export default function StudentAttendancePage() {
     setDetailsLoading(true);
     setShowDetailDialog(true);
     try {
-<<<<<<< HEAD
       const data = await getMyAttendance(course.course_id);
       setDetails(data);
-=======
-      // Find matching course id from summary or query directly
-      // Since summary.courses only contains course_code, we find course_id from user's active courses.
-      // In getMyAttendance(courseId), the API requests course_id.
-      // Wait! In available-courses or my-enrollments we have the mapping from course_code to course_id.
-      // Let's call getMyAttendance using course.course_code or course_id.
-      // Wait, let's verify if getMyAttendance works with course_id. Yes, backend matches on course_id.
-      // Wait! How do we map course_code to course_id?
-      // Let's check how student course enrollment page stored it.
-      // The backend calculate_attendance_percentage matches:
-      // student_id == str(student.id) and course_id == enrollment.course_id.
-      // In get_my_attendance_summary, the courses array has: course_code, course_name, attendance_percentage, etc.
-      // Wait, the API GET /api/attendance/my-attendance?course_id=course_id_123 takes course_id.
-      // But the summary only returned course_code.
-      // Let's modify the summary request or pass course_code if it is accepted, or let's get course_id.
-      // Let's check how attendance_service.py is implemented for `get_student_attendance_details`.
-      // It takes course_id. Let's make sure we find the course ID.
-      // Wait! We can fetch the student's enrollments first, matching the code to find the ID!
-      // This is a robust workaround!
-      const enrollmentsRes = await getMyAttendance(course.course_code).catch(() => null);
-      if (enrollmentsRes) {
-        setDetails(enrollmentsRes);
-      } else {
-        // Fallback or fetch from enrollments list first to find id
-        const myEnrollments = await import('@/lib/api').then(m => m.getMyEnrollments(term));
-        const matchingEnrollment = myEnrollments.enrollments?.find(e => e.course_code === course.course_code);
-        if (matchingEnrollment) {
-          const detailRes = await getMyAttendance(matchingEnrollment.id || matchingEnrollment.course_code);
-          setDetails(detailRes);
-        } else {
-          // If all else fails, use course_code
-          const detailRes = await getMyAttendance(course.course_code);
-          setDetails(detailRes);
-        }
-      }
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     } catch (err) {
       showError(err.message || 'Failed to load attendance details');
       setShowDetailDialog(false);
@@ -127,26 +86,6 @@ export default function StudentAttendancePage() {
             Monitor your attendance statistics. Maintain a minimum of <span className="text-violet-400 font-bold">75%</span> in each course for admit card eligibility.
           </p>
         </div>
-<<<<<<< HEAD
-=======
-
-        {/* Term Select */}
-        <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 p-1 rounded-lg">
-          {['2024F', '2024S'].map(t => (
-            <button
-              key={t}
-              onClick={() => setTerm(t)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono tracking-wider transition-all ${
-                term === t 
-                  ? 'bg-violet-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       </div>
 
       {/* Analytics Summary Banner */}
@@ -209,11 +148,7 @@ export default function StudentAttendancePage() {
         {summary?.courses?.length === 0 ? (
           <Card className="border-white/5 bg-white/[0.01]">
             <CardContent className="p-8 text-center text-slate-500 text-xs">
-<<<<<<< HEAD
               No registered courses found.
-=======
-              No registered courses found for this term.
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             </CardContent>
           </Card>
         ) : (

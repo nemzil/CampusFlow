@@ -157,7 +157,6 @@ async def list_ai_exams(
 
 
 # ═══════════════════════════════════════════════════════════
-<<<<<<< HEAD
 # TEACHER: Get all results (MUST BE BEFORE /{exam_id})
 # GET /api/ai-exams/results
 # ═══════════════════════════════════════════════════════════
@@ -200,8 +199,6 @@ async def get_teacher_results(
 
 
 # ═══════════════════════════════════════════════════════════
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 # TEACHER: Get single AI exam
 # GET /api/ai-exams/{exam_id}
 # ═══════════════════════════════════════════════════════════
@@ -213,13 +210,10 @@ async def get_ai_exam(
     """
     Get a single AI exam by ID
     """
-<<<<<<< HEAD
     # Reject reserved keywords that match other routes
     if exam_id in ('results', 'statistics', 'student', 'grade-generic'):
         raise HTTPException(status_code=404, detail="Invalid exam ID")
     
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     from app.models.ai_exam import AiExam
     exam = await AiExam.get(exam_id)
     
@@ -392,7 +386,6 @@ async def load_exam(body: StudentLoadExamRequest):
     def parse_local(s):
         if not s:
             return None
-<<<<<<< HEAD
         # Parse ISO format datetime
         dt = datetime.fromisoformat(s.replace('Z', '+00:00'))
         # Convert to PKT timezone
@@ -401,9 +394,6 @@ async def load_exam(body: StudentLoadExamRequest):
         else:
             dt = dt.astimezone(pkt)
         return dt
-=======
-        return pkt.localize(datetime.fromisoformat(s))
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     start_dt = parse_local(exam.start_time)
     end_dt = parse_local(exam.end_time)
@@ -607,51 +597,6 @@ async def confirm_result(
 
 
 # ═══════════════════════════════════════════════════════════
-<<<<<<< HEAD
-=======
-# TEACHER: Get all results
-# GET /api/ai-exams/results
-# ═══════════════════════════════════════════════════════════
-@router.get("/results", response_model=List[ExamResultResponse])
-async def get_teacher_results(
-    username: str = Depends(get_current_user),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100)
-):
-    """
-    Get all exam results for a teacher
-    """
-    results = await exam_service.get_results(
-        teacher_username=username,
-        skip=skip,
-        limit=limit
-    )
-    
-    from app.models.ai_exam import AiExam
-    
-    response = []
-    for r in results:
-        exam = await AiExam.get(r.exam_id) if r.exam_id else None
-        
-        response.append(ExamResultResponse(
-            result_id=str(r.id),
-            exam_id=r.exam_id,
-            student_username=r.student_username,
-            teacher_username=r.teacher_username,
-            class_name=exam.class_name if exam else r.class_name,
-            subject=exam.subject if exam else r.subject,
-            title=exam.topic if exam else r.title,
-            obtained_marks=r.obtained_marks,
-            total_marks=r.total_marks,
-            checked_at=r.checked_at,
-            source=r.source
-        ))
-    
-    return response
-
-
-# ═══════════════════════════════════════════════════════════
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 # STUDENT: Get own results
 # GET /api/ai-exams/student/results
 # ═══════════════════════════════════════════════════════════
@@ -717,7 +662,6 @@ async def get_student_statistics(username: str = Depends(get_current_user)):
     """
     stats = await exam_service.get_student_statistics(student_username=username)
     return StudentStatisticsResponse(**stats)
-<<<<<<< HEAD
 
 
 # ═══════════════════════════════════════════════════════════
@@ -739,5 +683,3 @@ async def delete_ai_exam(
         raise HTTPException(status_code=400, detail="Only draft exams can be deleted")
     await exam.delete()
     return {"status": "deleted"}
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

@@ -13,11 +13,7 @@ class Grade(Document):
     student_username: str  # "2024F-BSE-001"
     course_id: str  # Reference to courses
     course_code: str  # "CS-101T"
-<<<<<<< HEAD
     term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
-=======
-    term: str  # "2024F"
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     credit_hours: int  # 3
     
     # ═══ Component Marks ═══
@@ -38,7 +34,6 @@ class Grade(Document):
     
     # ═══ Status ═══
     status: str = Field(default="CALCULATED")  # "CALCULATED", "PUBLISHED"
-<<<<<<< HEAD
     workflow_status: str = Field(default="DRAFT")  # DRAFT, SUBMITTED, EXAM_REVIEWED, PUBLISHED
     is_complete: bool = Field(default=False)  # All components graded
     component_feedback: Dict[str, Optional[str]] = Field(default_factory=dict)
@@ -47,9 +42,6 @@ class Grade(Document):
     submitted_by: Optional[str] = None
     exam_reviewed_at: Optional[datetime] = None
     exam_reviewed_by: Optional[str] = None
-=======
-    is_complete: bool = Field(default=False)  # All components graded
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     published_at: Optional[datetime] = None
     published_by: Optional[str] = None
     
@@ -82,11 +74,7 @@ class SemesterGPA(Document):
     # ═══ Student & Term ═══
     student_id: str  # Reference to users
     student_username: str  # "2024F-BSE-001"
-<<<<<<< HEAD
     term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
-=======
-    term: str  # "2024F"
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # ═══ GPA Calculation ═══
     courses: List[Dict] = Field(default_factory=list)
@@ -185,7 +173,6 @@ class GradeResponse(BaseModel):
     class Config:
         from_attributes = True
 
-<<<<<<< HEAD
 class UpdateResultMarks(BaseModel):
     """Teacher/exam dept update for component marks and feedback"""
     student_id: str
@@ -196,8 +183,6 @@ class UpdateResultMarks(BaseModel):
     teacher_remarks: Optional[str] = None
 
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 class GradeOverride(BaseModel):
     """Schema for admin grade override"""
     student_id: str = Field(..., description="Student ID")

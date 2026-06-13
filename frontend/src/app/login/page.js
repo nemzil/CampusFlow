@@ -75,10 +75,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('token', data.access_token);
-<<<<<<< HEAD
       localStorage.removeItem('portal');
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
       const userData = {
         username: data.username,
@@ -315,12 +312,9 @@ export default function LoginPage() {
             <p className="text-sm text-center text-slate-400">
               Forgot your password? Contact administrator.
             </p>
-<<<<<<< HEAD
             <Link href="/exam-portal/login" className="text-sm text-center text-amber-400 hover:text-amber-300 transition-colors">
               Student? Go to Exam Portal login
             </Link>
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
           </CardFooter>
 
         </Card>
