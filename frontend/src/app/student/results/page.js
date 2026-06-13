@@ -104,13 +104,9 @@ export default function StudentResultsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/[0.02] border border-white/5 p-1 rounded-lg">
-            {['2021F', '2022S', '2022F', '2023S', '2023F', '2024S', '2024F', '2025S', '2025F', '2026S'].map(t => (
-              <button key={t} onClick={() => setTerm(t)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono tracking-wider transition-all ${term === t ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
-                {t}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-lg">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Term</span>
+            <span className="px-3 py-1 rounded-md text-xs font-semibold font-mono tracking-wider bg-violet-600 text-white">{term}</span>
           </div>
           {results?.transcript_available && (
             <Button onClick={handleDownloadTranscript} className="bg-emerald-600">

@@ -7,7 +7,8 @@ from typing import List, Optional
 from beanie import PydanticObjectId
 
 from app.models.user import User
-from app.models.exam import ManualQuestion, ManualStudentAnswer
+from app.models.exam import ManualQuestion, ManualStudentAnswer, ManualExam
+from app.models.course import Course
 from app.api.deps import get_current_user
 from app.services import exam_service
 from app.schemas.exam import (
@@ -114,8 +115,12 @@ async def list_manual_exams(
 >>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             id=str(exam.id),
             class_name=exam.className,
+            course_id=exam.courseId,
+            course_code=exam.courseCode,
             subject=exam.subject,
             title=exam.title,
+            exam_type=exam.examType or "midterm",
+            total_marks=exam.totalMarks or 30,
             teacher_username=exam.teacherUsername,
             start_time=exam.startTime,
             end_time=exam.endTime,
@@ -150,22 +155,56 @@ async def create_manual_exam(
     if not user or user.role != "TEACHER":
         raise HTTPException(status_code=403, detail="Only teachers can create exams")
     
+    # Handle both old and new formats
+    class_name = request.get_class_name()
+    subject = request.get_subject()
+    course_id = request.course_id
+    course_code = None
+    
+    # If course_id provided, fetch course details
+    if course_id:
+        course = await Course.get(course_id)
+        if course:
+            subject = course.course_name
+            course_code = course.course_code
+            if not class_name:
+                class_name = course.term
+    
     # Convert schema questions to model questions
     questions = [convert_to_model_question(q) for q in request.questions]
     
     exam = await exam_service.create_manual_exam(
-        class_name=request.class_name,
-        subject=request.subject,
+        class_name=class_name,
+        subject=subject,
         title=request.title,
         teacher_username=username,
         questions=questions
     )
     
+    # Update with new fields if provided
+    if course_id or request.exam_type or request.total_marks:
+        update_fields = {}
+        if course_id:
+            update_fields[ManualExam.courseId] = course_id
+        if course_code:
+            update_fields[ManualExam.courseCode] = course_code
+        if request.exam_type:
+            update_fields[ManualExam.examType] = request.exam_type
+        if request.total_marks:
+            update_fields[ManualExam.totalMarks] = request.total_marks
+        
+        if update_fields:
+            await exam.set(update_fields)
+    
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
+        course_id=exam.courseId,
+        course_code=exam.courseCode,
         subject=exam.subject,
         title=exam.title,
+        exam_type=exam.examType or "midterm",
+        total_marks=exam.totalMarks or 30,
         teacher_username=exam.teacherUsername,
         start_time=exam.startTime,
         end_time=exam.endTime,
@@ -224,8 +263,12 @@ async def get_manual_exam(exam_id: str):
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
+        course_id=exam.courseId,
+        course_code=exam.courseCode,
         subject=exam.subject,
         title=exam.title,
+        exam_type=exam.examType or "midterm",
+        total_marks=exam.totalMarks or 30,
         teacher_username=exam.teacherUsername,
         start_time=exam.startTime,
         end_time=exam.endTime,

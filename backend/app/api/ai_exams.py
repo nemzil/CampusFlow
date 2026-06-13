@@ -27,8 +27,12 @@ def serialize_ai_exam(exam) -> AiExamResponse:
     return AiExamResponse(
         exam_id=str(exam.id),
         class_name=exam.class_name,
+        course_id=exam.course_id,
+        course_code=exam.course_code,
         subject=exam.subject,
         topic=exam.topic,
+        exam_type=exam.exam_type or "midterm",
+        total_marks=exam.total_marks or 30,
         teacher_username=exam.teacher_username,
         is_live=exam.is_live,
         start_time=exam.start_time,
@@ -66,20 +70,62 @@ async def create_ai_exam(
     if not user or user.role != "TEACHER":
         raise HTTPException(status_code=403, detail="Only teachers can create exams")
     
+    # Handle both old and new formats
+    class_name = request.get_class_name()
+    subject = request.get_subject()
+    course_id = request.course_id
+    course_code = None
+    
+    # If course_id provided, fetch course details
+    if course_id:
+        from app.models.course import Course
+        course = await Course.get(course_id)
+        if course:
+            subject = course.course_name
+            course_code = course.course_code
+            if not class_name:
+                class_name = course.term
+    
     # Generate questions using AI
     questions = await ai_grading_service.generate_exam_questions(
         topic=request.topic,
         num_questions=request.num_questions
     )
     
+    # Distribute marks across questions
+    if request.total_marks:
+        marks_per_question = request.total_marks // request.num_questions
+        remainder = request.total_marks % request.num_questions
+        for i, q in enumerate(questions):
+            q.max_marks = marks_per_question + (1 if i < remainder else 0)
+    
     # Create exam
     exam = await exam_service.create_ai_exam(
-        class_name=request.class_name,
-        subject=request.subject,
+        class_name=class_name,
+        subject=subject,
         topic=request.topic,
         teacher_username=username,
         questions=questions
     )
+    
+    # Update with new fields if provided
+    if course_id or request.exam_type or request.total_marks:
+        update_fields = {}
+        if course_id:
+            update_fields["course_id"] = course_id
+        if course_code:
+            update_fields["course_code"] = course_code
+        if request.exam_type:
+            update_fields["exam_type"] = request.exam_type
+        if request.total_marks:
+            update_fields["total_marks"] = request.total_marks
+        
+        if update_fields:
+            from app.models.ai_exam import AiExam
+            await AiExam.get(str(exam.id))
+            for key, value in update_fields.items():
+                setattr(exam, key, value)
+            await exam.save()
     
     return serialize_ai_exam(exam)
 

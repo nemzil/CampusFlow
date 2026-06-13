@@ -27,9 +27,13 @@ class ManualStudentAnswer(BaseModel):
 # ---------------------------------------------------------
 class ManualExam(Document):
     className: str
+    courseId: Optional[str] = None  # NEW: Reference to course
+    courseCode: Optional[str] = None  # NEW: "CS-101T"
     subject: str
     title: str
+    examType: Optional[str] = "midterm"  # NEW: "midterm" or "final" (with default)
     teacherUsername: str
+    totalMarks: Optional[int] = 30  # NEW: Teacher-defined total marks (with default)
     startTime: Optional[datetime] = None
     endTime: Optional[datetime] = None
     live: bool = False
@@ -124,9 +128,11 @@ class ManualExamSubmissionResponse(BaseModel):
 # Request Schemas (External - API)
 # ---------------------------------------------------------
 class CreateManualExamRequest(BaseModel):
-    className: str
-    subject: str
-    title: str
+    batch: str  # Term like "2026F"
+    course_id: str  # Selected course ID
+    exam_type: str  # "midterm" or "final"
+    title: str  # e.g. "Midterm Exam"
+    total_marks: int  # Teacher-defined (30, 40, 50, etc.)
     questions: List[ManualQuestion]
 
 class SetLiveRequest(BaseModel):

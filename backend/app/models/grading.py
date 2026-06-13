@@ -21,17 +21,15 @@ class Grade(Document):
     credit_hours: int  # 3
     
     # ═══ Component Marks ═══
-    components: Dict[str, Optional[float]] = Field(default_factory=dict)
-    # {
-    #   "quiz1": 3.0,
-    #   "quiz2": 2.5,
-    #   "quiz3": 3.5,
-    #   "assignment1": 2.5,
-    #   "assignment2": 3.0,
-    #   "assignment3": 4.0,
-    #   "midterm": 25.0,
-    #   "final": 43.0
-    # }
+    components: Dict[str, Optional[float]] = Field(default_factory=lambda: {
+        "quiz1": None, "quiz2": None, "quiz3": None,
+        "assignment1": None, "assignment2": None, "assignment3": None,
+        "midterm": None, "final": None
+    })
+    
+    # Component max marks (for reference)
+    midterm_max: Optional[int] = 30
+    final_max: Optional[int] = 30
     
     # ═══ Calculated Grade ═══
     total_marks: Optional[float] = None  # 86.5
@@ -153,14 +151,14 @@ class CGPA(Document):
 
 class ComponentMarks(BaseModel):
     """Schema for component marks"""
-    quiz1: Optional[float] = None
-    quiz2: Optional[float] = None
-    quiz3: Optional[float] = None
-    assignment1: Optional[float] = None
-    assignment2: Optional[float] = None
-    assignment3: Optional[float] = None
-    midterm: Optional[float] = None
-    final: Optional[float] = None
+    quiz1: Optional[float] = Field(None, ge=0, le=10)
+    quiz2: Optional[float] = Field(None, ge=0, le=10)
+    quiz3: Optional[float] = Field(None, ge=0, le=10)
+    assignment1: Optional[float] = Field(None, ge=0, le=10)
+    assignment2: Optional[float] = Field(None, ge=0, le=10)
+    assignment3: Optional[float] = Field(None, ge=0, le=10)
+    midterm: Optional[float] = Field(None, ge=0, le=50)
+    final: Optional[float] = Field(None, ge=0, le=50)
 
 class GradeResponse(BaseModel):
     """Schema for grade response"""
@@ -168,7 +166,16 @@ class GradeResponse(BaseModel):
     student_username: str
     course_code: str
     term: str
-    components: Dict[str, Optional[float]]
+    quiz1: Optional[float]
+    quiz2: Optional[float]
+    quiz3: Optional[float]
+    assignment1: Optional[float]
+    assignment2: Optional[float]
+    assignment3: Optional[float]
+    midterm: Optional[float]
+    midterm_max: int
+    final: Optional[float]
+    final_max: int
     total_marks: Optional[float]
     letter_grade: Optional[str]
     grade_points: Optional[float]

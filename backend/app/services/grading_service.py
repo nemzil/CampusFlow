@@ -10,11 +10,9 @@ from app.models.grading import Grade, SemesterGPA, CGPA, convert_to_letter_grade
 from app.models.course import Course
 from app.models.enrollment import Enrollment
 from app.models.assignment import Assignment, Submission
-<<<<<<< HEAD
 from app.models.ai_exam import ExamResult
 from app.models.user import User
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
+from beanie.operators import In
 
 
 async def fetch_component_marks(student_id: str, course_id: str, term: str) -> Dict[str, Optional[float]]:
@@ -78,38 +76,79 @@ async def fetch_component_marks(student_id: str, course_id: str, term: str) -> D
             if submission and submission.marks_obtained is not None:
                 components[f"assignment{i}"] = submission.marks_obtained
     
-<<<<<<< HEAD
-    # Fetch midterm and final exam marks from exam results
+    # Fetch midterm and final exam marks ONLY from teacher-checked submissions
     course = await Course.get(course_id)
     if course:
         student = await User.get(student_id)
         if student:
-            results = await ExamResult.find(
-                ExamResult.student_username == student.username
+            from beanie import PydanticObjectId
+            from app.models.exam import ManualExam, ManualExamSubmission
+            from app.models.ai_exam import AiExam, AiExamSubmission
+
+            # --- Manual exam submissions checked by teacher ---
+            manual_subs = await ManualExamSubmission.find(
+                ManualExamSubmission.studentUsername == student.username,
+                ManualExamSubmission.checkedByTeacher == True,
             ).to_list()
 
-            for result in results:
-                class_ref = (result.class_name or result.subject or "").upper()
-                if course.course_code.upper() not in class_ref and class_ref not in course.course_code.upper():
+            for sub in manual_subs:
+                try:
+                    exam = await ManualExam.get(PydanticObjectId(sub.examId))
+                except Exception:
                     continue
+                if not exam:
+                    continue
+                # Only include if this exam belongs to the current course
+                exam_course_id = getattr(exam, "courseId", None)
+                exam_course_code = getattr(exam, "courseCode", None)
+                if exam_course_id and exam_course_id != course_id:
+                    continue
+                if not exam_course_id and exam_course_code and exam_course_code != course.course_code:
+                    continue
+                exam_type = (getattr(exam, "examType", "") or "").lower()
+                exam_title = (getattr(exam, "title", "") or "").lower()
+                obtained = float(sub.totalMarks or 0)
 
-                title = (result.title or result.subject or "").lower()
+                if "final" in exam_type or "final" in exam_title:
+                    components["final"] = obtained
+                elif "mid" in exam_type or "mid" in exam_title:
+                    components["midterm"] = obtained
+
+            # --- AI exam submissions checked by teacher ---
+            ai_subs = await AiExamSubmission.find(
+                AiExamSubmission.student_username == student.username,
+                AiExamSubmission.checked == True,
+            ).to_list()
+
+            for sub in ai_subs:
+                try:
+                    exam = await AiExam.get(PydanticObjectId(sub.exam_id))
+                except Exception:
+                    continue
+                if not exam:
+                    continue
+                exam_course_id = getattr(exam, "course_id", None)
+                exam_course_code = getattr(exam, "course_code", None)
+                if exam_course_id and exam_course_id != course_id:
+                    continue
+                if not exam_course_id and exam_course_code and exam_course_code != course.course_code:
+                    continue
+                exam_type = (getattr(exam, "exam_type", "") or "").lower()
+                exam_title = (getattr(exam, "topic", "") or "").lower()
+                # Get obtained marks from the ExamResult record
+                result = await ExamResult.find_one(
+                    ExamResult.exam_id == sub.exam_id,
+                    ExamResult.student_username == student.username,
+                )
+                if not result:
+                    continue
                 obtained = float(result.obtained_marks)
-                if "mid" in title or result.total_marks == 30:
-                    components["midterm"] = obtained
-                elif "final" in title or result.total_marks == 50:
-                    components["final"] = obtained
-                elif components["midterm"] is None and result.total_marks <= 30:
-                    components["midterm"] = obtained
-                elif components["final"] is None:
-                    components["final"] = obtained
 
-=======
-    # TODO: Fetch midterm and final exam marks from exam module
-    # This requires integration with the exam system
-    # For now, these will remain None until exam marks are available
-    
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
+                if "final" in exam_type or "final" in exam_title:
+                    components["final"] = obtained
+                elif "mid" in exam_type or "mid" in exam_title:
+                    components["midterm"] = obtained
+
     return components
 
 
@@ -182,7 +221,7 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
     # Get enrolled students
     enrollments = await Enrollment.find(
         Enrollment.course_id == course_id,
-        Enrollment.term == term,
+        In(Enrollment.term, [term, "ALL", "all"]),
         Enrollment.status == "ENROLLED"
     ).to_list()
     
@@ -215,27 +254,32 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
         )
         
         if existing_grade:
-<<<<<<< HEAD
+            # Preserve manual edits by only adding fetched components that are currently None
+            merged = existing_grade.components.copy() if existing_grade.components else {}
+            for k, v in components.items():
+                if merged.get(k) is None and v is not None:
+                    merged[k] = v
+
+            # Recalculate totals based on merged components
+            total_marks = calculate_total_marks(merged)
+            is_complete = is_grade_complete(merged)
+
+            letter_grade, grade_points = None, None
+            if total_marks is not None:
+                letter_grade, grade_points = convert_to_letter_grade(total_marks)
+
             # Update existing grade (preserve workflow if already submitted)
             update_fields = {
-=======
-            # Update existing grade
-            await existing_grade.set({
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
-                Grade.components: components,
+                Grade.components: merged,
                 Grade.total_marks: total_marks,
                 Grade.letter_grade: letter_grade,
                 Grade.grade_points: grade_points,
                 Grade.is_complete: is_complete,
                 Grade.updated_at: datetime.now(timezone.utc)
-<<<<<<< HEAD
             }
             if existing_grade.workflow_status == "DRAFT":
                 update_fields[Grade.status] = "CALCULATED"
             await existing_grade.set(update_fields)
-=======
-            })
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         else:
             # Create new grade
             grade = Grade(
@@ -490,7 +534,6 @@ async def calculate_cgpa(student_id: str) -> CGPA:
     ).to_list()
     
     if not semester_gpas:
-<<<<<<< HEAD
         from app.models.user import User
         user = await User.get(student_id)
         return CGPA(
@@ -501,9 +544,6 @@ async def calculate_cgpa(student_id: str) -> CGPA:
             total_credits=0,
             credits_required=130
         )
-=======
-        raise HTTPException(status_code=404, detail="No semester GPAs found")
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Calculate CGPA
     total_points = 0.0
@@ -611,7 +651,6 @@ async def override_grade(
     })
     
     return grade
-<<<<<<< HEAD
 
 
 def _recalculate_grade_fields(grade: Grade) -> None:
@@ -765,7 +804,7 @@ async def submit_course_results_to_exam_dept(
 
 async def get_submitted_results_for_exam_dept(term: Optional[str] = None) -> List[Dict]:
     """List all results submitted to exam department."""
-    query = Grade.find(Grade.workflow_status.in_(["SUBMITTED", "EXAM_REVIEWED"]))
+    query = Grade.find(In(Grade.workflow_status, ["SUBMITTED", "EXAM_REVIEWED"]))
     if term:
         query = query.find(Grade.term == term)
     grades = await query.to_list()
@@ -842,17 +881,31 @@ async def exam_dept_update_grade(
 
 
 async def _student_enrolled_courses_count(student_id: str, term: str) -> int:
+    # Also match enrollments with term="ALL" or "all" — used for courses that span all terms
     return await Enrollment.find(
         Enrollment.student_id == student_id,
-        Enrollment.term == term,
+        In(Enrollment.term, [term, "ALL", "all"]),
         Enrollment.status == "ENROLLED",
     ).count()
 
 
+async def _get_enrolled_course_ids(student_id: str, term: str) -> list:
+    """Return course_ids for courses the student is enrolled in for a given term (or ALL)."""
+    enrollments = await Enrollment.find(
+        Enrollment.student_id == student_id,
+        In(Enrollment.term, [term, "ALL", "all"]),
+        Enrollment.status == "ENROLLED",
+    ).to_list()
+    return [e.course_id for e in enrollments]
+
+
 async def _student_published_complete_count(student_id: str, term: str) -> int:
+    course_ids = await _get_enrolled_course_ids(student_id, term)
+    if not course_ids:
+        return 0
     return await Grade.find(
         Grade.student_id == student_id,
-        Grade.term == term,
+        In(Grade.course_id, course_ids),
         Grade.workflow_status == "PUBLISHED",
         Grade.is_complete == True,
     ).count()
@@ -867,7 +920,7 @@ async def publish_course_results_to_students(
     grades = await Grade.find(
         Grade.course_id == course_id,
         Grade.term == term,
-        Grade.workflow_status.in_(["SUBMITTED", "EXAM_REVIEWED"]),
+        In(Grade.workflow_status, ["SUBMITTED", "EXAM_REVIEWED"]),
     ).to_list()
 
     if not grades:
@@ -907,13 +960,25 @@ async def publish_course_results_to_students(
 
 
 async def get_student_results_summary(student_id: str, term: str) -> Dict:
-    """Student-facing results: partial marks always; CGPA/transcript when all courses complete."""
+    """Student-facing results: partial marks always; CGPA/transcript when all courses complete.
+    
+    Grades are fetched by enrolled course IDs (not by term) to handle cases where
+    grades were stored under a different term than the course's current term.
+    """
     user = await User.get(student_id)
-    grades = await Grade.find(
-        Grade.student_id == student_id,
-        Grade.term == term,
-        Grade.workflow_status == "PUBLISHED",
-    ).to_list()
+
+    # Get the course IDs the student is enrolled in for this term (including ALL-term enrollments)
+    enrolled_course_ids = await _get_enrolled_course_ids(student_id, term)
+
+    # Fetch published grades for those specific courses (term-agnostic)
+    if enrolled_course_ids:
+        grades = await Grade.find(
+            Grade.student_id == student_id,
+            In(Grade.course_id, enrolled_course_ids),
+            Grade.workflow_status == "PUBLISHED",
+        ).to_list()
+    else:
+        grades = []
 
     courses = []
     for grade in grades:
@@ -931,15 +996,18 @@ async def get_student_results_summary(student_id: str, term: str) -> Dict:
             "is_complete": grade.is_complete,
         })
 
-    enrolled_count = await _student_enrolled_courses_count(student_id, term)
-    complete_published = await _student_published_complete_count(student_id, term)
+    enrolled_count = len(enrolled_course_ids)
+    # Count published+complete grades among enrolled courses
+    complete_published = sum(1 for g in grades if g.is_complete)
     all_courses_complete = enrolled_count > 0 and complete_published >= enrolled_count
 
     semester_gpa = None
     cgpa = None
     if all_courses_complete:
+        # Use the term from actual grades if available, otherwise use requested term
+        grade_term = grades[0].term if grades else term
         try:
-            gpa_record = await calculate_semester_gpa(student_id, term)
+            gpa_record = await calculate_semester_gpa(student_id, grade_term)
             semester_gpa = gpa_record.semester_gpa
         except HTTPException:
             pass
@@ -974,5 +1042,3 @@ async def get_student_transcript(student_id: str, term: str) -> Dict:
             detail="Transcript available only when all course marks are published",
         )
     return summary
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

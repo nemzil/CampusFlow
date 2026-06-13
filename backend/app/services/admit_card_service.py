@@ -12,6 +12,7 @@ from app.models.course import Course
 from app.models.user import User
 from app.models.attendance import AttendanceSession, AttendanceRecord
 from app.services import fee_service
+from beanie.operators import In
 
 
 async def calculate_attendance_percentage(student_id: str, course_code: str) -> float:
@@ -39,7 +40,7 @@ async def calculate_attendance_percentage(student_id: str, course_code: str) -> 
     session_ids = [str(session.id) for session in sessions]
     records = await AttendanceRecord.find(
         AttendanceRecord.student_id == student_id,
-        AttendanceRecord.session_id.in_(session_ids)
+        In(AttendanceRecord.session_id, session_ids)
     ).to_list()
     
     # Count present sessions

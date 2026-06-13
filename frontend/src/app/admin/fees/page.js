@@ -44,6 +44,25 @@ function AdminFeesContent() {
 
   const [activeTab, setActiveTab] = useState('structures'); // structures, verification
 
+  // Department structures states
+  const [structures, setStructures] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  // Verification states
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+
+  // Approve/Reject Action states
+  const [notes, setNotes] = useState('');
+  const [verifyingId, setVerifyingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [actionProcessing, setActionProcessing] = useState(false);
+
   const tabParam = searchParams.get('tab');
 
   useEffect(() => {
@@ -70,25 +89,6 @@ function AdminFeesContent() {
       </div>
     );
   }
-
-  // Department structures states
-  const [structures, setStructures] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-
-  // Verification states
-  const [pendingPayments, setPendingPayments] = useState([]);
-  const [pendingLoading, setPendingLoading] = useState(false);
-  
-  // Approve/Reject Action states
-  const [notes, setNotes] = useState('');
-  const [verifyingId, setVerifyingId] = useState(null);
-  const [rejectingId, setRejectingId] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [actionProcessing, setActionProcessing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) router.push('/login');

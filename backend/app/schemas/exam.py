@@ -21,18 +21,37 @@ class ManualQuestionSchema(BaseModel):
 
 class CreateManualExamRequest(BaseModel):
     """Request to create a new manual exam"""
-    class_name: str
-    subject: str
+    # NEW fields (optional for backward compatibility)
+    batch: Optional[str] = None  # Term like "2026F"
+    course_id: Optional[str] = None  # Selected course ID
+    exam_type: Optional[str] = Field("midterm", pattern="^(midterm|final)$")
+    total_marks: Optional[int] = Field(30, ge=10, le=100)
+    
+    # OLD fields (kept for backward compatibility)
+    class_name: Optional[str] = None
+    subject: Optional[str] = None
     title: str
     questions: List[ManualQuestionSchema]
+    
+    def get_class_name(self):
+        """Get class name from either batch or class_name"""
+        return self.batch or self.class_name or ""
+    
+    def get_subject(self):
+        """Get subject name"""
+        return self.subject or ""
 
 
 class ManualExamResponse(BaseModel):
     """Response for manual exam data"""
     id: str
     class_name: str
+    course_id: Optional[str] = None
+    course_code: Optional[str] = None
     subject: str
     title: str
+    exam_type: Optional[str] = "midterm"
+    total_marks: Optional[int] = 30
     teacher_username: str
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
@@ -111,18 +130,37 @@ class ExamQuestionSchema(BaseModel):
 
 class CreateAiExamRequest(BaseModel):
     """Request to create a new AI-generated exam"""
-    class_name: str
-    subject: str
+    # NEW fields (optional for backward compatibility)
+    batch: Optional[str] = None  # Term like "2026F"
+    course_id: Optional[str] = None  # Selected course ID
+    exam_type: Optional[str] = Field("midterm", pattern="^(midterm|final)$")
+    total_marks: Optional[int] = Field(30, ge=10, le=100)
+    
+    # OLD fields (kept for backward compatibility)
+    class_name: Optional[str] = None
+    subject: Optional[str] = None
     topic: str
-    num_questions: int = 5
+    num_questions: int = Field(5, ge=1, le=20)
+    
+    def get_class_name(self):
+        """Get class name from either batch or class_name"""
+        return self.batch or self.class_name or ""
+    
+    def get_subject(self):
+        """Get subject name"""
+        return self.subject or ""
 
 
 class AiExamResponse(BaseModel):
     """Response for AI exam data"""
     exam_id: str
     class_name: str
+    course_id: Optional[str] = None
+    course_code: Optional[str] = None
     subject: str
     topic: str
+    exam_type: Optional[str] = "midterm"
+    total_marks: Optional[int] = 30
     teacher_username: str
     is_live: bool
     start_time: Optional[str] = None

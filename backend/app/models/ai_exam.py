@@ -34,9 +34,13 @@ class ResultItem(BaseModel):
 # ---------------------------------------------------------
 class AiExam(Document):
     class_name: str
+    course_id: Optional[str] = None  # NEW: Reference to course
+    course_code: Optional[str] = None  # NEW: "CS-101T"
     subject: str
     topic: str
+    exam_type: Optional[str] = "midterm"  # NEW: "midterm" or "final" (with default)
     teacher_username: str
+    total_marks: Optional[int] = 30  # NEW: Teacher-defined total marks (with default)
     questions: List[ExamQuestion] = Field(default_factory=list)
     is_live: bool = False
     start_time: Optional[str] = None  # ISO string (PKT)

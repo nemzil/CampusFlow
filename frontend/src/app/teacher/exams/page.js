@@ -34,22 +34,25 @@ export default function TeacherExamsPage() {
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const [tab, setTab] = useState('ai');
-  const [aiExams, setAiExams] = useState([]);
-  const [manualExams, setManualExams] = useState([]);
+  const [allExams, setAllExams] = useState([]);
   const [myCourses, setMyCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPicker, setShowPicker] = useState(false);
 
-  // Create modals
-  const [showAiCreate, setShowAiCreate] = useState(false);
-  const [showManualCreate, setShowManualCreate] = useState(false);
+  // Unified create modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creationMode, setCreationMode] = useState('ai'); // 'ai' or 'manual'
   const [creating, setCreating] = useState(false);
 
-  // AI form
-  const [aiForm, setAiForm] = useState({ batch: '', subject: '', topic: '', num_questions: 5 });
-  // Manual form
-  const [manualForm, setManualForm] = useState({ batch: '', subject: '', title: '' });
+  // Unified exam form
+  const [examForm, setExamForm] = useState({ 
+    batch: '', 
+    courseId: '',
+    title: '', // User enters "Mid", "Final", etc.
+    examType: 'midterm', // Still track internally for grading
+    totalMarks: 30,
+    topic: '', // For AI generation
+    num_questions: 5 
+  });
   const [questions, setQuestions] = useState([EMPTY_Q()]);
 
   // Edit AI questions
@@ -96,8 +99,16 @@ export default function TeacherExamsPage() {
         getManualExams({ teacher_username: user.username }).catch(() => []),
         getMyCourses().catch(() => []),
       ]);
-      setAiExams(Array.isArray(ai) ? ai : []);
-      setManualExams(Array.isArray(manual) ? manual : []);
+      
+      // Merge AI and Manual exams into single list
+      const aiExamsWithType = (Array.isArray(ai) ? ai : []).map(e => ({ ...e, creation_mode: 'ai', id: e.exam_id }));
+      const manualExamsWithType = (Array.isArray(manual) ? manual : []).map(e => ({ ...e, creation_mode: 'manual' }));
+      const merged = [...aiExamsWithType, ...manualExamsWithType].sort((a, b) => {
+        // Sort by date if available, newest first
+        return new Date(b.start_time || 0) - new Date(a.start_time || 0);
+      });
+      
+      setAllExams(merged);
       setMyCourses(Array.isArray(courses) ? courses : []);
     } catch { showError('Failed to load'); }
     finally { setLoading(false); }
@@ -110,39 +121,59 @@ export default function TeacherExamsPage() {
   const coursesForBatch = (batch) => myCourses.filter(c => c.term === batch);
 
   // ── Handlers ───────────────────────────────────────────────────
-  const handleAiCreate = async (e) => {
-    e.preventDefault(); setCreating(true);
+  const handleCreateExam = async (e) => {
+    e.preventDefault(); 
+    setCreating(true);
+    
     try {
-      await createAiExam({ class_name: aiForm.batch, subject: aiForm.subject, topic: aiForm.topic, num_questions: aiForm.num_questions });
-      showSuccess('Exam generated!');
-      setShowAiCreate(false);
-      setAiForm({ batch: '', subject: '', topic: '', num_questions: 5 });
+      const selectedCourse = myCourses.find(c => c.id === examForm.courseId);
+      
+      if (creationMode === 'ai') {
+        // AI-generated exam
+        await createAiExam({ 
+          batch: examForm.batch,
+          course_id: examForm.courseId,
+          subject: selectedCourse?.course_name || '',
+          topic: examForm.topic, 
+          num_questions: examForm.num_questions,
+          exam_type: examForm.examType,
+          total_marks: examForm.totalMarks
+        });
+        showSuccess('AI exam generated!');
+      } else {
+        // Manual exam
+        await createManualExam({ 
+          batch: examForm.batch,
+          course_id: examForm.courseId,
+          subject: selectedCourse?.course_name || '',
+          title: examForm.title, 
+          exam_type: examForm.examType,
+          total_marks: examForm.totalMarks,
+          questions 
+        });
+        showSuccess('Exam created!');
+      }
+      
+      setShowCreateModal(false);
+      setExamForm({ batch: '', courseId: '', title: '', examType: 'midterm', totalMarks: 30, topic: '', num_questions: 5 });
+      setQuestions([EMPTY_Q()]);
       await loadAll();
-    } catch (e) { showError(e.message || 'Failed'); }
-    finally { setCreating(false); }
+    } catch (e) { 
+      showError(e.message || 'Failed'); 
+    } finally { 
+      setCreating(false); 
+    }
   };
 
   const addQuestion = () => setQuestions(p => [...p, { ...EMPTY_Q(), question_number: p.length + 1 }]);
   const removeQ = (i) => setQuestions(p => p.filter((_, j) => j !== i).map((q, j) => ({ ...q, question_number: j + 1 })));
   const updateQ = (i, field, val) => setQuestions(p => p.map((q, j) => j === i ? { ...q, [field]: val } : q));
 
-  const handleManualCreate = async (e) => {
-    e.preventDefault(); setCreating(true);
+  const handleDelete = async (exam) => {
+    const displayTitle = exam.creation_mode === 'ai' ? exam.topic : exam.title;
+    if (!confirm(`Delete "${displayTitle}"? This cannot be undone.`)) return;
     try {
-      await createManualExam({ class_name: manualForm.batch, subject: manualForm.subject, title: manualForm.title, questions });
-      showSuccess('Exam created!');
-      setShowManualCreate(false);
-      setManualForm({ batch: '', subject: '', title: '' });
-      setQuestions([EMPTY_Q()]);
-      await loadAll();
-    } catch (e) { showError(e.message || 'Failed'); }
-    finally { setCreating(false); }
-  };
-
-  const handleDelete = async (exam, type) => {
-    if (!confirm(`Delete "${type === 'ai' ? exam.topic : exam.title}"? This cannot be undone.`)) return;
-    try {
-      if (type === 'ai') await deleteAiExam(exam.exam_id);
+      if (exam.creation_mode === 'ai') await deleteAiExam(exam.exam_id || exam.id);
       else await deleteManualExam(exam.id);
       showSuccess('Deleted.');
       await loadAll();
@@ -180,12 +211,11 @@ export default function TeacherExamsPage() {
   const handleSetLive = async (e) => {
     e.preventDefault(); setSettingLive(true);
     try {
-      const { exam, type } = liveTarget;
-      // Convert datetime-local to ISO string (includes timezone)
+      const { exam } = liveTarget;
       const startISO = new Date(liveForm.start_time).toISOString();
       const endISO = new Date(liveForm.end_time).toISOString();
       
-      if (type === 'ai') await setAiExamLive(exam.exam_id, startISO, endISO);
+      if (exam.creation_mode === 'ai') await setAiExamLive(exam.exam_id || exam.id, startISO, endISO);
       else await setManualExamLive(exam.id, startISO, endISO);
       showSuccess('Exam is live!');
       setLiveTarget(null);
@@ -194,20 +224,22 @@ export default function TeacherExamsPage() {
     finally { setSettingLive(false); }
   };
 
-  const handleEnd = async (exam, type) => {
+  const handleEnd = async (exam) => {
     if (!confirm('End this exam?')) return;
     try {
-      if (type === 'ai') await endAiExam(exam.exam_id);
+      if (exam.creation_mode === 'ai') await endAiExam(exam.exam_id || exam.id);
       else await endManualExam(exam.id);
       showSuccess('Exam ended.');
       await loadAll();
     } catch (e) { showError(e.message); }
   };
 
-  const openSubs = async (exam, type) => {
-    setSubsTarget({ exam, type }); setSubsLoading(true);
+  const openSubs = async (exam) => {
+    setSubsTarget({ exam }); setSubsLoading(true);
     try {
-      const data = type === 'ai' ? await getAiExamSubmissions(exam.exam_id) : await getManualExamSubmissions(exam.id);
+      const data = exam.creation_mode === 'ai' 
+        ? await getAiExamSubmissions(exam.exam_id || exam.id)
+        : await getManualExamSubmissions(exam.id);
       setSubmissions(Array.isArray(data) ? data : []);
     } catch (e) { showError(e.message); }
     finally { setSubsLoading(false); }
@@ -216,7 +248,7 @@ export default function TeacherExamsPage() {
   const openGrade = async (exam, username) => {
     setGradeTarget({ exam, username }); setGrading(true); setGradeResults(null);
     try {
-      const res = await gradeAiExam(exam.exam_id, username);
+      const res = await gradeAiExam(exam.exam_id || exam.id, username);
       setGradeResults(res.results || []);
     } catch (e) { showError(e.message); }
     finally { setGrading(false); }
@@ -225,11 +257,11 @@ export default function TeacherExamsPage() {
   const confirmGrade = async () => {
     setSaving(true);
     try {
-      await confirmAiResult(gradeTarget.exam.exam_id, gradeTarget.username,
+      await confirmAiResult(gradeTarget.exam.exam_id || gradeTarget.exam.id, gradeTarget.username,
         gradeResults.map(r => ({ id: r.id, marks_obtained: r.marks_obtained, max_marks: r.max_marks, feedback: r.feedback })));
       showSuccess('Result saved!');
       setGradeTarget(null);
-      if (subsTarget) openSubs(subsTarget.exam, 'ai');
+      if (subsTarget) openSubs(subsTarget.exam);
     } catch (e) { showError(e.message); }
     finally { setSaving(false); }
   };
@@ -246,7 +278,7 @@ export default function TeacherExamsPage() {
       await markManualSubmission(markTarget.id, { question_marks: markForm, total_marks: total });
       showSuccess('Marked!');
       setMarkTarget(null);
-      if (subsTarget) openSubs(subsTarget.exam, 'manual');
+      if (subsTarget) openSubs(subsTarget.exam);
     } catch (e) { showError(e.message); }
     finally { setMarking(false); }
   };
@@ -260,11 +292,15 @@ export default function TeacherExamsPage() {
     finally { setResultsLoading(false); }
   };
 
-  const examStatus = (exam, type) => type === 'ai' ? exam.status?.toUpperCase() : (exam.live ? 'LIVE' : 'DRAFT');
+  const examStatus = (exam) => {
+    if (exam.creation_mode === 'ai') {
+      return exam.status?.toUpperCase() || 'DRAFT';
+    } else {
+      return exam.live ? 'LIVE' : 'DRAFT';
+    }
+  };
 
-  const curExams = tab === 'ai' ? aiExams : manualExams;
-
-  if (authLoading || (loading && !aiExams.length && !manualExams.length)) {
+  if (authLoading || (loading && !allExams.length)) {
     return <div className="min-h-screen flex items-center justify-center bg-[#060813]"><Loader2 className="w-10 h-10 text-violet-500 animate-spin" /></div>;
   }
 
@@ -286,78 +322,45 @@ export default function TeacherExamsPage() {
           <Button onClick={openResults} variant="ghost" className="text-xs h-9 border border-white/10 text-slate-400 hover:text-white">
             <BarChart2 className="w-3.5 h-3.5 mr-1.5" />Results
           </Button>
-          <div className="relative">
-            <Button onClick={() => setShowPicker(p => !p)} className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold h-9">
-              <Plus className="w-4 h-4 mr-1.5" />New Exam
-            </Button>
-            {showPicker && (
-              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-                className="absolute right-0 top-11 z-50 bg-[#0d0e1a] border border-white/10 rounded-xl shadow-2xl w-56 overflow-hidden">
-                <button onClick={() => { setShowPicker(false); setShowAiCreate(true); setTab('ai'); }}
-                  className="w-full flex items-start gap-3 p-4 hover:bg-white/5 transition-colors text-left">
-                  <Sparkles className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-white">AI Generated</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Give a prompt — AI writes the questions</p>
-                  </div>
-                </button>
-                <div className="h-px bg-white/5" />
-                <button onClick={() => { setShowPicker(false); setShowManualCreate(true); setTab('manual'); }}
-                  className="w-full flex items-start gap-3 p-4 hover:bg-white/5 transition-colors text-left">
-                  <PenLine className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-white">Manual</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Write your own questions and marks</p>
-                  </div>
-                </button>
-              </motion.div>
-            )}
-          </div>
+          <Button onClick={() => setShowCreateModal(true)} className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold h-9">
+            <Plus className="w-4 h-4 mr-1.5" />Create Exam
+          </Button>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="relative inline-flex p-1 bg-white/5 border border-white/10 rounded-lg">
-        {[['ai', 'AI Exams', Sparkles], ['manual', 'Manual Exams', PenLine]].map(([key, label, Icon]) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={`relative z-10 flex items-center gap-1.5 px-4 py-2 text-xs font-semibold tracking-wider transition-colors ${tab === key ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}>
-            <Icon className="w-3.5 h-3.5" />{label}
-            {tab === key && <motion.div layoutId="examTab" className="absolute inset-0 bg-violet-600 rounded-md" style={{ zIndex: -1 }} transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
-          </button>
-        ))}
       </div>
 
       {/* Exam list */}
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-violet-500 animate-spin" /></div>
-      ) : curExams.length === 0 ? (
+      ) : allExams.length === 0 ? (
         <Card className="border-white/5 bg-white/[0.01]">
           <CardContent className="p-16 text-center">
-            <p className="text-slate-500 text-xs">No {tab} exams yet.</p>
-            <Button onClick={() => tab === 'ai' ? setShowAiCreate(true) : setShowManualCreate(true)}
+            <p className="text-slate-500 text-xs">No exams yet.</p>
+            <Button onClick={() => setShowCreateModal(true)}
               className="mt-4 text-xs h-8 bg-violet-600 hover:bg-violet-500 text-white"><Plus className="w-3.5 h-3.5 mr-1" />Create one</Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {curExams.map(exam => {
-            const type = tab;
-            const id = type === 'ai' ? exam.exam_id : exam.id;
-            const status = examStatus(exam, type);
-            const title = type === 'ai' ? exam.topic : exam.title;
+          {allExams.map(exam => {
+            const id = exam.id;
+            const status = examStatus(exam);
+            const title = exam.creation_mode === 'ai' ? exam.topic : exam.title;
             const isDraft = status === 'DRAFT';
+            const isAI = exam.creation_mode === 'ai';
+            
             return (
               <Card key={id} className="bg-white/[0.03] border-white/5">
                 <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <Badge className={`text-[9px] px-1.5 py-0 ${STATUS_COLOR[status] || STATUS_COLOR.DRAFT}`}>{status}</Badge>
+                      {isAI && <Badge className="text-[9px] px-1.5 py-0 bg-violet-500/10 text-violet-400 border-violet-500/20">AI</Badge>}
                       <span className="font-mono text-[10px] text-violet-400">{exam.class_name}</span>
                       <span className="text-[10px] text-slate-500">{exam.subject}</span>
                     </div>
                     <p className="font-bold text-white">{title}</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      {(exam.questions?.length || 0)} questions
+                      {(exam.questions?.length || 0)} questions · {exam.total_marks || 30} marks
                       {exam.start_time && ` · ${new Date(exam.start_time).toLocaleString()}`}
                       {exam.end_time && ` → ${new Date(exam.end_time).toLocaleString()}`}
                     </p>
@@ -365,17 +368,17 @@ export default function TeacherExamsPage() {
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     {isDraft && (
                       <>
-                        {type === 'ai' && (
+                        {isAI && (
                           <Button size="sm" variant="ghost" onClick={() => openEditAi(exam)}
                             className="h-7 px-2 text-slate-400 hover:text-violet-400 text-xs">
                             <Edit3 className="w-3 h-3 mr-1" />Edit Qs
                           </Button>
                         )}
-                        <Button size="sm" onClick={() => { setLiveTarget({ exam, type }); setLiveForm({ start_time: '', end_time: '' }); }}
+                        <Button size="sm" onClick={() => { setLiveTarget({ exam }); setLiveForm({ start_time: '', end_time: '' }); }}
                           className="h-7 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
                           <Play className="w-3 h-3 mr-1" />Set Live
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(exam, type)}
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(exam)}
                           className="h-7 px-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 text-xs">
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -383,18 +386,18 @@ export default function TeacherExamsPage() {
                     )}
                     {status === 'LIVE' && (
                       <>
-                        <Button size="sm" variant="ghost" onClick={() => openSubs(exam, type)}
+                        <Button size="sm" variant="ghost" onClick={() => openSubs(exam)}
                           className="h-7 px-2 text-slate-400 hover:text-violet-400 text-xs">
                           <Users className="w-3 h-3 mr-1" />Submissions
                         </Button>
-                        <Button size="sm" onClick={() => handleEnd(exam, type)}
+                        <Button size="sm" onClick={() => handleEnd(exam)}
                           className="h-7 px-3 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold">
                           <Square className="w-3 h-3 mr-1" />End
                         </Button>
                       </>
                     )}
                     {status === 'ENDED' && (
-                      <Button size="sm" variant="ghost" onClick={() => openSubs(exam, type)}
+                      <Button size="sm" variant="ghost" onClick={() => openSubs(exam)}
                         className="h-7 px-2 text-slate-400 hover:text-violet-400 text-xs">
                         <Users className="w-3 h-3 mr-1" />Submissions
                       </Button>
@@ -407,123 +410,136 @@ export default function TeacherExamsPage() {
         </div>
       )}
 
-      {/* ── AI Create Modal ───────────────────────────────────────── */}
-      {showAiCreate && (
+      {/* ── Unified Create Modal ───────────────────────────────────────── */}
+      {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0d0e1a] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-white/5">
-              <h3 className="font-bold text-sm flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" />AI Generated Exam</h3>
-              <button onClick={() => setShowAiCreate(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-            <form onSubmit={handleAiCreate} className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Batch</label>
-                  <select value={aiForm.batch} onChange={e => setAiForm(p => ({ ...p, batch: e.target.value, subject: '' }))} className={selectCls} required>
-                    <option value="">Select batch</option>
-                    {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Subject</label>
-                  <select value={aiForm.subject} onChange={e => setAiForm(p => ({ ...p, subject: e.target.value }))} className={selectCls} required disabled={!aiForm.batch}>
-                    <option value="">Select subject</option>
-                    {coursesForBatch(aiForm.batch).map(c => <option key={c.course_code} value={c.course_name}>{c.course_name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Topic / Prompt</label>
-                <textarea value={aiForm.topic} onChange={e => setAiForm(p => ({ ...p, topic: e.target.value }))}
-                  placeholder="e.g. Scenario-based questions on Python marksheet program"
-                  className="w-full bg-white/5 border border-white/10 text-white text-xs rounded-lg px-3 py-2 min-h-[70px] resize-none focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" required />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-2">Questions</label>
-                <div className="flex gap-2">
-                  {[3, 5, 7, 10].map(n => (
-                    <button key={n} type="button" onClick={() => setAiForm(p => ({ ...p, num_questions: n }))}
-                      className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${aiForm.num_questions === n ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>{n}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-violet-500/5 border border-violet-500/10 rounded-lg p-3 text-[10px] text-violet-300">
-                Gemini will generate <strong>{aiForm.num_questions}</strong> questions based on your prompt.
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="ghost" onClick={() => setShowAiCreate(false)} className="flex-1 text-xs h-9 text-slate-400 border border-white/10">Cancel</Button>
-                <Button type="submit" disabled={creating} className="flex-1 text-xs h-9 bg-violet-600 hover:bg-violet-500 text-white font-semibold">
-                  {creating ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />Generating...</> : <><Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate</>}
-                </Button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ── Manual Create Modal ───────────────────────────────────── */}
-      {showManualCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0d0e1a] border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
+            className="bg-[#0d0e1a] border border-white/10 rounded-2xl w-full max-w-3xl shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
-              <h3 className="font-bold text-sm flex items-center gap-2"><PenLine className="w-4 h-4 text-indigo-400" />Manual Exam</h3>
-              <button onClick={() => setShowManualCreate(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
+              <div className="flex items-center gap-4">
+                <h3 className="font-bold text-sm">Create Exam</h3>
+                <div className="flex bg-white/5 rounded-lg p-1">
+                  <button type="button" onClick={() => setCreationMode('ai')} className={`text-[10px] px-3 py-1 rounded-md font-semibold transition-colors ${creationMode === 'ai' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}`}>AI Generate</button>
+                  <button type="button" onClick={() => setCreationMode('manual')} className={`text-[10px] px-3 py-1 rounded-md font-semibold transition-colors ${creationMode === 'manual' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>Manual</button>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
             </div>
-            <form onSubmit={handleManualCreate} className="flex flex-col flex-1 min-h-0">
-              <div className="p-5 space-y-3 border-b border-white/5 shrink-0">
-                <div className="grid grid-cols-3 gap-3">
+            <form onSubmit={handleCreateExam} className="flex flex-col flex-1 min-h-0">
+              <div className="p-5 space-y-4 border-b border-white/5 shrink-0">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <div>
                     <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Batch</label>
-                    <select value={manualForm.batch} onChange={e => setManualForm(p => ({ ...p, batch: e.target.value, subject: '' }))} className={selectCls} required>
+                    <select value={examForm.batch} onChange={e => setExamForm(p => ({ ...p, batch: e.target.value, courseId: '' }))} className={selectCls} required>
                       <option value="">Select batch</option>
                       {batches.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Subject</label>
-                    <select value={manualForm.subject} onChange={e => setManualForm(p => ({ ...p, subject: e.target.value }))} className={selectCls} required disabled={!manualForm.batch}>
+                    <select value={examForm.courseId} onChange={e => setExamForm(p => ({ ...p, courseId: e.target.value }))} className={selectCls} required disabled={!examForm.batch}>
                       <option value="">Select subject</option>
-                      {coursesForBatch(manualForm.batch).map(c => <option key={c.course_code} value={c.course_name}>{c.course_name}</option>)}
+                      {coursesForBatch(examForm.batch).map(c => <option key={c.id} value={c.id}>{c.course_name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Title</label>
-                    <Input value={manualForm.title} onChange={e => setManualForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Mid Exam" className="bg-white/5 border-white/10 text-white text-xs h-9" required />
+                    <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Exam Type</label>
+                    <select
+                      value={examForm.examType}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setExamForm(p => ({
+                          ...p,
+                          examType: val,
+                          totalMarks: val === 'final' ? 50 : 30
+                        }));
+                      }}
+                      className={selectCls}
+                      required
+                    >
+                      <option value="midterm">Midterm</option>
+                      <option value="final">Final</option>
+                    </select>
                   </div>
-                </div>
-              </div>
-              <div className="overflow-y-auto flex-1 p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Questions</span>
-                  <Button type="button" onClick={addQuestion} variant="ghost" className="h-7 px-2 text-xs text-violet-400 hover:text-violet-300"><Plus className="w-3 h-3 mr-1" />Add</Button>
-                </div>
-                {questions.map((q, i) => (
-                  <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-indigo-400">Q{i + 1}</span>
-                      {questions.length > 1 && <button type="button" onClick={() => removeQ(i)} className="text-slate-600 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>}
+                  {creationMode === 'manual' && (
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Title</label>
+                      <Input value={examForm.title} onChange={e => setExamForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Mid Exam" className="bg-white/5 border-white/10 text-white text-xs h-9" required />
                     </div>
-                    <textarea value={q.text} onChange={e => updateQ(i, 'text', e.target.value)} placeholder="Question text..."
-                      className="w-full bg-white/5 border border-white/10 text-white text-xs rounded-lg px-3 py-2 min-h-[55px] resize-none focus:outline-none focus:border-indigo-500/50" required />
-                    <div className="grid grid-cols-2 gap-2">
+                  )}
+                  {creationMode === 'manual' && (
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Total Marks</label>
+                      <Input type="number" value={examForm.totalMarks} onChange={e => setExamForm(p => ({ ...p, totalMarks: parseInt(e.target.value) || 0 }))} className="bg-white/5 border-white/10 text-white text-xs h-9" required />
+                    </div>
+                  )}
+                </div>
+
+                {creationMode === 'ai' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Topic / Prompt</label>
+                      <textarea value={examForm.topic} onChange={e => setExamForm(p => ({ ...p, topic: e.target.value }))}
+                        placeholder="e.g. Scenario-based questions on Python marksheet program"
+                        className="w-full bg-white/5 border border-white/10 text-white text-xs rounded-lg px-3 py-2 min-h-[70px] resize-none focus:outline-none focus:border-violet-500/50 placeholder:text-slate-600" required />
+                    </div>
+                    <div className="flex gap-4">
                       <div>
-                        <label className="text-[10px] text-slate-500 block mb-1">Marks</label>
-                        <Input type="number" min={1} value={q.max_marks} onChange={e => updateQ(i, 'max_marks', parseInt(e.target.value))} className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                        <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-2">Questions</label>
+                        <div className="flex gap-2">
+                          {[3, 5, 7, 10].map(n => (
+                            <button key={n} type="button" onClick={() => setExamForm(p => ({ ...p, num_questions: n }))}
+                              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${examForm.num_questions === n ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>{n}</button>
+                          ))}
+                        </div>
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500 block mb-1">Model Answer (optional)</label>
-                        <Input value={q.correct_answer} onChange={e => updateQ(i, 'correct_answer', e.target.value)} placeholder="Key points..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                        <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-2">Total Marks</label>
+                        <Input type="number" value={examForm.totalMarks} onChange={e => setExamForm(p => ({ ...p, totalMarks: parseInt(e.target.value) || 0 }))} className="bg-white/5 border-white/10 text-white text-xs h-8 w-24" required />
                       </div>
                     </div>
+                    <div className="bg-violet-500/5 border border-violet-500/10 rounded-lg p-3 text-[10px] text-violet-300">
+                      Gemini will generate <strong>{examForm.num_questions}</strong> questions based on your prompt.
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
+
+              {creationMode === 'manual' && (
+                <div className="overflow-y-auto flex-1 p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Questions</span>
+                    <Button type="button" onClick={addQuestion} variant="ghost" className="h-7 px-2 text-xs text-indigo-400 hover:text-indigo-300"><Plus className="w-3 h-3 mr-1" />Add</Button>
+                  </div>
+                  {questions.map((q, i) => (
+                    <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-indigo-400">Q{i + 1}</span>
+                        {questions.length > 1 && <button type="button" onClick={() => removeQ(i)} className="text-slate-600 hover:text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>}
+                      </div>
+                      <textarea value={q.text} onChange={e => updateQ(i, 'text', e.target.value)} placeholder="Question text..."
+                        className="w-full bg-white/5 border border-white/10 text-white text-xs rounded-lg px-3 py-2 min-h-[55px] resize-none focus:outline-none focus:border-indigo-500/50" required />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-slate-500 block mb-1">Marks</label>
+                          <Input type="number" min={1} value={q.max_marks} onChange={e => updateQ(i, 'max_marks', parseInt(e.target.value))} className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-slate-500 block mb-1">Model Answer (optional)</label>
+                          <Input value={q.correct_answer} onChange={e => updateQ(i, 'correct_answer', e.target.value)} placeholder="Key points..." className="bg-white/5 border-white/10 text-white text-xs h-8" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="p-4 border-t border-white/5 shrink-0 flex gap-2">
-                <Button type="button" variant="ghost" onClick={() => setShowManualCreate(false)} className="flex-1 text-xs h-9 text-slate-400 border border-white/10">Cancel</Button>
-                <Button type="submit" disabled={creating} className="flex-1 text-xs h-9 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-                  {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Save className="w-3.5 h-3.5 mr-1.5" />Create Exam</>}
+                <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)} className="flex-1 text-xs h-9 text-slate-400 border border-white/10">Cancel</Button>
+                <Button type="submit" disabled={creating} className={`flex-1 text-xs h-9 text-white font-semibold ${creationMode === 'ai' ? 'bg-violet-600 hover:bg-violet-500' : 'bg-indigo-600 hover:bg-indigo-500'}`}>
+                  {creating ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />{creationMode === 'ai' ? 'Generating...' : 'Creating...'}</> : 
+                    creationMode === 'ai' ? <><Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate</> : <><Save className="w-3.5 h-3.5 mr-1.5" />Create Exam</>
+                  }
                 </Button>
               </div>
             </form>

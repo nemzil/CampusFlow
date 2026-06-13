@@ -3,7 +3,7 @@
  * Handles all API requests to the backend
  */
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
 // Get auth token from localStorage
 const getAuthHeaders = () => {
@@ -91,6 +91,11 @@ async function apiRequest(url, options = {}) {
     if (error.name === 'AbortError') {
       console.error('Request timeout:', url);
       throw new Error('Request timed out. Please check your connection and try again.');
+    }
+    // Handle network / connection failures (backend not running, DNS, etc.)
+    if (error instanceof TypeError || (error.message && error.message.includes('Failed to fetch'))) {
+      console.error('Network error — backend unreachable:', url, error);
+      throw new Error('Unable to connect to the backend server. Please make sure it is running on the expected URL (' + API_BASE + ').');
     }
     console.error('API Error:', error);
     throw error;
