@@ -28,37 +28,57 @@ async def test_student():
     }
 
 # ═══════════════════════════════════════════════════════════════════
-# PUBLIC ENDPOINT: Login (All users)
+# AUTHENTICATION ENDPOINTS: Role-Based Login
 # ═══════════════════════════════════════════════════════════════════
-@router.post("/login")
-async def login(credentials: UserLogin):
+
+async def _authenticate_user(username: str, password: str, required_role: str = None):
     """
-    Login endpoint for all users (Students, Teachers, Admins)
-    Returns JWT token and user profile data
+    Internal helper function for authentication
+    Returns user if authentication successful, raises HTTPException otherwise
     """
     # 1. Find user by username
-    user = await User.find_one(User.username == credentials.username)
+    user = await User.find_one(User.username == username)
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid username or password"
+        )
 
-    # 2. Check if account is active
+    # 2. Check if role matches (if role is specified)
+    if required_role and user.role != required_role:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"This login portal is for {required_role.lower()}s only"
+        )
+
+    # 3. Check if account is active
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="Account is deactivated")
+        raise HTTPException(
+            status_code=403, 
+            detail="Account is deactivated. Please contact administration."
+        )
 
-    # 3. Verify password matches hash
-    if not verify_password(credentials.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+    # 4. Verify password matches hash
+    if not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid username or password"
+        )
 
-    # 4. Update last login timestamp using atomic update
+    # 5. Update last login timestamp using atomic update
     await user.set({User.last_login: datetime.now(timezone.utc)})
 
-    # 5. Generate JWT Token
-    access_token = create_access_token(data={"sub": user.username, "role": user.role})
+    return user
 
-    # 6. Build response
+
+def _build_login_response(user: User):
+    """
+    Internal helper function to build login response with role-specific fields
+    """
+    # Base response data
     response_data = {
         "message": "Login successful",
-        "access_token": access_token,
+        "access_token": create_access_token(data={"sub": user.username, "role": user.role}),
         "token_type": "bearer",
         "id": str(user.id),
         "username": user.username,
@@ -71,22 +91,125 @@ async def login(credentials: UserLogin):
 
     # Add role-specific fields
     if user.role == "STUDENT":
-        response_data["registration_no"] = user.registration_no
-        response_data["department"] = user.department
-        response_data["program"] = user.program
-        response_data["batch"] = user.batch
-        response_data["current_semester"] = user.current_semester
+        response_data.update({
+            "registration_no": user.registration_no,
+            "department": user.department,
+            "program": user.program,
+            "batch": user.batch,
+            "current_semester": user.current_semester
+        })
     elif user.role == "TEACHER":
-        response_data["employee_id"] = user.employee_id
-        response_data["department"] = user.department
-        response_data["designation"] = user.designation
-        response_data["qualification"] = user.qualification
-        response_data["specialization"] = user.specialization
-        response_data["office_location"] = user.office_location
+        response_data.update({
+            "employee_id": user.employee_id,
+            "department": user.department,
+            "designation": user.designation,
+            "qualification": user.qualification,
+            "specialization": user.specialization,
+            "office_location": user.office_location
+        })
     elif user.role == "ADMIN":
         response_data["admin_level"] = user.admin_level
 
     return response_data
+
+
+@router.post("/login/student")
+async def student_login(credentials: UserLogin):
+    """
+    Student login endpoint
+    Only allows STUDENT role to authenticate
+    """
+    user = await _authenticate_user(
+        credentials.username, 
+        credentials.password, 
+        required_role="STUDENT"
+    )
+    return _build_login_response(user)
+
+
+@router.post("/login/teacher")
+async def teacher_login(credentials: UserLogin):
+    """
+    Teacher login endpoint
+    Only allows TEACHER role to authenticate
+    """
+    user = await _authenticate_user(
+        credentials.username, 
+        credentials.password, 
+        required_role="TEACHER"
+    )
+    return _build_login_response(user)
+
+
+@router.post("/login/admin")
+async def admin_login(credentials: UserLogin):
+    """
+    Admin login endpoint
+    Only allows ADMIN role to authenticate
+    """
+    user = await _authenticate_user(
+        credentials.username, 
+        credentials.password, 
+        required_role="ADMIN"
+    )
+    return _build_login_response(user)
+
+
+@router.post("/login")
+async def login(credentials: UserLogin):
+    """
+    Universal login endpoint (backward compatibility)
+    Authenticates any role without restriction
+    
+    NOTE: Frontend should use role-specific endpoints:
+    - POST /api/auth/login/student
+    - POST /api/auth/login/teacher
+    - POST /api/auth/login/admin
+    """
+    user = await _authenticate_user(credentials.username, credentials.password)
+    return _build_login_response(user)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# TOKEN VERIFICATION & SESSION MANAGEMENT
+# ═══════════════════════════════════════════════════════════════════
+
+@router.get("/verify")
+async def verify_token(current_user: str = Depends(get_current_user)):
+    """
+    Verify JWT token validity and return current user info
+    Used by frontend to check if user is still authenticated
+    """
+    user = await User.find_one(User.username == current_user)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+    
+    return {
+        "valid": True,
+        "username": user.username,
+        "role": user.role,
+        "is_active": user.is_active
+    }
+
+
+@router.post("/logout")
+async def logout(current_user: str = Depends(get_current_user)):
+    """
+    Logout endpoint (for audit logging purposes)
+    Note: JWT tokens are stateless, so actual invalidation happens on frontend
+    """
+    # In future, you can:
+    # 1. Add token to blacklist in Redis
+    # 2. Log the logout event
+    # 3. Clear any server-side sessions
+    
+    return {
+        "message": "Logout successful",
+        "username": current_user
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════
