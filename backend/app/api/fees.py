@@ -13,10 +13,7 @@ from app.models.fee import (
 from app.models.user import User
 from app.api.deps import get_current_user
 from app.services import fee_service
-<<<<<<< HEAD
 from app.utils.academic_term import resolve_term, get_current_academic_term
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 router = APIRouter()
 
@@ -121,7 +118,6 @@ async def calculate_fees(
     elif user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-<<<<<<< HEAD
     # Convert semester to term if needed
     if semester.isdigit():
         resolved_semester = get_current_academic_term()
@@ -130,10 +126,6 @@ async def calculate_fees(
     
     # Calculate fees
     result = await fee_service.calculate_fees(student_id, resolved_semester)
-=======
-    # Calculate fees
-    result = await fee_service.calculate_fees(student_id, semester)
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     return result
 
@@ -185,7 +177,6 @@ async def submit_payment(
     if str(user.id) != payment_data.student_id:
         raise HTTPException(status_code=403, detail="Can only submit your own payment")
     
-<<<<<<< HEAD
     # Convert semester to current academic term if needed
     semester = payment_data.semester
     # If semester is just a number (like "1"), convert to current term
@@ -199,12 +190,6 @@ async def submit_payment(
     result = await fee_service.submit_payment(
         student_id=payment_data.student_id,
         semester=semester,
-=======
-    # Submit payment
-    result = await fee_service.submit_payment(
-        student_id=payment_data.student_id,
-        semester=payment_data.semester,
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         receipt_url=payment_data.receipt_url,
         payment_date=payment_data.payment_date,
         bank_name=payment_data.bank_name,
@@ -232,15 +217,12 @@ async def get_payment_status(
     elif user.role != "ADMIN":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-<<<<<<< HEAD
     # Convert semester to term if needed
     if semester.isdigit():
         semester = get_current_academic_term()
     else:
         semester = resolve_term(semester)
     
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     # Get payment status
     result = await fee_service.get_payment_status(student_id, semester)
     
@@ -364,7 +346,6 @@ async def generate_fee_report(
     
     return result
 
-<<<<<<< HEAD
 
 @router.post("/admin/recalculate/{student_id}")
 async def admin_recalculate_fees(
@@ -400,8 +381,6 @@ async def admin_recalculate_fees(
     }
 
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 # ═══════════════════════════════════════════════════════════════════
 # UTILITY ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════
@@ -422,7 +401,6 @@ async def check_fee_paid(
         "semester": semester,
         "is_paid": is_paid
     }
-<<<<<<< HEAD
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -784,5 +762,3 @@ async def get_fee_statement(
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

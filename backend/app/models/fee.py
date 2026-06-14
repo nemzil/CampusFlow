@@ -247,7 +247,6 @@ class FeeReportResponse(BaseModel):
     semester: str
     summary: FeeReportSummary
     breakdown: List[FeeReportBreakdown]
-<<<<<<< HEAD
 
 
 # ---------------------------------------------------------
@@ -280,5 +279,3 @@ class DepartmentFeeStructureSchema(BaseModel):
     compulsory_per_credit: int = 0
     lab_charges: int = 0
     security_deposit: int = 0
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

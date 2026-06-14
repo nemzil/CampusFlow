@@ -1,18 +1,10 @@
 'use client';
 
-<<<<<<< HEAD
 import { useState, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight, BookOpen, Megaphone, BookMarked, Calendar, ClipboardList, Video, FileQuestion, DollarSign, CalendarDays, ShieldCheck, BarChart3 } from 'lucide-react';
-=======
-import { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, CheckSquare, Users, MessageSquare, LogOut, GraduationCap, User, ChevronLeft, ChevronRight, BookOpen, Megaphone, BookMarked, Calendar, ClipboardList } from 'lucide-react';
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -29,7 +21,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-<<<<<<< HEAD
 function SidebarComponent({ role }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -50,11 +41,6 @@ function SidebarComponent({ role }) {
     }
     return true;
   };
-=======
-export default function Sidebar({ role }) {
-  const pathname = usePathname();
-  const router = useRouter();
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const { user, logout } = useAuth();
   const { toggleSidebar, state } = useSidebar();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,21 +56,16 @@ export default function Sidebar({ role }) {
       baseLinks.push({ path: '/student/assignments', label: 'Assignments', Icon: ClipboardList });
       baseLinks.push({ path: '/student/attendance', label: 'Attendance', Icon: Calendar });
       baseLinks.push({ path: '/student/todos', label: 'My Todos', Icon: CheckSquare });
-<<<<<<< HEAD
       baseLinks.push({ path: '/student/lectures', label: 'Lectures', Icon: Video });
       baseLinks.push({ path: '/student/fees', label: 'Fee Voucher', Icon: DollarSign });
       baseLinks.push({ path: '/student/timetable', label: 'My Timetable', Icon: CalendarDays });
       baseLinks.push({ path: '/student/admit-card', label: 'Admit Card', Icon: ClipboardList });
       baseLinks.push({ path: '/student/results', label: 'Results', Icon: GraduationCap });
-=======
-      baseLinks.push({ path: '/student/exams', label: 'Exams', Icon: GraduationCap });
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       baseLinks.push({ path: '/student/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     if (role === 'TEACHER') {
       baseLinks.push({ path: '/teacher/courses', label: 'My Courses', Icon: BookOpen });
-<<<<<<< HEAD
       baseLinks.push({ path: '/teacher/assignments?tab=ASSIGNMENT', label: 'Assignments', Icon: ClipboardList });
       baseLinks.push({ path: '/teacher/assignments?tab=QUIZ', label: 'Quizzes', Icon: FileQuestion });
       baseLinks.push({ path: '/teacher/attendance', label: 'Attendance', Icon: Calendar });
@@ -94,17 +75,10 @@ export default function Sidebar({ role }) {
       baseLinks.push({ path: '/teacher/manage-results', label: 'Manage Results', Icon: BarChart3 });
       baseLinks.push({ path: '/teacher/timetable', label: 'My Schedule', Icon: CalendarDays });
       baseLinks.push({ path: '/teacher/invigilation', label: 'Invigilation', Icon: ShieldCheck });
-=======
-      baseLinks.push({ path: '/teacher/assignments', label: 'Assignments', Icon: ClipboardList });
-      baseLinks.push({ path: '/teacher/attendance', label: 'Attendance', Icon: Calendar });
-      baseLinks.push({ path: '/teacher/todos', label: 'My Todos', Icon: CheckSquare });
-      baseLinks.push({ path: '/teacher/exams', label: 'Exams', Icon: GraduationCap });
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       baseLinks.push({ path: '/teacher/announcements', label: 'Announcements', Icon: Megaphone });
     }
 
     if (role === 'ADMIN') {
-<<<<<<< HEAD
       if (user?.admin_level === 'COURSE_MANAGEMENT_ADMIN') {
         baseLinks.push({ path: '/admin/courses', label: 'Courses', Icon: BookOpen });
         baseLinks.push({ path: '/admin/enrollment', label: 'Enrollments', Icon: BookMarked });
@@ -125,13 +99,6 @@ export default function Sidebar({ role }) {
         baseLinks.push({ path: '/admin/announcements', label: 'Announcements', Icon: Megaphone });
         baseLinks.push({ path: '/admin/fees', label: 'Fee Structure', Icon: DollarSign });
       }
-=======
-      baseLinks.push({ path: '/admin/courses', label: 'Courses', Icon: BookOpen });
-      baseLinks.push({ path: '/admin/enrollment', label: 'Enrollments', Icon: BookMarked });
-      baseLinks.push({ path: '/admin/attendance', label: 'Attendance', Icon: Calendar });
-      baseLinks.push({ path: '/admin/users', label: 'User Management', Icon: Users });
-      baseLinks.push({ path: '/admin/announcements', label: 'Announcements', Icon: Megaphone });
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     }
 
     baseLinks.push({ path: `/${role.toLowerCase()}/messages`, label: 'Chat', Icon: MessageSquare });
@@ -180,11 +147,7 @@ export default function Sidebar({ role }) {
             <SidebarMenu className="gap-1 relative">
               {/* Animated background indicator */}
               {links.map((link, index) => {
-<<<<<<< HEAD
                 const isActive = isLinkActive(link.path);
-=======
-                const isActive = pathname === link.path;
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                 if (isActive) {
                   return (
                     <motion.div
@@ -212,11 +175,7 @@ export default function Sidebar({ role }) {
               
               {links.map((link) => {
                 const LinkIcon = link.Icon;
-<<<<<<< HEAD
                 const isActive = isLinkActive(link.path);
-=======
-                const isActive = pathname === link.path;
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                 
                 return (
                   <SidebarMenuItem key={link.path}>
@@ -314,7 +273,6 @@ export default function Sidebar({ role }) {
     </ShadcnSidebar>
   );
 }
-<<<<<<< HEAD
 
 export default function Sidebar(props) {
   return (
@@ -323,5 +281,3 @@ export default function Sidebar(props) {
     </Suspense>
   );
 }
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

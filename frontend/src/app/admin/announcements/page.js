@@ -22,10 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-<<<<<<< HEAD
 import { canAccessFullAdminConsole } from '@/lib/adminAccess';
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 export default function AdminAnnouncementsPage() {
   const router = useRouter();
@@ -47,11 +44,8 @@ export default function AdminAnnouncementsPage() {
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'ADMIN')) {
       router.push('/login');
-<<<<<<< HEAD
     } else if (!authLoading && user && !canAccessFullAdminConsole(user)) {
       router.push('/admin');
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     } else if (!authLoading && user) {
       fetchAnnouncements();
     }

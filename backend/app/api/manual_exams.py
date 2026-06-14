@@ -87,7 +87,6 @@ async def list_manual_exams(
         limit=limit
     )
     
-<<<<<<< HEAD
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
     
@@ -109,10 +108,6 @@ async def list_manual_exams(
                 status = "live"
         
         result.append(ManualExamResponse(
-=======
-    return [
-        ManualExamResponse(
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
             id=str(exam.id),
             class_name=exam.className,
             course_id=exam.courseId,
@@ -125,18 +120,11 @@ async def list_manual_exams(
             start_time=exam.startTime,
             end_time=exam.endTime,
             live=exam.live,
-<<<<<<< HEAD
             status=status,
             questions=[convert_to_schema_question(q) for q in exam.questions]
         ))
     
     return result
-=======
-            questions=[convert_to_schema_question(q) for q in exam.questions]
-        )
-        for exam in exams
-    ]
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 
 # ═══════════════════════════════════════════════════════════
@@ -209,10 +197,7 @@ async def create_manual_exam(
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
-<<<<<<< HEAD
         status="draft",
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -232,16 +217,12 @@ async def get_manual_exam(exam_id: str):
         raise HTTPException(status_code=400, detail="Invalid exam ID format")
     
     from app.models.exam import ManualExam
-<<<<<<< HEAD
     from datetime import datetime, timezone
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     exam = await ManualExam.get(oid)
     
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     
-<<<<<<< HEAD
     # Determine status
     now = datetime.now(timezone.utc)
     status = "draft"
@@ -258,8 +239,6 @@ async def get_manual_exam(exam_id: str):
         else:
             status = "live"
     
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
@@ -273,10 +252,7 @@ async def get_manual_exam(exam_id: str):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
-<<<<<<< HEAD
         status=status,
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -304,7 +280,6 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     
-<<<<<<< HEAD
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
     status = "live"
@@ -314,8 +289,6 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
         if now > end:
             status = "ended"
     
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
@@ -325,10 +298,7 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
-<<<<<<< HEAD
         status=status,
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -361,10 +331,7 @@ async def end_manual_exam(exam_id: str):
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
-<<<<<<< HEAD
         status="ended",
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         questions=[convert_to_schema_question(q) for q in exam.questions]
     )
 
@@ -529,7 +496,6 @@ async def mark_submission(submission_id: str, body: MarkSubmissionRequest):
         max_total_marks=submission.maxTotalMarks,
         submitted_at=submission.submittedAt
     )
-<<<<<<< HEAD
 
 
 # ═══════════════════════════════════════════════════════════
@@ -558,5 +524,3 @@ async def delete_manual_exam(
         raise HTTPException(status_code=400, detail="Cannot delete a live exam. End it first.")
     await exam.delete()
     return {"status": "deleted"}
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e

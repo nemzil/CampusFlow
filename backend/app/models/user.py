@@ -52,11 +52,7 @@ class User(Document):
     joining_date: Optional[datetime] = None
     
     # ═══ Admin-Specific (For role="ADMIN") ═══
-<<<<<<< HEAD
     admin_level: Optional[str] = None  # "SUPER_ADMIN", "ADMIN", "FEE_MANAGEMENT_ADMIN", "COURSE_MANAGEMENT_ADMIN", "EXAM_MANAGEMENT_ADMIN"
-=======
-    admin_level: Optional[str] = None  # "SUPER_ADMIN", "DEPARTMENT_ADMIN"
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
     @model_validator(mode="before")
     @classmethod
@@ -151,6 +147,7 @@ class AdminCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+    role: Optional[str] = None
 
 # ═══ Response Schema ═══
 class UserResponse(BaseModel):

@@ -1,19 +1,11 @@
 'use client';
 
-<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { getMyAttendanceSummary, getMyFeeVoucher, getMyCgpa } from '@/lib/api';
 import { GraduationCap, Building, BookOpen, Calendar, DollarSign, User, ArrowRight, Loader2, Activity } from 'lucide-react';
-=======
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { motion } from 'framer-motion';
-import { GraduationCap, Building, BookOpen, Calendar, CheckSquare, MessageSquare, User, ArrowRight, Loader2 } from 'lucide-react';
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,14 +13,13 @@ import { Badge } from '@/components/ui/badge';
 export default function StudentDashboard() {
   const router = useRouter();
   const { user, loading } = useAuth();
-<<<<<<< HEAD
   const [avgAttendance, setAvgAttendance] = useState(null);
   const [semesterFees, setSemesterFees] = useState(null);
   const [cgpa, setCgpa] = useState(null);
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
-    else if (!loading && user && user.role !== 'STUDENT') router.push('/login');
+    if (!loading && !user) router.push('/student/login');
+    else if (!loading && user && user.role !== 'STUDENT') router.push('/student/login');
     else if (!loading && user) {
       getMyAttendanceSummary('ALL')
         .then(d => setAvgAttendance(d?.overall_percentage ?? null))
@@ -41,14 +32,6 @@ export default function StudentDashboard() {
       getMyCgpa()
         .then(d => setCgpa(d?.cgpa ?? null))
         .catch(() => {});
-=======
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    } else if (!loading && user && user.role !== 'STUDENT') {
-      router.push('/login');
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     }
   }, [user, loading, router]);
 
@@ -71,7 +54,6 @@ export default function StudentDashboard() {
   ];
 
   const quickActions = [
-<<<<<<< HEAD
     { 
       href: '/student/attendance', 
       label: 'Avg Attendance', 
@@ -112,35 +94,6 @@ export default function StudentDashboard() {
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
 
         {/* Header */}
-=======
-    { href: '/student/todos', label: 'My Todos', desc: 'Manage assignments & tasks', Icon: CheckSquare, colorTheme: 'violet' },
-    { href: '/student/messages', label: 'Messages', desc: 'Chat with teachers & peers', Icon: MessageSquare, colorTheme: 'cyan' },
-    { href: '/student/profile', label: 'My Profile', desc: 'View details & change settings', Icon: User, colorTheme: 'emerald' },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
-  };
-
-  return (
-    <div className="p-6 max-w-7xl mx-auto min-h-[calc(100vh-4rem)]">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="space-y-6"
-      >
-        {/* Header Greeting */}
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         <motion.div variants={itemVariants} className="space-y-2">
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="outline" className="badge-violet text-xs">Student Portal</Badge>
@@ -149,24 +102,11 @@ export default function StudentDashboard() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white font-heading">
             Welcome back, <span className="gradient-text-violet">{user.first_name}</span>!
           </h1>
-<<<<<<< HEAD
           <p className="text-slate-400 text-base max-w-2xl">Here's an overview of your academic profile and activities today.</p>
         </motion.div>
 
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-=======
-          <p className="text-slate-400 text-base max-w-2xl">
-            Here's an overview of your academic profile and activities today.
-          </p>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <motion.div 
-          variants={itemVariants} 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
           {stats.map((stat, i) => {
             const IconComponent = stat.Icon;
             return (
@@ -175,23 +115,10 @@ export default function StudentDashboard() {
                   <div className={`absolute top-0 left-0 w-full h-1 opacity-50 transition-opacity group-hover:opacity-100 ${stat.colorClass.split(' ')[1]}`} />
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
-<<<<<<< HEAD
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{stat.label}</span>
                       <div className={`p-2 rounded-lg border ${stat.colorClass}`}><IconComponent className="w-4 h-4" /></div>
                     </div>
                     <p className="text-xl font-bold text-white tracking-tight truncate font-heading">{stat.value}</p>
-=======
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                        {stat.label}
-                      </span>
-                      <div className={`p-2 rounded-lg border ${stat.colorClass}`}>
-                        <IconComponent className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <p className="text-xl font-bold text-white tracking-tight truncate font-heading">
-                      {stat.value}
-                    </p>
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                   </CardContent>
                 </Card>
               </motion.div>
@@ -201,7 +128,6 @@ export default function StudentDashboard() {
 
         {/* Quick Actions */}
         <motion.div variants={itemVariants} className="space-y-4">
-<<<<<<< HEAD
           <h2 className="text-xl font-bold tracking-tight text-white font-heading">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {quickActions.map((action, i) => {
@@ -221,42 +147,12 @@ export default function StudentDashboard() {
                             {action.value}
                           </span>
                         </div>
-=======
-          <h2 className="text-xl font-bold tracking-tight text-white font-heading">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {quickActions.map((action, i) => {
-              const ActionIcon = action.Icon;
-              
-              const themeStyles = {
-                violet: 'from-violet-600/20 to-indigo-600/20 hover:border-violet-500/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] text-violet-400 border-violet-500/20',
-                cyan: 'from-cyan-600/20 to-blue-600/20 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] text-cyan-400 border-cyan-500/20',
-                emerald: 'from-emerald-600/20 to-teal-600/20 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(52,211,153,0.15)] text-emerald-400 border-emerald-500/20'
-              };
-
-              return (
-                <Link key={i} href={action.href} >
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`group flex flex-col justify-between p-5 rounded-xl border border-white/10 bg-gradient-to-br ${themeStyles[action.colorTheme].split(' text-')[0]} backdrop-blur-md cursor-pointer transition-all duration-300 h-full`}
-                  >
-                    <div>
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-background/50 border mb-4 group-hover:scale-110 transition-transform duration-300 ${themeStyles[action.colorTheme].split(' hover:')[0].split(' ').pop()} ${themeStyles[action.colorTheme].split(' text-')[1].split(' ')[0]}`}>
-                        <ActionIcon className="w-6 h-6" />
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                       </div>
                       <h3 className="text-lg font-bold text-white mb-1 font-heading">{action.label}</h3>
                       <p className="text-slate-400 text-sm mb-4 leading-relaxed">{action.desc}</p>
                     </div>
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 group-hover:text-white transition-colors">
-<<<<<<< HEAD
                       View Details <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-=======
-                      Open Menu
-                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                     </div>
                   </motion.div>
                 </Link>
@@ -264,10 +160,7 @@ export default function StudentDashboard() {
             })}
           </div>
         </motion.div>
-<<<<<<< HEAD
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       </motion.div>
     </div>
   );

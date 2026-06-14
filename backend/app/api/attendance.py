@@ -9,10 +9,7 @@ from app.models.attendance import (
 from app.models.user import User
 from app.models.course import Course
 from app.api.deps import get_current_user
-<<<<<<< HEAD
 from app.api.permissions import require_course_management_edit
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 from app.services import attendance_service
 
 router = APIRouter()
@@ -292,7 +289,6 @@ async def get_my_attendance_summary(
     if student.role != "STUDENT":
         raise HTTPException(status_code=403, detail="Only students can view their attendance")
     
-<<<<<<< HEAD
     # Get student's enrollments — support 'ALL' wildcard term
     from app.models.enrollment import Enrollment
     if term == "ALL":
@@ -306,15 +302,6 @@ async def get_my_attendance_summary(
             Enrollment.status == "ENROLLED"
         ).to_list()
         enrollments = [e for e in enrollments if e.term == term or e.term == "ALL"]
-=======
-    # Get student's enrollments
-    from app.models.enrollment import Enrollment
-    enrollments = await Enrollment.find(
-        Enrollment.student_id == str(student.id),
-        Enrollment.term == term,
-        Enrollment.status == "ENROLLED"
-    ).to_list()
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Calculate attendance for each course
     courses = []
@@ -329,10 +316,7 @@ async def get_my_attendance_summary(
             )
             
             courses.append({
-<<<<<<< HEAD
                 "course_id": enrollment.course_id,
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
                 "course_code": course.course_code,
                 "course_name": course.course_name,
                 "attendance_percentage": attendance_stats["attendance_percentage"],
@@ -399,12 +383,7 @@ async def lock_attendance(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-<<<<<<< HEAD
     require_course_management_edit(user)
-=======
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can lock attendance")
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Lock attendance
     result = await attendance_service.lock_course_attendance(
@@ -425,12 +404,7 @@ async def unlock_attendance(
     """
     # Verify admin permission
     user = await get_current_user_object(current_user)
-<<<<<<< HEAD
     require_course_management_edit(user)
-=======
-    if user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Only admins can unlock attendance")
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Unlock attendance
     result = await attendance_service.unlock_course_attendance(

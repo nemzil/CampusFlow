@@ -59,13 +59,10 @@ from app.api.timetable import router as timetable_router
 from app.api.grading import router as grading_router
 from app.api.fees import router as fees_router
 from app.api.admit_cards import router as admit_cards_router
-<<<<<<< HEAD
 from app.api.upload import router as upload_router
 from app.api.lectures import router as lectures_router
 from app.api.class_timetable import router as class_timetable_router
 from app.api.exam_schedule import router as exam_schedule_router
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 # Register routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
@@ -84,11 +81,8 @@ app.include_router(timetable_router, prefix="/api/timetable", tags=["Timetable"]
 app.include_router(grading_router, prefix="/api/grades", tags=["Grading & GPA"])
 app.include_router(fees_router, prefix="/api/fees", tags=["Fee Management"])
 app.include_router(admit_cards_router, prefix="/api/admit-cards", tags=["Admit Cards"])
-<<<<<<< HEAD
 app.include_router(upload_router, prefix="/api/upload", tags=["File Upload"])
 app.include_router(lectures_router, prefix="/api/lectures", tags=["Lectures"])
 app.include_router(class_timetable_router, prefix="/api/class-timetable", tags=["Class Timetable"])
 app.include_router(exam_schedule_router, prefix="/api/exam-schedule", tags=["Exam Schedule"])
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 

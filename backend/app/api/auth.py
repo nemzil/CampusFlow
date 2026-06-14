@@ -49,6 +49,13 @@ async def login(credentials: UserLogin):
     if not verify_password(credentials.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    # 4. Verify portal role if provided
+    if credentials.role and user.role.upper() != credentials.role.upper():
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Access denied. This portal is for {credentials.role.capitalize()}s only."
+        )
+
     # 4. Update last login timestamp using atomic update
     await user.set({User.last_login: datetime.now(timezone.utc)})
 
@@ -60,10 +67,7 @@ async def login(credentials: UserLogin):
         "message": "Login successful",
         "access_token": access_token,
         "token_type": "bearer",
-<<<<<<< HEAD
         "id": str(user.id),
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         "username": user.username,
         "email": user.email,
         "role": user.role,
@@ -257,11 +261,7 @@ class RegisterAdminRequest(BaseModel):
     first_name: str
     last_name: str
     cell_no: str  # Required
-<<<<<<< HEAD
     admin_level: str  # "SUPER_ADMIN", "ADMIN", "FEE_MANAGEMENT_ADMIN", "COURSE_MANAGEMENT_ADMIN", "EXAM_MANAGEMENT_ADMIN"
-=======
-    admin_level: str  # "SUPER_ADMIN", "ADMIN", "MODERATOR"
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
 @router.post("/register/student")
 async def register_student(
@@ -609,13 +609,10 @@ class AdminUpdateUserRequest(BaseModel):
     # Admin fields
     admin_level: Optional[str] = None
 
-<<<<<<< HEAD
     # Credentials (admin-only override)
     new_username: Optional[str] = None
     new_password: Optional[str] = None
 
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 @router.patch("/users/{username}/admin-edit")
 async def admin_edit_user(
     username: str,
@@ -701,7 +698,6 @@ async def admin_edit_user(
         if admin.admin_level != "SUPER_ADMIN":
             raise HTTPException(status_code=403, detail="Only super admins can change admin level")
         update_data[User.admin_level] = updates.admin_level
-<<<<<<< HEAD
 
     # Credential overrides
     if updates.new_username is not None:
@@ -717,8 +713,6 @@ async def admin_edit_user(
         if len(pw) < 6:
             raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
         update_data[User.password_hash] = get_password_hash(pw)
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     
     # Add updated_at
     update_data[User.updated_at] = datetime.now(timezone.utc)

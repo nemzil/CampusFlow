@@ -26,11 +26,7 @@ export default function StudentEnrollmentPage() {
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
 
-<<<<<<< HEAD
   const [term] = useState('ALL');
-=======
-  const [term, setTerm] = useState('2024F');
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
   const [windowStatus, setWindowStatus] = useState(null);
   const [myEnrollments, setMyEnrollments] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
@@ -47,11 +43,7 @@ export default function StudentEnrollmentPage() {
     } else if (!authLoading && user) {
       loadEnrollmentData();
     }
-<<<<<<< HEAD
   }, [user, authLoading, router]);
-=======
-  }, [user, authLoading, router, term]);
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
 
   const loadEnrollmentData = async () => {
     setLoading(true);
@@ -117,11 +109,7 @@ export default function StudentEnrollmentPage() {
 
   const totalRegisteredCredits = myEnrollments.reduce((sum, item) => sum + (item.credit_hours || 0), 0);
 
-<<<<<<< HEAD
   if (authLoading || loading) {
-=======
-  if (authLoading || (loading && availableCourses.length === 0)) {
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#060813]">
         <div className="flex flex-col items-center gap-3">
@@ -148,32 +136,9 @@ export default function StudentEnrollmentPage() {
           <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">SSUET Registrar Office</Badge>
           <h1 className="text-3xl font-bold font-heading text-white tracking-tight">Course Registration</h1>
           <p className="text-slate-400 mt-1 font-sans">
-<<<<<<< HEAD
             Enroll in courses for Semester <span className="font-semibold text-white">{user?.current_semester || ''}</span>.
           </p>
         </div>
-=======
-            Enroll in core/elective courses and manage your academic load for Term <span className="font-mono text-white font-semibold">{term}</span>.
-          </p>
-        </div>
-
-        {/* Term Switcher */}
-        <div className="flex items-center gap-2 self-start sm:self-center bg-white/[0.02] border border-white/5 p-1 rounded-lg">
-          {['2024F', '2024S'].map(t => (
-            <button
-              key={t}
-              onClick={() => setTerm(t)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono tracking-wider transition-all ${
-                term === t 
-                  ? 'bg-violet-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
       </div>
 
       {/* Registration Status Indicator Window */}
@@ -277,13 +242,8 @@ export default function StudentEnrollmentPage() {
         )}
       </div>
 
-<<<<<<< HEAD
       {/* Available Registration Catalog — only shown when window is open */}
       {isWindowOpen && <div className="space-y-4 pt-4">
-=======
-      {/* Available Registration Catalog */}
-      <div className="space-y-4 pt-4">
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <h2 className="text-lg font-bold font-heading flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-violet-400" /> Available Registration Catalog
@@ -450,10 +410,7 @@ export default function StudentEnrollmentPage() {
           </div>
         )}
       </div>
-<<<<<<< HEAD
       }
-=======
->>>>>>> dfcb8b4dcbd245453f1448c935a8ac364f27767e
     </div>
   );
 }
