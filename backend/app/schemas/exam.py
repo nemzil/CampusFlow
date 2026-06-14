@@ -32,6 +32,7 @@ class CreateManualExamRequest(BaseModel):
     subject: Optional[str] = None
     title: str
     questions: List[ManualQuestionSchema]
+    require_seb: Optional[bool] = False
     
     def get_class_name(self):
         """Get class name from either batch or class_name"""
@@ -58,12 +59,15 @@ class ManualExamResponse(BaseModel):
     live: bool
     status: str = "draft"
     questions: List[ManualQuestionSchema]
+    require_seb: bool = False
+    submitted: bool = False
 
 
 class SetLiveRequest(BaseModel):
     """Request to set an exam as live"""
     start_time: datetime
     end_time: datetime
+    require_seb: Optional[bool] = None
 
 
 class ManualStudentAnswerSchema(BaseModel):
@@ -138,6 +142,7 @@ class CreateAiExamRequest(BaseModel):
     subject: Optional[str] = None
     topic: str
     num_questions: int = Field(5, ge=1, le=20)
+    require_seb: Optional[bool] = False
     
     def get_class_name(self):
         """Get class name from either batch or class_name"""
@@ -165,12 +170,15 @@ class AiExamResponse(BaseModel):
     status: str
     questions: List[ExamQuestionSchema]
     ended_at: Optional[str] = None
+    require_seb: bool = False
+    submitted: bool = False
 
 
 class SetLiveAiRequest(BaseModel):
     """Request to set an AI exam as live"""
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    require_seb: Optional[bool] = None
 
 
 class UpdateQuestionRequest(BaseModel):

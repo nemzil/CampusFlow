@@ -12,7 +12,9 @@ from app.models.enrollment import Enrollment
 from app.models.assignment import Assignment, Submission
 from app.models.ai_exam import ExamResult
 from app.models.user import User
+from beanie import PydanticObjectId
 from beanie.operators import In
+
 
 
 async def fetch_component_marks(student_id: str, course_id: str, term: str) -> Dict[str, Optional[float]]:
@@ -154,33 +156,26 @@ async def fetch_component_marks(student_id: str, course_id: str, term: str) -> D
 
 def calculate_total_marks(components: Dict[str, Optional[float]]) -> Optional[float]:
     """
-    Calculate total marks from components
+    Calculate total marks from components (running sum of non-None values)
     
     Args:
         components: Dict of component marks
     
     Returns:
-        Total marks or None if incomplete
+        Total marks or None if no components are graded
     """
-    # Check if all components are present
-    required_components = ["quiz1", "quiz2", "quiz3", "assignment1", "assignment2", "assignment3", "midterm", "final"]
-    
-    for component in required_components:
-        if components.get(component) is None:
-            return None  # Incomplete
-    
-    # Calculate total
     total = 0.0
-    total += components["quiz1"] or 0
-    total += components["quiz2"] or 0
-    total += components["quiz3"] or 0
-    total += components["assignment1"] or 0
-    total += components["assignment2"] or 0
-    total += components["assignment3"] or 0
-    total += components["midterm"] or 0
-    total += components["final"] or 0
+    has_any = False
     
-    return round(total, 2)
+    required_components = ["quiz1", "quiz2", "quiz3", "assignment1", "assignment2", "assignment3", "midterm", "final"]
+    for component in required_components:
+        val = components.get(component)
+        if val is not None:
+            total += val
+            has_any = True
+            
+    return round(total, 2) if has_any else None
+
 
 
 def is_grade_complete(components: Dict[str, Optional[float]]) -> bool:
@@ -225,16 +220,166 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
         Enrollment.status == "ENROLLED"
     ).to_list()
     
+    if not enrollments:
+        return {
+            "message": "Grades calculated for 0 students",
+            "course_code": course.course_code,
+            "calculated_count": 0,
+            "incomplete_count": 0,
+            "status": "CALCULATED"
+        }
+
+    # ----------------- OPTIMIZED CACHING -----------------
+    student_ids = [e.student_id for e in enrollments]
+    student_usernames = [e.student_username for e in enrollments]
+
+    # 1. Fetch all published assignments / quizzes for the course
+    all_published_assignments = await Assignment.find(
+        Assignment.course_id == course_id,
+        Assignment.status == "PUBLISHED"
+    ).to_list()
+
+    assignment_map = {}  # keys: (type, number), values: assignment_id (str)
+    assignment_ids = []
+    for assign in all_published_assignments:
+        key = (assign.type, assign.number)
+        assignment_map[key] = str(assign.id)
+        assignment_ids.append(str(assign.id))
+
+    # 2. Fetch all graded submissions for these assignments and students
+    submission_map = {}  # keys: (assignment_id, student_id), values: marks_obtained
+    if assignment_ids:
+        submissions = await Submission.find(
+            In(Submission.assignment_id, assignment_ids),
+            In(Submission.student_id, student_ids),
+            Submission.status == "GRADED"
+        ).to_list()
+        for sub in submissions:
+            if sub.marks_obtained is not None:
+                submission_map[(sub.assignment_id, sub.student_id)] = sub.marks_obtained
+
+    # 3. Fetch all manual exams and their submissions checked by teacher
+    from beanie import PydanticObjectId
+    from app.models.exam import ManualExam, ManualExamSubmission
+    from app.models.ai_exam import AiExam, AiExamSubmission
+
+    manual_exams = await ManualExam.find({
+        "$or": [
+            {"courseId": course_id},
+            {"courseCode": course.course_code}
+        ]
+    }).to_list()
+    manual_exam_map = {str(exam.id): exam for exam in manual_exams}
+
+    manual_subs = await ManualExamSubmission.find(
+        In(ManualExamSubmission.studentUsername, student_usernames),
+        ManualExamSubmission.checkedByTeacher == True
+    ).to_list()
+
+    manual_sub_map = {}
+    for sub in manual_subs:
+        manual_sub_map.setdefault(sub.studentUsername, []).append(sub)
+
+    # 4. Fetch all AI exams and their submissions/results checked by teacher
+    ai_exams = await AiExam.find({
+        "$or": [
+            {"course_id": course_id},
+            {"course_code": course.course_code}
+        ]
+    }).to_list()
+    ai_exam_map = {str(exam.id): exam for exam in ai_exams}
+    ai_exam_ids = list(ai_exam_map.keys())
+
+    ai_subs = []
+    exam_results_map = {}
+    if ai_exam_ids:
+        ai_subs = await AiExamSubmission.find(
+            In(AiExamSubmission.student_username, student_usernames),
+            AiExamSubmission.checked == True
+        ).to_list()
+
+        exam_results = await ExamResult.find(
+            In(ExamResult.exam_id, ai_exam_ids),
+            In(ExamResult.student_username, student_usernames)
+        ).to_list()
+        for res in exam_results:
+            exam_results_map[(res.exam_id, res.student_username)] = res.obtained_marks
+
+    ai_sub_map = {}
+    for sub in ai_subs:
+        ai_sub_map.setdefault(sub.student_username, []).append(sub)
+
+    # 5. Fetch all existing grade records for this course and term
+    existing_grades = await Grade.find(
+        Grade.course_id == course_id,
+        Grade.term == term,
+        In(Grade.student_id, student_ids)
+    ).to_list()
+    existing_grade_map = {grade.student_id: grade for grade in existing_grades}
+    # -----------------------------------------------------
+
     calculated_count = 0
     incomplete_count = 0
     
     for enrollment in enrollments:
-        # Fetch component marks
-        components = await fetch_component_marks(
-            student_id=enrollment.student_id,
-            course_id=course_id,
-            term=term
-        )
+        # Construct student components in-memory
+        components = {
+            "quiz1": None,
+            "quiz2": None,
+            "quiz3": None,
+            "assignment1": None,
+            "assignment2": None,
+            "assignment3": None,
+            "midterm": None,
+            "final": None,
+        }
+
+        # Quizzes
+        for i in range(1, 4):
+            assign_id = assignment_map.get(("QUIZ", i))
+            if assign_id:
+                obtained = submission_map.get((assign_id, enrollment.student_id))
+                if obtained is not None:
+                    components[f"quiz{i}"] = obtained
+
+        # Assignments
+        for i in range(1, 4):
+            assign_id = assignment_map.get(("ASSIGNMENT", i))
+            if assign_id:
+                obtained = submission_map.get((assign_id, enrollment.student_id))
+                if obtained is not None:
+                    components[f"assignment{i}"] = obtained
+
+        # Manual Exams
+        for sub in manual_sub_map.get(enrollment.student_username, []):
+            exam = manual_exam_map.get(str(sub.examId))
+            if not exam:
+                continue
+            exam_type = (getattr(exam, "examType", "") or "").lower()
+            exam_title = (getattr(exam, "title", "") or "").lower()
+            obtained = float(sub.totalMarks or 0)
+
+            if "final" in exam_type or "final" in exam_title:
+                components["final"] = obtained
+            elif "mid" in exam_type or "mid" in exam_title:
+                components["midterm"] = obtained
+
+        # AI Exams
+        for sub in ai_sub_map.get(enrollment.student_username, []):
+            exam = ai_exam_map.get(str(sub.exam_id))
+            if not exam:
+                continue
+            exam_type = (getattr(exam, "exam_type", "") or "").lower()
+            exam_title = (getattr(exam, "topic", "") or "").lower()
+            obtained_marks = exam_results_map.get((sub.exam_id, enrollment.student_username))
+            if obtained_marks is None:
+                continue
+            obtained = float(obtained_marks)
+
+            if "final" in exam_type or "final" in exam_title:
+                components["final"] = obtained
+            elif "mid" in exam_type or "mid" in exam_title:
+                components["midterm"] = obtained
         
         # Calculate total
         total_marks = calculate_total_marks(components)
@@ -243,43 +388,49 @@ async def calculate_course_grades(course_id: str, term: str) -> Dict:
         # Convert to letter grade
         letter_grade = None
         grade_points = None
-        if total_marks is not None:
+        if is_complete and total_marks is not None:
             letter_grade, grade_points = convert_to_letter_grade(total_marks)
         
         # Check if grade already exists
-        existing_grade = await Grade.find_one(
-            Grade.student_id == enrollment.student_id,
-            Grade.course_id == course_id,
-            Grade.term == term
-        )
+        existing_grade = existing_grade_map.get(enrollment.student_id)
         
         if existing_grade:
-            # Preserve manual edits by only adding fetched components that are currently None
+            # Overwrite components with the latest fetched marks if they differ
             merged = existing_grade.components.copy() if existing_grade.components else {}
+            changed = False
             for k, v in components.items():
-                if merged.get(k) is None and v is not None:
+                if v is not None and merged.get(k) != v:
                     merged[k] = v
+                    changed = True
 
             # Recalculate totals based on merged components
             total_marks = calculate_total_marks(merged)
             is_complete = is_grade_complete(merged)
 
             letter_grade, grade_points = None, None
-            if total_marks is not None:
+            if is_complete and total_marks is not None:
                 letter_grade, grade_points = convert_to_letter_grade(total_marks)
 
-            # Update existing grade (preserve workflow if already submitted)
-            update_fields = {
-                Grade.components: merged,
-                Grade.total_marks: total_marks,
-                Grade.letter_grade: letter_grade,
-                Grade.grade_points: grade_points,
-                Grade.is_complete: is_complete,
-                Grade.updated_at: datetime.now(timezone.utc)
-            }
-            if existing_grade.workflow_status == "DRAFT":
-                update_fields[Grade.status] = "CALCULATED"
-            await existing_grade.set(update_fields)
+
+            # Only write to database if actual values have changed
+            if (
+                changed or
+                existing_grade.total_marks != total_marks or
+                existing_grade.is_complete != is_complete or
+                existing_grade.letter_grade != letter_grade or
+                existing_grade.grade_points != grade_points
+            ):
+                update_fields = {
+                    Grade.components: merged,
+                    Grade.total_marks: total_marks,
+                    Grade.letter_grade: letter_grade,
+                    Grade.grade_points: grade_points,
+                    Grade.is_complete: is_complete,
+                    Grade.updated_at: datetime.now(timezone.utc)
+                }
+                if existing_grade.workflow_status == "DRAFT":
+                    update_fields[Grade.status] = "CALCULATED"
+                await existing_grade.set(update_fields)
         else:
             # Create new grade
             grade = Grade(
@@ -658,13 +809,14 @@ def _recalculate_grade_fields(grade: Grade) -> None:
     total_marks = calculate_total_marks(grade.components)
     grade.is_complete = is_grade_complete(grade.components)
     grade.total_marks = total_marks
-    if total_marks is not None:
+    if grade.is_complete and total_marks is not None:
         letter, points = convert_to_letter_grade(total_marks)
         grade.letter_grade = letter
         grade.grade_points = points
     else:
         grade.letter_grade = None
         grade.grade_points = None
+
 
 
 async def upsert_course_grade(
@@ -705,7 +857,16 @@ async def upsert_course_grade(
             existing.teacher_remarks = teacher_remarks
         _recalculate_grade_fields(existing)
         existing.updated_at = datetime.now(timezone.utc)
-        await existing.save()
+        await existing.set({
+            Grade.components: existing.components,
+            Grade.component_feedback: existing.component_feedback,
+            Grade.teacher_remarks: existing.teacher_remarks,
+            Grade.total_marks: existing.total_marks,
+            Grade.letter_grade: existing.letter_grade,
+            Grade.grade_points: existing.grade_points,
+            Grade.is_complete: existing.is_complete,
+            Grade.updated_at: existing.updated_at,
+        })
         return existing
 
     base_components = await fetch_component_marks(student_id, course_id, term)
@@ -741,9 +902,19 @@ async def get_course_grades_for_manage(course_id: str, term: str) -> Dict:
         Grade.term == term,
     ).to_list()
 
+    student_ids = [grade.student_id for grade in grades]
+    valid_oids = []
+    for sid in student_ids:
+        try:
+            valid_oids.append(PydanticObjectId(sid))
+        except Exception:
+            pass
+    users = await User.find(In(User.id, valid_oids)).to_list() if valid_oids else []
+    user_map = {str(u.id): u for u in users}
+
     students = []
     for grade in grades:
-        student = await User.get(grade.student_id)
+        student = user_map.get(grade.student_id)
         students.append({
             "student_id": grade.student_id,
             "registration_no": grade.student_username,
@@ -764,6 +935,7 @@ async def get_course_grades_for_manage(course_id: str, term: str) -> Dict:
         "term": term,
         "students": students,
     }
+
 
 
 async def submit_course_results_to_exam_dept(
@@ -809,11 +981,34 @@ async def get_submitted_results_for_exam_dept(term: Optional[str] = None) -> Lis
         query = query.find(Grade.term == term)
     grades = await query.to_list()
 
+    course_ids = list(set(grade.course_id for grade in grades))
+    student_ids = list(set(grade.student_id for grade in grades))
+
+    valid_course_oids = []
+    for cid in course_ids:
+        try:
+            valid_course_oids.append(PydanticObjectId(cid))
+        except Exception:
+            pass
+
+    valid_student_oids = []
+    for sid in student_ids:
+        try:
+            valid_student_oids.append(PydanticObjectId(sid))
+        except Exception:
+            pass
+
+    courses = await Course.find(In(Course.id, valid_course_oids)).to_list() if valid_course_oids else []
+    course_map = {str(c.id): c for c in courses}
+
+    users = await User.find(In(User.id, valid_student_oids)).to_list() if valid_student_oids else []
+    user_map = {str(u.id): u for u in users}
+
     grouped: Dict[str, Dict] = {}
     for grade in grades:
         key = f"{grade.course_id}:{grade.term}"
         if key not in grouped:
-            course = await Course.get(grade.course_id)
+            course = course_map.get(grade.course_id)
             grouped[key] = {
                 "course_id": grade.course_id,
                 "course_code": grade.course_code,
@@ -822,7 +1017,7 @@ async def get_submitted_results_for_exam_dept(term: Optional[str] = None) -> Lis
                 "workflow_status": grade.workflow_status,
                 "students": [],
             }
-        student = await User.get(grade.student_id)
+        student = user_map.get(grade.student_id)
         grouped[key]["students"].append({
             "grade_id": str(grade.id),
             "student_id": grade.student_id,
@@ -838,6 +1033,7 @@ async def get_submitted_results_for_exam_dept(term: Optional[str] = None) -> Lis
         })
 
     return list(grouped.values())
+
 
 
 async def exam_dept_update_grade(
@@ -876,7 +1072,19 @@ async def exam_dept_update_grade(
     grade.exam_reviewed_at = datetime.now(timezone.utc)
     grade.exam_reviewed_by = reviewer_username
     grade.updated_at = datetime.now(timezone.utc)
-    await grade.save()
+    await grade.set({
+        Grade.components: grade.components,
+        Grade.component_feedback: grade.component_feedback,
+        Grade.teacher_remarks: grade.teacher_remarks,
+        Grade.total_marks: grade.total_marks,
+        Grade.letter_grade: grade.letter_grade,
+        Grade.grade_points: grade.grade_points,
+        Grade.is_complete: grade.is_complete,
+        Grade.workflow_status: grade.workflow_status,
+        Grade.exam_reviewed_at: grade.exam_reviewed_at,
+        Grade.exam_reviewed_by: grade.exam_reviewed_by,
+        Grade.updated_at: grade.updated_at,
+    })
     return grade
 
 

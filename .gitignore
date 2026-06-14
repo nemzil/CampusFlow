@@ -30,6 +30,7 @@ dist/
 out/
 build/
 coverage/
+AGENTS.md
 
 # Vercel & Debug Logs
 .vercel

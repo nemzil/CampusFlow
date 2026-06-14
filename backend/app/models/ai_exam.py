@@ -43,6 +43,7 @@ class AiExam(Document):
     total_marks: Optional[int] = 30  # NEW: Teacher-defined total marks (with default)
     questions: List[ExamQuestion] = Field(default_factory=list)
     is_live: bool = False
+    require_seb: bool = False
     start_time: Optional[str] = None  # ISO string (PKT)
     end_time: Optional[str] = None
     status: str = "DRAFT"

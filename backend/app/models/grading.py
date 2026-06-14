@@ -5,6 +5,59 @@ from datetime import datetime, timezone
 from pymongo import IndexModel, ASCENDING, DESCENDING
 
 # ---------------------------------------------------------
+# Grading Scale Functions
+# ---------------------------------------------------------
+def convert_to_letter_grade(total_marks: float):
+    """Convert total marks (100 scale for theory) to letter grade and GPA"""
+    if 86 <= total_marks <= 100:
+        return ("A", 4.0)
+    elif 80 <= total_marks <= 85:
+        return ("A-", 3.66)
+    elif 75 <= total_marks <= 79:
+        return ("B+", 3.33)
+    elif 70 <= total_marks <= 74:
+        return ("B", 3.0)
+    elif 67 <= total_marks <= 69:
+        return ("B-", 2.66)
+    elif 63 <= total_marks <= 66:
+        return ("C+", 2.33)
+    elif 60 <= total_marks <= 62:
+        return ("C", 2.0)
+    elif 57 <= total_marks <= 59:
+        return ("C-", 1.66)
+    elif 54 <= total_marks <= 56:
+        return ("D+", 1.3)
+    elif 50 <= total_marks <= 53:
+        return ("D", 1.0)
+    else:
+        return ("F", 0.0)
+
+def convert_to_letter_grade_lab(total_marks: float):
+    """Convert total marks (50 scale for lab) to letter grade and GPA"""
+    if 43 <= total_marks <= 50:
+        return ("A", 4.0)
+    elif 40 <= total_marks <= 42:
+        return ("A-", 3.66)
+    elif 38 <= total_marks <= 39:
+        return ("B+", 3.33)
+    elif 35 <= total_marks <= 37:
+        return ("B", 3.0)
+    elif 33 <= total_marks <= 34:
+        return ("B-", 2.66)
+    elif 31 <= total_marks <= 32:
+        return ("C+", 2.33)
+    elif total_marks == 30:
+        return ("C", 2.0)
+    elif 28 <= total_marks <= 29:
+        return ("C-", 1.66)
+    elif 26 <= total_marks <= 27:
+        return ("D+", 1.3)
+    elif total_marks == 25:
+        return ("D", 1.0)
+    else:
+        return ("F", 0.0)
+
+# ---------------------------------------------------------
 # Grade Model
 # ---------------------------------------------------------
 class Grade(Document):

@@ -105,8 +105,27 @@ export default function StudentResultsPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-lg">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Term</span>
-            <span className="px-3 py-1 rounded-md text-xs font-semibold font-mono tracking-wider bg-violet-600 text-white">{term}</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Term</span>
+            <select
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              className="bg-transparent text-xs font-semibold font-mono tracking-wider text-violet-400 focus:outline-none cursor-pointer animate-pulse-subtle"
+            >
+              {(() => {
+                const options = [];
+                const baseYear = 2024;
+                const currentYear = new Date().getFullYear();
+                for (let y = baseYear; y <= currentYear + 1; y++) {
+                  options.push(`${y}S`);
+                  options.push(`${y}F`);
+                }
+                return options.map((opt) => (
+                  <option key={opt} value={opt} className="bg-[#0b0c16] text-white">
+                    {opt}
+                  </option>
+                ));
+              })()}
+            </select>
           </div>
           {results?.transcript_available && (
             <Button onClick={handleDownloadTranscript} className="bg-emerald-600">

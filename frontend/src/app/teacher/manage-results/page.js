@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const COMPONENT_LABELS = {
   quiz1: 'Quiz 1 (3)', quiz2: 'Quiz 2 (3)', quiz3: 'Quiz 3 (4)',
@@ -24,7 +25,7 @@ export default function TeacherManageResultsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
-  const [term] = useState('2024F');
+  const [term, setTerm] = useState('2024F');
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [results, setResults] = useState(null);
@@ -37,6 +38,19 @@ export default function TeacherManageResultsPage() {
     if (!authLoading && (!user || user.role !== 'TEACHER')) router.push('/login');
     else if (!authLoading && user) loadCourses();
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (courses.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const courseId = params.get('courseId');
+      if (courseId) {
+        const course = courses.find(c => (c.id || c._id) === courseId);
+        if (course) {
+          loadResults(course);
+        }
+      }
+    }
+  }, [courses]);
 
   const loadCourses = async () => {
     setLoading(true);
@@ -52,9 +66,16 @@ export default function TeacherManageResultsPage() {
 
   const loadResults = async (course) => {
     setSelectedCourse(course);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('courseId', course.id || course._id);
+      window.history.pushState({}, '', url.pathname + url.search);
+    }
     setLoading(true);
     try {
-      const data = await getManageResults(course.id || course._id, term);
+      const courseTerm = course.term || '2024F';
+      setTerm(courseTerm);
+      const data = await getManageResults(course.id || course._id, courseTerm);
       setResults(data);
     } catch (e) {
       showError(e.message || 'Failed to load results');
@@ -135,6 +156,10 @@ export default function TeacherManageResultsPage() {
                   <span className="font-bold text-white">{course.course_code}</span>
                 </div>
                 <p className="text-sm text-slate-400">{course.course_name}</p>
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                  <span>Term: {course.term || 'N/A'}</span>
+                  <span>Semester: {course.semester}</span>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -142,11 +167,29 @@ export default function TeacherManageResultsPage() {
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="ghost" onClick={() => { setSelectedCourse(null); setResults(null); }}>
+            <Button variant="ghost" onClick={() => {
+              setSelectedCourse(null);
+              setResults(null);
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('courseId');
+                window.history.pushState({}, '', url.pathname + url.search);
+              }
+            }}>
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </Button>
-            <h2 className="text-xl font-bold text-white">{results?.course_code} — {results?.course_name}</h2>
-            <Button onClick={handleSubmitToExamDept} disabled={submitting} className="ml-auto bg-violet-600">
+            <h2 className="text-xl font-bold text-white">
+              {results ? (
+                `${results.course_code} — ${results.course_name}`
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-16 bg-white/10" />
+                  <span className="text-slate-600">—</span>
+                  <Skeleton className="h-6 w-40 bg-white/10" />
+                </div>
+              )}
+            </h2>
+            <Button onClick={handleSubmitToExamDept} disabled={submitting || !results} className="ml-auto bg-violet-600">
               <Send className="w-4 h-4 mr-2" /> Send to Exam Dept
             </Button>
           </div>
@@ -166,7 +209,60 @@ export default function TeacherManageResultsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(results?.students || []).map((s) => (
+                {!results ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <tr key={idx} className="border-t border-white/5">
+                      <td className="p-3">
+                        <Skeleton className="h-4 w-32 bg-white/10 mb-2" />
+                        <Skeleton className="h-3 w-20 bg-white/5" />
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center gap-1">
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                          <span className="text-slate-600">/</span>
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                          <span className="text-slate-600">/</span>
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center gap-1">
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                          <span className="text-slate-600">/</span>
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                          <span className="text-slate-600">/</span>
+                          <Skeleton className="h-4 w-6 bg-white/5" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center">
+                          <Skeleton className="h-4 w-8 bg-white/5" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center">
+                          <Skeleton className="h-4 w-8 bg-white/5" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center">
+                          <Skeleton className="h-4 w-10 bg-white/10" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center">
+                          <Skeleton className="h-5 w-16 bg-white/5 rounded-full" />
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center">
+                          <Skeleton className="h-8 w-8 bg-white/5 rounded" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  results.students.map((s) => (
                   <tr key={s.student_id} className="border-t border-white/5 hover:bg-white/[0.02]">
                     <td className="p-3">
                       <div className="font-medium text-white">{s.student_name}</div>
@@ -192,7 +288,8 @@ export default function TeacherManageResultsPage() {
                       </Button>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>

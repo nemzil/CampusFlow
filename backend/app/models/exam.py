@@ -37,6 +37,7 @@ class ManualExam(Document):
     startTime: Optional[datetime] = None
     endTime: Optional[datetime] = None
     live: bool = False
+    requireSeb: bool = False
     questions: List[ManualQuestion] = Field(default_factory=list)
 
     class Settings:

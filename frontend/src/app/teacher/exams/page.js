@@ -10,7 +10,7 @@ import {
   setAiExamLive, endAiExam, getAiExamSubmissions, gradeAiExam, confirmAiResult,
   getTeacherResults, createManualExam, getManualExams, setManualExamLive,
   endManualExam, getManualExamSubmissions, markManualSubmission,
-  deleteAiExam, deleteManualExam, getMyCourses,
+  deleteAiExam, deleteManualExam, getMyCourses, gradeGenericExam,
 } from '@/lib/api';
 import {
   GraduationCap, Plus, Loader2, X, Save, Sparkles, RotateCcw, Edit3,
@@ -51,7 +51,8 @@ export default function TeacherExamsPage() {
     examType: 'midterm', // Still track internally for grading
     totalMarks: 30,
     topic: '', // For AI generation
-    num_questions: 5 
+    num_questions: 5,
+    require_seb: false
   });
   const [questions, setQuestions] = useState([EMPTY_Q()]);
 
@@ -62,7 +63,7 @@ export default function TeacherExamsPage() {
 
   // Set live
   const [liveTarget, setLiveTarget] = useState(null);
-  const [liveForm, setLiveForm] = useState({ start_time: '', end_time: '' });
+  const [liveForm, setLiveForm] = useState({ start_time: '', end_time: '', require_seb: false });
   const [settingLive, setSettingLive] = useState(false);
 
   // Submissions
@@ -155,7 +156,7 @@ export default function TeacherExamsPage() {
       }
       
       setShowCreateModal(false);
-      setExamForm({ batch: '', courseId: '', title: '', examType: 'midterm', totalMarks: 30, topic: '', num_questions: 5 });
+      setExamForm({ batch: '', courseId: '', title: '', examType: 'midterm', totalMarks: 30, topic: '', num_questions: 5, require_seb: false });
       setQuestions([EMPTY_Q()]);
       await loadAll();
     } catch (e) { 
@@ -215,8 +216,8 @@ export default function TeacherExamsPage() {
       const startISO = new Date(liveForm.start_time).toISOString();
       const endISO = new Date(liveForm.end_time).toISOString();
       
-      if (exam.creation_mode === 'ai') await setAiExamLive(exam.exam_id || exam.id, startISO, endISO);
-      else await setManualExamLive(exam.id, startISO, endISO);
+      if (exam.creation_mode === 'ai') await setAiExamLive(exam.exam_id || exam.id, startISO, endISO, liveForm.require_seb);
+      else await setManualExamLive(exam.id, startISO, endISO, liveForm.require_seb);
       showSuccess('Exam is live!');
       setLiveTarget(null);
       await loadAll();
@@ -235,7 +236,7 @@ export default function TeacherExamsPage() {
   };
 
   const openSubs = async (exam) => {
-    setSubsTarget({ exam }); setSubsLoading(true);
+    setSubsTarget({ exam, type: exam.creation_mode }); setSubsLoading(true);
     try {
       const data = exam.creation_mode === 'ai' 
         ? await getAiExamSubmissions(exam.exam_id || exam.id)
@@ -254,11 +255,61 @@ export default function TeacherExamsPage() {
     finally { setGrading(false); }
   };
 
+  const openGradeManual = async (exam, submission) => {
+    const studentUsername = submission.student_username;
+    setGradeTarget({ exam, username: studentUsername }); setGrading(true); setGradeResults(null);
+    try {
+      const res = await gradeGenericExam(
+        exam.title,
+        exam.questions.map(q => ({
+          id: q.question_number,
+          text: q.text,
+          correct_answer: q.correct_answer || 'N/A',
+          max_marks: q.max_marks
+        })),
+        submission.answers.map(a => ({
+          id: a.question_number,
+          student_answer: a.answer_text
+        }))
+      );
+      
+      // Merge AI marks/feedback with question details for rendering
+      const mergedResults = exam.questions.map(q => {
+        const aiRes = (res.results || []).find(r => r.id === q.question_number) || {};
+        return {
+          id: q.question_number,
+          question: q.text,
+          max_marks: q.max_marks,
+          marks_obtained: aiRes.marks_obtained ?? 0,
+          feedback: aiRes.feedback || ''
+        };
+      });
+      setGradeResults(mergedResults);
+    } catch (e) { showError(e.message); }
+    finally { setGrading(false); }
+  };
+
   const confirmGrade = async () => {
     setSaving(true);
     try {
-      await confirmAiResult(gradeTarget.exam.exam_id || gradeTarget.exam.id, gradeTarget.username,
-        gradeResults.map(r => ({ id: r.id, marks_obtained: r.marks_obtained, max_marks: r.max_marks, feedback: r.feedback })));
+      const isAi = gradeTarget.exam.creation_mode === 'ai';
+      if (isAi) {
+        await confirmAiResult(gradeTarget.exam.exam_id || gradeTarget.exam.id, gradeTarget.username,
+          gradeResults.map(r => ({ id: r.id, marks_obtained: r.marks_obtained, max_marks: r.max_marks, feedback: r.feedback })));
+      } else {
+        // Find the submission ID for the manual exam student
+        const submission = submissions.find(s => s.student_username === gradeTarget.username);
+        if (!submission) throw new Error('Submission not found');
+        
+        await markManualSubmission(submission.id, {
+          question_marks: gradeResults.map(r => ({
+            question_number: r.id,
+            awarded_marks: r.marks_obtained,
+            feedback: r.feedback
+          })),
+          total_marks: gradeResults.reduce((s, r) => s + (r.marks_obtained || 0), 0)
+        });
+      }
       showSuccess('Result saved!');
       setGradeTarget(null);
       if (subsTarget) openSubs(subsTarget.exam);
@@ -267,15 +318,54 @@ export default function TeacherExamsPage() {
   };
 
   const openMark = (sub) => {
-    setMarkTarget(sub);
-    setMarkForm((sub.answers || []).map(a => ({ question_number: a.question_number, awarded_marks: a.awarded_marks ?? 0, feedback: a.teacher_feedback ?? '' })));
+    const isAi = sub.answers && sub.answers.length > 0 && ('student_answer' in sub.answers[0] || 'marks' in sub.answers[0]);
+    const normalizedAnswers = (sub.answers || []).map(a => {
+      if (isAi) {
+        return {
+          question_number: a.id || a.questionNumber,
+          question: a.question,
+          answer_text: a.student_answer,
+          correct_answer: a.correct_answer,
+          max_marks: a.marks || a.max_marks || 5,
+          awarded_marks: a.awarded_marks ?? 0,
+          teacher_feedback: a.teacher_feedback ?? ''
+        };
+      } else {
+        return {
+          question_number: a.question_number,
+          question: a.question,
+          answer_text: a.answer_text,
+          correct_answer: a.correct_answer,
+          max_marks: a.max_marks,
+          awarded_marks: a.awarded_marks ?? 0,
+          teacher_feedback: a.teacher_feedback ?? ''
+        };
+      }
+    });
+
+    setMarkTarget({ ...sub, answers: normalizedAnswers });
+    setMarkForm(normalizedAnswers.map(a => ({ question_number: a.question_number, awarded_marks: a.awarded_marks, feedback: a.teacher_feedback })));
   };
 
   const confirmMark = async () => {
     setMarking(true);
     try {
       const total = markForm.reduce((s, m) => s + Number(m.awarded_marks), 0);
-      await markManualSubmission(markTarget.id, { question_marks: markForm, total_marks: total });
+      if (subsTarget.type === 'ai') {
+        const items = markForm.map(m => ({
+          id: m.question_number,
+          marks_obtained: Number(m.awarded_marks),
+          max_marks: markTarget.answers.find(a => a.question_number === m.question_number)?.max_marks || 5,
+          feedback: m.feedback
+        }));
+        await confirmAiResult(
+          subsTarget.exam.exam_id || subsTarget.exam.id,
+          markTarget.student_username,
+          items
+        );
+      } else {
+        await markManualSubmission(markTarget.id, { question_marks: markForm, total_marks: total });
+      }
       showSuccess('Marked!');
       setMarkTarget(null);
       if (subsTarget) openSubs(subsTarget.exam);
@@ -293,11 +383,7 @@ export default function TeacherExamsPage() {
   };
 
   const examStatus = (exam) => {
-    if (exam.creation_mode === 'ai') {
-      return exam.status?.toUpperCase() || 'DRAFT';
-    } else {
-      return exam.live ? 'LIVE' : 'DRAFT';
-    }
+    return exam.status?.toUpperCase() || 'DRAFT';
   };
 
   if (authLoading || (loading && !allExams.length)) {
@@ -374,7 +460,7 @@ export default function TeacherExamsPage() {
                             <Edit3 className="w-3 h-3 mr-1" />Edit Qs
                           </Button>
                         )}
-                        <Button size="sm" onClick={() => { setLiveTarget({ exam }); setLiveForm({ start_time: '', end_time: '' }); }}
+                        <Button size="sm" onClick={() => { setLiveTarget({ exam }); setLiveForm({ start_time: '', end_time: '', require_seb: exam.require_seb || exam.requireSeb || false }); }}
                           className="h-7 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
                           <Play className="w-3 h-3 mr-1" />Set Live
                         </Button>
@@ -473,6 +559,19 @@ export default function TeacherExamsPage() {
                       <Input type="number" value={examForm.totalMarks} onChange={e => setExamForm(p => ({ ...p, totalMarks: parseInt(e.target.value) || 0 }))} className="bg-white/5 border-white/10 text-white text-xs h-9" required />
                     </div>
                   )}
+                </div>
+                
+                <div className="flex items-center gap-2 pt-2">
+                  <input 
+                    type="checkbox" 
+                    id="require_seb_create" 
+                    checked={examForm.require_seb} 
+                    onChange={e => setExamForm(p => ({ ...p, require_seb: e.target.checked }))} 
+                    className="rounded border-white/10 bg-white/5 text-violet-600 focus:ring-violet-500/50 cursor-pointer" 
+                  />
+                  <label htmlFor="require_seb_create" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
+                    Require Safe Exam Browser (SEB) for this exam
+                  </label>
                 </div>
 
                 {creationMode === 'ai' && (
@@ -605,6 +704,18 @@ export default function TeacherExamsPage() {
                 <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">End Time</label>
                 <Input type="datetime-local" value={liveForm.end_time} onChange={e => setLiveForm(p => ({ ...p, end_time: e.target.value }))} className="bg-white/5 border-white/10 text-white text-xs h-9" required />
               </div>
+              <div className="flex items-center gap-2 pt-2">
+                <input 
+                  type="checkbox" 
+                  id="require_seb_live" 
+                  checked={liveForm.require_seb} 
+                  onChange={e => setLiveForm(p => ({ ...p, require_seb: e.target.checked }))} 
+                  className="rounded border-white/10 bg-white/5 text-violet-600 focus:ring-violet-500/50 cursor-pointer" 
+                />
+                <label htmlFor="require_seb_live" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
+                  Require Safe Exam Browser (SEB)
+                </label>
+              </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" onClick={() => setLiveTarget(null)} className="flex-1 text-xs h-9 text-slate-400 border border-white/10">Cancel</Button>
                 <Button type="submit" disabled={settingLive} className="flex-1 text-xs h-9 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
@@ -648,10 +759,17 @@ export default function TeacherExamsPage() {
                           {checked
                             ? <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px]"><CheckCircle2 className="w-2.5 h-2.5 mr-1 inline" />Graded</Badge>
                             : <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-[9px]">Pending</Badge>}
-                          <Button size="sm" onClick={() => subsTarget.type === 'ai' ? openGrade(subsTarget.exam, username) : openMark(sub)}
-                            className="h-7 px-2 bg-violet-600/80 hover:bg-violet-600 text-white text-[10px] font-bold">
-                            <Award className="w-3 h-3 mr-1" />{subsTarget.type === 'ai' ? 'AI Grade' : 'Mark'}
-                          </Button>
+                          <div className="flex gap-1.5">
+                            <Button size="sm" onClick={() => subsTarget.type === 'ai' ? openGrade(subsTarget.exam, username) : openGradeManual(subsTarget.exam, sub)}
+                              className="h-7 px-2.5 bg-violet-600/80 hover:bg-violet-600 text-white text-[10px] font-bold flex items-center gap-1">
+                              {subsTarget.type === 'ai' ? <Award className="w-3 h-3" /> : <Sparkles className="w-3 h-3 text-violet-300 animate-pulse" />}
+                              AI Grade
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => openMark(sub)}
+                              className="h-7 px-2 bg-white/5 hover:bg-white/10 text-white border-white/10 text-[10px] font-medium flex items-center gap-1">
+                              <Edit3 className="w-3 h-3 text-slate-400" />Mark
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     );

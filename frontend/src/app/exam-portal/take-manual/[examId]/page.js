@@ -21,6 +21,8 @@ export default function TakeManualExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
 
+  const [isSebLocked, setIsSebLocked] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/exam-portal/login');
@@ -61,6 +63,12 @@ export default function TakeManualExamPage() {
         return;
       }
       
+      if (data.submitted) {
+        showError('You have already submitted this exam.');
+        router.push('/exam-portal/exams');
+        return;
+      }
+      
       setExam(data);
       
       // Initialize empty answers
@@ -78,8 +86,13 @@ export default function TakeManualExamPage() {
         setTimeLeft(diff > 0 ? diff : 0);
       }
     } catch (error) {
-      showError(error.message || 'Failed to load exam');
-      setTimeout(() => router.push('/exam-portal/exams'), 2000);
+      const errorMsg = error.message || '';
+      if (errorMsg.includes('Safe Exam Browser') || errorMsg.includes('403')) {
+        setIsSebLocked(true);
+      } else {
+        showError(errorMsg || 'Failed to load exam');
+        setTimeout(() => router.push('/exam-portal/exams'), 2000);
+      }
     } finally {
       setLoading(false);
     }
@@ -147,6 +160,71 @@ export default function TakeManualExamPage() {
       setSubmitting(false);
     }
   };
+
+  if (isSebLocked) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api';
+    const configUrl = `${backendUrl}/manual-exams/${params.examId}/seb-config`;
+    const launchUrl = `seb://localhost:3000/exam-portal/take-manual/${params.examId}`;
+
+    return (
+      <div className="min-h-screen bg-[#060813] text-white flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white/[0.02] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-md shadow-xl space-y-6"
+        >
+          <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-rose-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-xl font-bold tracking-tight text-white font-heading">Safe Exam Browser Required</h1>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              This exam is highly secure and locked down. You can only access and submit it using the official Safe Exam Browser client.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <a 
+              href={configUrl}
+              className="w-full inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors"
+            >
+              📥 Download SEB Config
+            </a>
+            <a 
+              href={launchUrl}
+              className="w-full inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-300 text-xs font-semibold transition-colors"
+            >
+              🚀 Launch Safe Exam Browser
+            </a>
+          </div>
+
+          <div className="border-t border-white/5 pt-4 space-y-3">
+            <p className="text-[10px] text-slate-500 leading-normal">
+              Don't have Safe Exam Browser installed? 
+              <br />
+              <a href="https://safeexambrowser.org/download_en.html" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">
+                Download SEB for Windows/macOS
+              </a>
+            </p>
+            
+            <button
+              onClick={() => {
+                sessionStorage.setItem('seb_bypass', 'campusflow-dev-secret-bypass');
+                setIsSebLocked(false);
+                loadExam();
+              }}
+              className="text-[9px] px-2.5 py-1 rounded border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 font-medium transition-colors"
+            >
+              ⚠️ Developer Bypass (Testing Only)
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (authLoading || loading) {
     return <LoadingSpinner size="large" message="Loading exam..." />;

@@ -56,7 +56,13 @@ IMPORTANT: Return ONLY valid JSON in exactly this format, no markdown formatting
 }}
 
 Do not include ```json or ``` in your response. Return only the raw JSON.
-Make questions clear, specific, and appropriate for university-level students.
+
+QUESTION GUIDELINES:
+- Use simple, clear wording that university students can easily understand
+- Keep questions directly related to the course topic
+- Avoid overly complex or ambiguous language
+- Make questions practical and relevant to what students learn in class
+- Ensure questions test understanding, not just memorization
 """
     
     try:
@@ -130,11 +136,15 @@ IMPORTANT: Return ONLY valid JSON in exactly this format, no markdown formatting
 
 Do not include ```json or ``` in your response. Return only the raw JSON.
 
-Grading criteria:
-- Award full marks for complete, accurate answers
-- Deduct marks for missing key points or inaccuracies
-- Provide constructive feedback
-- Be consistent and fair
+GRADING GUIDELINES:
+- Be fair and consistent with all students
+- Award full marks for complete, accurate answers that demonstrate understanding
+- Deduct marks proportionally for missing key points or inaccuracies
+- Accept answers with simple wording if the core concept is correct
+- Don't penalize for different phrasing if the meaning is the same
+- Provide constructive, helpful feedback in simple language
+- Focus on understanding rather than memorization of exact wording
+- Be lenient with minor grammar or spelling mistakes if the answer is correct
 
 Here are the questions and student answers:
 """
@@ -221,6 +231,14 @@ IMPORTANT: Return ONLY valid JSON, no markdown:
     }}
   ]
 }}
+
+GRADING GUIDELINES:
+- Be fair and consistent with all students
+- Award marks based on understanding, not exact wording
+- Accept simple language if the concept is correct
+- Don't penalize minor grammar or spelling mistakes
+- Provide constructive feedback in simple language
+- Focus on whether the student understands the topic
 
 Here are the questions and student answers:
 """

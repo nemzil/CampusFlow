@@ -2,7 +2,7 @@
 Manual Exams API (v2 - Improved)
 Handles teacher-created manual exams with service layer
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from typing import List, Optional
 from beanie import PydanticObjectId
 
@@ -18,6 +18,30 @@ from app.schemas.exam import (
 )
 
 router = APIRouter()
+
+
+def check_seb_lockout(exam, request: Request):
+    """
+    Checks if the exam requires Safe Exam Browser and validates user agent.
+    Supports a developer bypass for local manual testing.
+    """
+    require_seb = False
+    if hasattr(exam, 'requireSeb'):
+        require_seb = exam.requireSeb
+    elif hasattr(exam, 'require_seb'):
+        require_seb = exam.require_seb
+        
+    if require_seb:
+        # Check if the bypass is enabled via custom header (useful for testing)
+        if request.headers.get("x-seb-bypass") == "campusflow-dev-secret-bypass":
+            return
+            
+        user_agent = request.headers.get("user-agent", "").lower()
+        if "seb" not in user_agent:
+            raise HTTPException(
+                status_code=403, 
+                detail="Safe Exam Browser is required to access or submit this exam."
+            )
 
 
 def convert_to_model_question(schema: ManualQuestionSchema) -> ManualQuestion:
@@ -75,7 +99,8 @@ async def list_manual_exams(
     teacher_username: Optional[str] = Query(None),
     class_name: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100)
+    limit: int = Query(50, ge=1, le=100),
+    username: str = Depends(get_current_user)
 ):
     """
     List manual exams with optional filtering and pagination
@@ -87,6 +112,7 @@ async def list_manual_exams(
         limit=limit
     )
     
+    from app.models.exam import ManualExamSubmission
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc)
     
@@ -106,6 +132,16 @@ async def list_manual_exams(
                     status = "ended"
             else:
                 status = "live"
+                
+        # Check if student already submitted
+        submitted = False
+        if username:
+            submission = await ManualExamSubmission.find_one(
+                ManualExamSubmission.examId == str(exam.id),
+                ManualExamSubmission.studentUsername == username
+            )
+            if submission:
+                submitted = True
         
         result.append(ManualExamResponse(
             id=str(exam.id),
@@ -121,7 +157,9 @@ async def list_manual_exams(
             end_time=exam.endTime,
             live=exam.live,
             status=status,
-            questions=[convert_to_schema_question(q) for q in exam.questions]
+            questions=[convert_to_schema_question(q) for q in exam.questions],
+            require_seb=exam.requireSeb or False,
+            submitted=submitted
         ))
     
     return result
@@ -166,7 +204,8 @@ async def create_manual_exam(
         subject=subject,
         title=request.title,
         teacher_username=username,
-        questions=questions
+        questions=questions,
+        require_seb=request.require_seb or False
     )
     
     # Update with new fields if provided
@@ -198,7 +237,8 @@ async def create_manual_exam(
         end_time=exam.endTime,
         live=exam.live,
         status="draft",
-        questions=[convert_to_schema_question(q) for q in exam.questions]
+        questions=[convert_to_schema_question(q) for q in exam.questions],
+        require_seb=exam.requireSeb or False
     )
 
 
@@ -207,7 +247,7 @@ async def create_manual_exam(
 # GET /api/manual-exams/{exam_id}
 # ═══════════════════════════════════════════════════════════
 @router.get("/{exam_id}", response_model=ManualExamResponse)
-async def get_manual_exam(exam_id: str):
+async def get_manual_exam(exam_id: str, request: Request, username: str = Depends(get_current_user)):
     """
     Get a single manual exam by ID
     """
@@ -222,6 +262,9 @@ async def get_manual_exam(exam_id: str):
     
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
+        
+    # Check SEB lockout
+    check_seb_lockout(exam, request)
     
     # Determine status
     now = datetime.now(timezone.utc)
@@ -239,6 +282,17 @@ async def get_manual_exam(exam_id: str):
         else:
             status = "live"
     
+    # Check if student already submitted
+    from app.models.exam import ManualExamSubmission
+    submitted = False
+    if username:
+        submission = await ManualExamSubmission.find_one(
+            ManualExamSubmission.examId == str(exam.id),
+            ManualExamSubmission.studentUsername == username
+        )
+        if submission:
+            submitted = True
+
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
@@ -253,7 +307,9 @@ async def get_manual_exam(exam_id: str):
         end_time=exam.endTime,
         live=exam.live,
         status=status,
-        questions=[convert_to_schema_question(q) for q in exam.questions]
+        questions=[convert_to_schema_question(q) for q in exam.questions],
+        require_seb=exam.requireSeb or False,
+        submitted=submitted
     )
 
 
@@ -275,7 +331,8 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
         exam = await exam_service.set_manual_exam_live(
             exam_id=oid,
             start_time=body.start_time,
-            end_time=body.end_time
+            end_time=body.end_time,
+            require_seb=body.require_seb
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -292,14 +349,19 @@ async def set_exam_live(exam_id: str, body: SetLiveRequest):
     return ManualExamResponse(
         id=str(exam.id),
         class_name=exam.className,
+        course_id=exam.courseId,
+        course_code=exam.courseCode,
         subject=exam.subject,
         title=exam.title,
+        exam_type=exam.examType or "midterm",
+        total_marks=exam.totalMarks or 30,
         teacher_username=exam.teacherUsername,
         start_time=exam.startTime,
         end_time=exam.endTime,
         live=exam.live,
         status=status,
-        questions=[convert_to_schema_question(q) for q in exam.questions]
+        questions=[convert_to_schema_question(q) for q in exam.questions],
+        require_seb=exam.requireSeb or False
     )
 
 
@@ -344,6 +406,7 @@ async def end_manual_exam(exam_id: str):
 async def submit_manual_exam(
     exam_id: str,
     request: ManualExamSubmissionRequest,
+    req: Request,
     username: str = Depends(get_current_user)
 ):
     """
@@ -353,6 +416,14 @@ async def submit_manual_exam(
         oid = PydanticObjectId(exam_id)
     except:
         raise HTTPException(status_code=400, detail="Invalid exam ID format")
+        
+    from app.models.exam import ManualExam
+    exam = await ManualExam.get(oid)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+        
+    # Check SEB lockout
+    check_seb_lockout(exam, req)
     
     # Convert schema answers to model answers
     answers = [convert_to_model_answer(a) for a in request.answers]
@@ -524,3 +595,61 @@ async def delete_manual_exam(
         raise HTTPException(status_code=400, detail="Cannot delete a live exam. End it first.")
     await exam.delete()
     return {"status": "deleted"}
+
+
+# ═══════════════════════════════════════════════════════════
+# STUDENT: Download SEB Configuration File
+# GET /api/manual-exams/{exam_id}/seb-config
+# ═══════════════════════════════════════════════════════════
+@router.get("/{exam_id}/seb-config")
+async def get_manual_exam_seb_config(exam_id: str):
+    """
+    Generate and download SEB config plist file for this exam
+    """
+    try:
+        oid = PydanticObjectId(exam_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid exam ID format")
+    
+    exam = await ManualExam.get(oid)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+        
+    start_url = f"http://localhost:3000/exam-portal/take-manual/{exam_id}"
+    quit_url = "http://localhost:3000/exam-portal/exams"
+    
+    seb_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>startURL</key>
+    <string>{start_url}</string>
+    <key>sendBrowserExamKey</key>
+    <true/>
+    <key>browserExamKey</key>
+    <string>campusflow-exam-{exam_id}</string>
+    <key>allowPreferencesWindow</key>
+    <false/>
+    <key>allowQuit</key>
+    <true/>
+    <key>quitURL</key>
+    <string>{quit_url}</string>
+    <key>quitURLConfirm</key>
+    <true/>
+    <key>ignoreExitKeys</key>
+    <true/>
+    <key>allowSpellCheck</key>
+    <false/>
+    <key>allowRightClick</key>
+    <false/>
+</dict>
+</plist>
+"""
+    return Response(
+        content=seb_xml,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename=exam-manual-{exam_id}.seb"
+        }
+    )
+

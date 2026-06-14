@@ -236,7 +236,7 @@ export default function TeacherAttendancePage() {
                     </div>
 
                     <div className="flex justify-between items-center text-xs text-slate-400 pt-3 border-t border-white/5">
-                      <span>Term: {course.term || '2024F'}</span>
+                      <span>Term: {course.term || 'N/A'}</span>
                       <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-slate-500" /> {course.enrolled_count || 0} Enrolled</span>
                     </div>
                   </CardContent>

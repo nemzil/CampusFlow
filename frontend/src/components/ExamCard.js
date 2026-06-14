@@ -58,6 +58,14 @@ export default function ExamCard({ exam, role, onSetLive, onEnd, onView, onTake 
             >
               {exam.type.toUpperCase()}
             </span>
+            {(exam.require_seb || exam.requireSeb) && (
+              <span 
+                className="exam-badge"
+                style={{ backgroundColor: '#dc2626', color: '#ffffff', fontSize: '9px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px' }}
+              >
+                SEB REQUIRED
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -92,13 +100,19 @@ export default function ExamCard({ exam, role, onSetLive, onEnd, onView, onTake 
       </div>
 
       <div className="exam-card-actions">
-        {role === 'student' && isCurrentlyTakeable && (
+        {role === 'student' && exam.submitted && (
+          <button className="btn-secondary" style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.2)', cursor: 'default' }} disabled>
+            ✓ Submitted
+          </button>
+        )}
+
+        {role === 'student' && !exam.submitted && isCurrentlyTakeable && (
           <button className="btn-primary" onClick={() => onTake(exam.id)}>
             Take Exam
           </button>
         )}
         
-        {role === 'student' && !isCurrentlyTakeable && (
+        {role === 'student' && !exam.submitted && !isCurrentlyTakeable && (
           <button className="btn-secondary" disabled>
             {isDraft ? 'Not Available' : hasEnded ? 'Ended' : isUpcoming ? 'Upcoming' : 'Not Available'}
           </button>

@@ -8,10 +8,17 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/
 // Get auth token from localStorage
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  return {
+  const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
   };
+  if (typeof window !== 'undefined') {
+    const bypass = sessionStorage.getItem('seb_bypass');
+    if (bypass) {
+      headers['x-seb-bypass'] = bypass;
+    }
+  }
+  return headers;
 };
 
 // Error handling wrapper
@@ -42,6 +49,7 @@ async function apiRequest(url, options = {}) {
     
     if (!response.ok) {
       let error;
+      const clonedResponse = response.clone();
       try {
         error = await response.json();
         
@@ -71,7 +79,7 @@ async function apiRequest(url, options = {}) {
           throw e;
         }
         // Response is not JSON
-        const text = await response.text();
+        const text = await clonedResponse.text();
         console.error('API Error (non-JSON):', text);
         throw new Error(`Request failed with status ${response.status}: ${text || 'Unknown error'}`);
       }
@@ -371,10 +379,14 @@ export async function createManualExam(examData) {
   });
 }
 
-export async function setManualExamLive(examId, startTime, endTime) {
+export async function setManualExamLive(examId, startTime, endTime, requireSeb = null) {
+  const body = { start_time: startTime, end_time: endTime };
+  if (requireSeb !== null) {
+    body.require_seb = requireSeb;
+  }
   return apiRequest(`${API_BASE}/manual-exams/${examId}/live`, {
     method: 'PUT',
-    body: JSON.stringify({ start_time: startTime, end_time: endTime })
+    body: JSON.stringify(body)
   });
 }
 
@@ -446,10 +458,14 @@ export async function undoAiQuestion(examId, questionId) {
   });
 }
 
-export async function setAiExamLive(examId, startTime, endTime) {
+export async function setAiExamLive(examId, startTime, endTime, requireSeb = null) {
+  const body = { start_time: startTime, end_time: endTime };
+  if (requireSeb !== null) {
+    body.require_seb = requireSeb;
+  }
   return apiRequest(`${API_BASE}/ai-exams/${examId}/live`, {
     method: 'PUT',
-    body: JSON.stringify({ start_time: startTime, end_time: endTime })
+    body: JSON.stringify(body)
   });
 }
 
@@ -491,6 +507,13 @@ export async function gradeAiExam(examId, studentUsername) {
   return apiRequest(`${API_BASE}/ai-exams/${examId}/grade`, {
     method: 'POST',
     body: JSON.stringify({ student_username: studentUsername })
+  });
+}
+
+export async function gradeGenericExam(topic, questions, answers) {
+  return apiRequest(`${API_BASE}/ai-exams/grade-generic`, {
+    method: 'POST',
+    body: JSON.stringify({ topic, questions, answers })
   });
 }
 

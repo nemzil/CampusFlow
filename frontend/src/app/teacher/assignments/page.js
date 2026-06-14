@@ -21,7 +21,7 @@ function TeacherAssignmentsPageComponent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
-  const [term] = useState('2024F');
+  const [term, setTerm] = useState('2024F');
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [assignments, setAssignments] = useState([]);
@@ -69,7 +69,11 @@ function TeacherAssignmentsPageComponent() {
   };
 
   const handleSelectCourse = async (course) => {
-    setSelectedCourse(course); setShowSubmissionsPanel(false); setActiveTab(searchParams.get('tab') || 'ASSIGNMENT'); setLoading(true);
+    setSelectedCourse(course);
+    setTerm(course.term || '2024F');
+    setShowSubmissionsPanel(false);
+    setActiveTab(searchParams.get('tab') || 'ASSIGNMENT');
+    setLoading(true);
     try { const d = await getCourseAssignments(course.id || course._id); setAssignments(d.assignments || []); }
     catch (e) { showError(e.message || 'Failed to load'); }
     finally { setLoading(false); }

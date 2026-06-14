@@ -21,7 +21,7 @@ class Assignment(Document):
     course_id: str
     course_code: str
     teacher_id: str
-    teacher_name: str
+    teacher_name: Optional[str] = None
     
     # ═══ Assignment Details ═══
     type: str  # "ASSIGNMENT", "QUIZ"
@@ -29,7 +29,7 @@ class Assignment(Document):
     title: str
     description: str
     max_marks: int
-    deadline: datetime
+    deadline: Optional[datetime] = None
     attachment_urls: List[str] = Field(default_factory=list)
     
     # ═══ Creation Mode ═══
@@ -38,7 +38,7 @@ class Assignment(Document):
     
     # ═══ Status ═══
     status: str = Field(default="DRAFT")  # "DRAFT", "PUBLISHED"
-    term: str  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
+    term: Optional[str] = None  # Auto-resolved: "Fall" -> "2025F", "Spring" -> "2025S"
     
     # ═══ Statistics ═══
     submission_count: int = Field(default=0)
@@ -47,7 +47,7 @@ class Assignment(Document):
     # ═══ Metadata ═══
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    created_by: str
+    created_by: Optional[str] = None
 
     class Settings:
         name = "assignments"

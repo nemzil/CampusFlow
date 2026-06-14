@@ -11,6 +11,7 @@ from app.models.enrollment import Enrollment
 from app.models.course import Course
 from app.models.user import User
 from app.models.attendance import AttendanceSession, AttendanceRecord
+from app.models.exam_schedule import ExamSchedule
 from app.services import fee_service
 from beanie.operators import In
 
@@ -117,13 +118,20 @@ async def check_eligibility(student_id: str, semester: str, exam_type: str) -> D
             course = await Course.get(enrollment.course_id)
             if course:
                 attendance_pct = await calculate_attendance_percentage(student_id, course.course_code)
+                
+                # Link to exam schedule
+                exam_schedule = await ExamSchedule.find_one(ExamSchedule.course_code == course.course_code)
+                exam_date = exam_schedule.exam_date if exam_schedule else None
+                exam_time = f"{exam_schedule.start_time} - {exam_schedule.end_time}" if exam_schedule else None
+                room = exam_schedule.exam_hall if exam_schedule else None
+                
                 eligible_courses.append({
                     "course_code": course.course_code,
                     "course_name": course.course_name,
                     "attendance_percentage": attendance_pct,
-                    "exam_date": None,  # TODO: Link to exam schedule
-                    "exam_time": None,
-                    "room": None
+                    "exam_date": exam_date,
+                    "exam_time": exam_time,
+                    "room": room
                 })
         
         return {

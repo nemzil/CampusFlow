@@ -3,10 +3,12 @@ from datetime import datetime, timezone
 from typing import Optional, List
 from app.models.course import Course
 from app.models.user import User
+from app.models.enrollment import Enrollment
 from app.schemas.course import CourseCreate, CourseUpdate, TeacherAssignment, CourseResponse
 from app.api.deps import get_current_user
 from app.api.permissions import require_course_management_edit
 from app.utils.academic_term import resolve_term
+from beanie.operators import In
 
 router = APIRouter()
 
@@ -109,21 +111,25 @@ async def get_my_courses(
         ]
     
     elif user.role == "STUDENT":
-        # TODO: After enrollment module, fetch enrolled courses
-        # For now, return courses for student's current semester
-        if user.current_semester:
-            courses = await Course.find(
-                Course.semester == user.current_semester,
-                Course.is_active == True
-            ).to_list()
-            return [
-                {
-                    **course.model_dump(),
-                    "id": str(course.id)
-                }
-                for course in courses
-            ]
-        return []
+        # Fetch enrolled courses for this student
+        enrollments = await Enrollment.find(Enrollment.student_id == user.username).to_list()
+        
+        if not enrollments:
+            return []
+        
+        # Get course IDs from enrollments
+        course_ids = [enrollment.course_id for enrollment in enrollments]
+        
+        # Fetch all enrolled courses
+        courses = await Course.find(In(Course.id, course_ids)).to_list()
+        
+        return [
+            {
+                **course.model_dump(),
+                "id": str(course.id)
+            }
+            for course in courses
+        ]
     
     return []
 

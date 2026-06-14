@@ -16,7 +16,8 @@ async def create_manual_exam(
     subject: str,
     title: str,
     teacher_username: str,
-    questions: List[ManualQuestion]
+    questions: List[ManualQuestion],
+    require_seb: bool = False
 ) -> ManualExam:
     """Create a new manual exam"""
     exam = ManualExam(
@@ -24,7 +25,8 @@ async def create_manual_exam(
         subject=subject,
         title=title,
         teacherUsername=teacher_username,
-        questions=questions
+        questions=questions,
+        requireSeb=require_seb
     )
     await exam.insert()
     return exam
@@ -51,18 +53,23 @@ async def get_manual_exams(
 async def set_manual_exam_live(
     exam_id: PydanticObjectId,
     start_time: datetime,
-    end_time: datetime
+    end_time: datetime,
+    require_seb: Optional[bool] = None
 ) -> ManualExam:
     """Set a manual exam as live with start and end times"""
     exam = await ManualExam.get(exam_id)
     if not exam:
         raise ValueError("Exam not found")
     
-    await exam.set({
+    update_data = {
         ManualExam.startTime: start_time,
         ManualExam.endTime: end_time,
         ManualExam.live: True
-    })
+    }
+    if require_seb is not None:
+        update_data[ManualExam.requireSeb] = require_seb
+        
+    await exam.set(update_data)
     
     # Refresh to get updated data
     await exam.sync()
@@ -166,29 +173,41 @@ async def mark_manual_submission(
                 break
     
     await submission.set({
+        ManualExamSubmission.answers: submission.answers,
         ManualExamSubmission.totalMarks: total_marks,
         ManualExamSubmission.checkedByTeacher: True
     })
     
-    # Save result to ExamResult collection
+    # Save/Update result in ExamResult collection
     try:
         exam_oid = PydanticObjectId(submission.examId)
         exam = await ManualExam.get(exam_oid)
         
         if exam:
-            result = ExamResult(
-                exam_id=submission.examId,
-                teacher_username=exam.teacherUsername,
-                student_username=submission.studentUsername,
-                obtained_marks=total_marks,
-                total_marks=submission.maxTotalMarks or 0,
-                class_name=submission.className,
-                subject=exam.subject,
-                title=exam.title,
-                source="MANUAL",
-                checked_at=datetime.now(timezone.utc)
+            existing_result = await ExamResult.find_one(
+                ExamResult.exam_id == submission.examId,
+                ExamResult.student_username == submission.studentUsername
             )
-            await result.insert()
+            if existing_result:
+                await existing_result.set({
+                    ExamResult.obtained_marks: total_marks,
+                    ExamResult.total_marks: submission.maxTotalMarks or 0,
+                    ExamResult.checked_at: datetime.now(timezone.utc)
+                })
+            else:
+                result = ExamResult(
+                    exam_id=submission.examId,
+                    teacher_username=exam.teacherUsername,
+                    student_username=submission.studentUsername,
+                    obtained_marks=total_marks,
+                    total_marks=submission.maxTotalMarks or 0,
+                    class_name=submission.className,
+                    subject=exam.subject,
+                    title=exam.title,
+                    source="MANUAL",
+                    checked_at=datetime.now(timezone.utc)
+                )
+                await result.insert()
     except Exception as e:
         print(f"exam result save failed: {e}")
     
@@ -202,7 +221,8 @@ async def create_ai_exam(
     subject: str,
     topic: str,
     teacher_username: str,
-    questions: List[ExamQuestion]
+    questions: List[ExamQuestion],
+    require_seb: bool = False
 ) -> AiExam:
     """Create a new AI-generated exam"""
     exam = AiExam(
@@ -211,6 +231,7 @@ async def create_ai_exam(
         topic=topic,
         teacher_username=teacher_username,
         questions=questions,
+        require_seb=require_seb,
         status="draft"
     )
     await exam.insert()
@@ -241,7 +262,8 @@ async def get_ai_exams(
 async def set_ai_exam_live(
     exam_id: str,
     start_time: Optional[str] = None,
-    end_time: Optional[str] = None
+    end_time: Optional[str] = None,
+    require_seb: Optional[bool] = None
 ) -> AiExam:
     """Set an AI exam as live"""
     exam = await AiExam.get(exam_id)
@@ -257,6 +279,8 @@ async def set_ai_exam_live(
         update_data[AiExam.start_time] = start_time
     if end_time:
         update_data[AiExam.end_time] = end_time
+    if require_seb is not None:
+        update_data[AiExam.require_seb] = require_seb
     
     await exam.set(update_data)
     await exam.sync()
@@ -346,27 +370,62 @@ async def save_exam_result(
     title: Optional[str] = None
 ) -> ExamResult:
     """Save exam result to database"""
-    result = ExamResult(
-        exam_id=exam_id,
-        teacher_username=teacher_username,
-        student_username=student_username,
-        obtained_marks=obtained_marks,
-        total_marks=total_marks,
-        items=items,
-        source=source,
-        class_name=class_name,
-        subject=subject,
-        title=title,
-        checked_at=datetime.now(timezone.utc)
+    # Check if result already exists
+    existing_result = await ExamResult.find_one(
+        ExamResult.exam_id == exam_id,
+        ExamResult.student_username == student_username
     )
-    await result.insert()
+    if existing_result:
+        await existing_result.set({
+            ExamResult.obtained_marks: obtained_marks,
+            ExamResult.total_marks: total_marks,
+            ExamResult.items: items,
+            ExamResult.checked_at: datetime.now(timezone.utc)
+        })
+        result = existing_result
+    else:
+        result = ExamResult(
+            exam_id=exam_id,
+            teacher_username=teacher_username,
+            student_username=student_username,
+            obtained_marks=obtained_marks,
+            total_marks=total_marks,
+            items=items,
+            source=source,
+            class_name=class_name,
+            subject=subject,
+            title=title,
+            checked_at=datetime.now(timezone.utc)
+        )
+        await result.insert()
     
-    # Mark submission as checked
-    if source == "AI" and exam_id:
-        await AiExamSubmission.find_one(
+    # Update submission answers and status
+    if exam_id:
+        submission = await AiExamSubmission.find_one(
             AiExamSubmission.exam_id == exam_id,
             AiExamSubmission.student_username == student_username
-        ).update({"$set": {"checked": True}})
+        )
+        if submission:
+            updated_answers = []
+            for ans in submission.answers:
+                ans_id = ans.get("id") if isinstance(ans, dict) else getattr(ans, "id", None)
+                if ans_id is None:
+                    ans_id = ans.get("questionNumber") if isinstance(ans, dict) else getattr(ans, "questionNumber", None)
+                
+                matching_item = next((item for item in items if item.id == ans_id), None)
+                if matching_item:
+                    if isinstance(ans, dict):
+                        ans["awarded_marks"] = matching_item.marks_obtained
+                        ans["teacher_feedback"] = matching_item.feedback
+                    else:
+                        ans.awarded_marks = matching_item.marks_obtained
+                        ans.teacher_feedback = matching_item.feedback
+                updated_answers.append(ans)
+            
+            await submission.set({
+                AiExamSubmission.answers: updated_answers,
+                AiExamSubmission.checked: True
+            })
     
     return result
 

@@ -2,7 +2,7 @@
 AI Exams API (v2 - Improved)
 Handles AI-generated exams with service layer
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from typing import List, Optional
 import pytz
 from datetime import datetime
@@ -22,7 +22,7 @@ from app.schemas.exam import (
 router = APIRouter()
 
 
-def serialize_ai_exam(exam) -> AiExamResponse:
+def serialize_ai_exam(exam, submitted: bool = False) -> AiExamResponse:
     """Convert AI exam model to response schema"""
     return AiExamResponse(
         exam_id=str(exam.id),
@@ -50,7 +50,9 @@ def serialize_ai_exam(exam) -> AiExamResponse:
             )
             for q in exam.questions
         ],
-        ended_at=exam.ended_at
+        ended_at=exam.ended_at,
+        require_seb=exam.require_seb or False,
+        submitted=submitted
     )
 
 
@@ -105,7 +107,8 @@ async def create_ai_exam(
         subject=subject,
         topic=request.topic,
         teacher_username=username,
-        questions=questions
+        questions=questions,
+        require_seb=request.require_seb or False
     )
     
     # Update with new fields if provided
@@ -140,7 +143,8 @@ async def list_ai_exams(
     class_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100)
+    limit: int = Query(50, ge=1, le=100),
+    username: str = Depends(get_current_user)
 ):
     """
     List AI exams with optional filtering and pagination
@@ -153,7 +157,20 @@ async def list_ai_exams(
         limit=limit
     )
     
-    return [serialize_ai_exam(exam) for exam in exams]
+    from app.models.ai_exam import AiExamSubmission
+    result = []
+    for exam in exams:
+        submitted = False
+        if username:
+            submission = await AiExamSubmission.find_one(
+                AiExamSubmission.exam_id == str(exam.id),
+                AiExamSubmission.student_username == username
+            )
+            if submission:
+                submitted = True
+        result.append(serialize_ai_exam(exam, submitted=submitted))
+        
+    return result
 
 
 # ═══════════════════════════════════════════════════════════
@@ -327,7 +344,8 @@ async def set_exam_live(
         exam = await exam_service.set_ai_exam_live(
             exam_id=exam_id,
             start_time=body.start_time,
-            end_time=body.end_time
+            end_time=body.end_time,
+            require_seb=body.require_seb
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -369,7 +387,11 @@ async def end_exam(
 # POST /api/ai-exams/student/load
 # ═══════════════════════════════════════════════════════════
 @router.post("/student/load")
-async def load_exam(body: StudentLoadExamRequest):
+async def load_exam(
+    body: StudentLoadExamRequest, 
+    request: Request,
+    username: str = Depends(get_current_user)
+):
     """
     Load an exam for a student (validates timing)
     """
@@ -378,6 +400,10 @@ async def load_exam(body: StudentLoadExamRequest):
     
     if not exam or exam.class_name != body.class_name or not exam.is_live:
         raise HTTPException(status_code=404, detail="Exam not found for this class or not live")
+        
+    # Check SEB lockout
+    from app.api.manual_exams import check_seb_lockout
+    check_seb_lockout(exam, request)
     
     # Validate timing (PKT timezone)
     pkt = pytz.timezone("Asia/Karachi")
@@ -402,13 +428,24 @@ async def load_exam(body: StudentLoadExamRequest):
         raise HTTPException(status_code=403, detail="Exam not started yet")
     if end_dt and now_pkt > end_dt:
         raise HTTPException(status_code=403, detail="Exam time over")
+        
+    # Check if student already submitted
+    submitted = False
+    from app.models.ai_exam import AiExamSubmission
+    submission = await AiExamSubmission.find_one(
+        AiExamSubmission.exam_id == body.exam_id,
+        AiExamSubmission.student_username == username
+    )
+    if submission:
+        submitted = True
     
     return {
         "exam_id": body.exam_id,
         "class_name": exam.class_name,
         "subject": exam.subject,
         "topic": exam.topic,
-        "questions": [q.model_dump() for q in exam.questions]
+        "questions": [q.model_dump() for q in exam.questions],
+        "submitted": submitted
     }
 
 
@@ -419,11 +456,18 @@ async def load_exam(body: StudentLoadExamRequest):
 @router.post("/student/submit")
 async def submit_answers(
     body: StudentSubmitRequest,
+    req: Request,
     username: str = Depends(get_current_user)
 ):
     """
     Submit exam answers
     """
+    from app.models.ai_exam import AiExam
+    exam = await AiExam.get(body.exam_id)
+    if exam:
+        from app.api.manual_exams import check_seb_lockout
+        check_seb_lockout(exam, req)
+        
     try:
         await exam_service.submit_ai_exam(
             exam_id=body.exam_id,
@@ -458,12 +502,14 @@ async def list_submissions(
     
     return [
         {
+            "id": str(s.id),
             "student_username": s.student_username,
             "class_name": s.class_name,
             "subject": s.subject,
             "topic": s.topic,
             "submitted_at": s.submitted_at,
-            "checked": s.checked
+            "checked": s.checked,
+            "answers": s.answers
         }
         for s in submissions
     ]
@@ -683,3 +729,56 @@ async def delete_ai_exam(
         raise HTTPException(status_code=400, detail="Only draft exams can be deleted")
     await exam.delete()
     return {"status": "deleted"}
+
+
+# ═══════════════════════════════════════════════════════════
+# STUDENT: Download SEB Configuration File
+# GET /api/ai-exams/{exam_id}/seb-config
+# ═══════════════════════════════════════════════════════════
+@router.get("/{exam_id}/seb-config")
+async def get_ai_exam_seb_config(exam_id: str):
+    """
+    Generate and download SEB config plist file for this exam
+    """
+    from app.models.ai_exam import AiExam
+    exam = await AiExam.get(exam_id)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+        
+    start_url = f"http://localhost:3000/exam-portal/take-ai/{exam_id}"
+    quit_url = "http://localhost:3000/exam-portal/exams"
+    
+    seb_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>startURL</key>
+    <string>{start_url}</string>
+    <key>sendBrowserExamKey</key>
+    <true/>
+    <key>browserExamKey</key>
+    <string>campusflow-exam-{exam_id}</string>
+    <key>allowPreferencesWindow</key>
+    <false/>
+    <key>allowQuit</key>
+    <true/>
+    <key>quitURL</key>
+    <string>{quit_url}</string>
+    <key>quitURLConfirm</key>
+    <true/>
+    <key>ignoreExitKeys</key>
+    <true/>
+    <key>allowSpellCheck</key>
+    <false/>
+    <key>allowRightClick</key>
+    <false/>
+</dict>
+</plist>
+"""
+    return Response(
+        content=seb_xml,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename=exam-ai-{exam_id}.seb"
+        }
+    )

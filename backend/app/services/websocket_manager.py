@@ -3,7 +3,10 @@ from typing import Dict, Set, Optional
 from fastapi import WebSocket
 from fastapi.encoders import jsonable_encoder
 import json
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -23,7 +26,7 @@ class ConnectionManager:
         """Accept and register a new WebSocket connection"""
         await websocket.accept()
         self.active_connections[username] = websocket
-        print(f"ws: {username} connected")
+        logger.info(f"WebSocket connected: {username}")
     
     def disconnect(self, username: str):
         """Remove user from all rooms and active connections"""

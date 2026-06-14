@@ -20,7 +20,13 @@ export default function AdminManageResultsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
-  const [term] = useState('2024F');
+  const getCurrentTerm = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    return month >= 1 && month <= 5 ? `${year}S` : `${year}F`;
+  };
+  const [term, setTerm] = useState(getCurrentTerm());
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +38,7 @@ export default function AdminManageResultsPage() {
     if (!authLoading && (!user || user.role !== 'ADMIN')) router.push('/login');
     else if (!authLoading && user && !isExamManagementAdmin(user)) router.push('/admin');
     else if (!authLoading && user) loadPending();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, term]);
 
   const loadPending = async () => {
     setLoading(true);
@@ -102,10 +108,35 @@ export default function AdminManageResultsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Badge variant="outline" className="badge-cyan mb-2">Exam Department</Badge>
-        <h1 className="text-3xl font-bold text-white font-heading">Manage Results</h1>
-        <p className="text-slate-400 mt-1">Review teacher submissions, edit marks, and publish compiled CGPA to students.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <Badge variant="outline" className="badge-cyan mb-2">Exam Department</Badge>
+          <h1 className="text-3xl font-bold text-white font-heading">Manage Results</h1>
+          <p className="text-slate-400 mt-1">Review teacher submissions, edit marks, and publish compiled CGPA to students.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-400 font-medium">Term:</span>
+          <select
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            className="bg-white/5 border border-white/10 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-cyan-500/50"
+          >
+            {(() => {
+              const options = [];
+              const baseYear = 2024;
+              const currentYear = new Date().getFullYear();
+              for (let y = baseYear; y <= currentYear + 1; y++) {
+                options.push(`${y}S`);
+                options.push(`${y}F`);
+              }
+              return options.map((opt) => (
+                <option key={opt} value={opt} className="bg-[#0b0c16]">
+                  {opt}
+                </option>
+              ));
+            })()}
+          </select>
+        </div>
       </div>
 
       {courses.length === 0 ? (
