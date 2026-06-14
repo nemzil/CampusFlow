@@ -110,7 +110,6 @@ export default function AdminManageResultsPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="badge-cyan mb-2">Exam Department</Badge>
           <h1 className="text-3xl font-bold text-white font-heading">Manage Results</h1>
           <p className="text-slate-400 mt-1">Review teacher submissions, edit marks, and publish compiled CGPA to students.</p>
         </div>

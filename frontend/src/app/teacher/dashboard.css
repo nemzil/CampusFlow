@@ -1,0 +1,183 @@
+/* ============================================================
+   CAMPUSFLOW — TEACHER PORTAL GLOBAL STYLES
+   ============================================================ */
+
+/* light green/emerald backgrounds for headers and sidebars */
+.teacher-header {
+  background-color: #ECFDF5 !important; /* light emerald/green */
+}
+
+aside, [data-sidebar="sidebar"], [data-slot="sidebar-inner"], .bg-sidebar {
+  background-color: #ECFDF5 !important; /* light emerald/green */
+}
+
+/* Light mode overrides for all teacher portal subpages */
+.min-h-screen, .min-h-\[calc\(100vh-4rem\)\] {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Standardize headings and titles to dark slate */
+h1, h2, h3, h4, h5, h6, .text-white {
+  color: #0F172A !important;
+}
+
+/* Secondary muted text description colors */
+.text-slate-400, .text-slate-300, .text-slate-200, .text-slate-500 {
+  color: #64748B !important;
+}
+
+/* Convert dark-theme card components to light borders and backgrounds */
+.border-white\/5, .border-white\/10, .border-white\/20, .border-white\/30 {
+  border-color: #E2E8F0 !important;
+}
+
+.bg-white\/\[0\.02\], .bg-white\/\[0\.01\], .bg-white\/\[0\.03\], .bg-white\/\[0\.04\], .bg-white\/5, .bg-white\/10, .bg-white\/\[0\.05\] {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+/* Force light backgrounds for modals and dialog popups */
+.bg-\[\#0a0b14\]\/95, .bg-\[\#0d0e1a\], .bg-\[\#0a0b14\], .bg-\[\#0d0e1a\] {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
+}
+
+.border-b-white\/5, .border-t-white\/5 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Tables design integration */
+table {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+th {
+  background-color: #F8FAFC !important;
+  color: #64748B !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+tr {
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+
+tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Map violet/indigo/purple text colors to green/emerald/teal */
+.text-violet-300, .text-indigo-300, .text-purple-300,
+.text-violet-400, .text-indigo-400, .text-purple-400,
+.text-violet-500, .text-indigo-500, .text-purple-500,
+.text-violet-600, .text-indigo-600, .text-purple-600 {
+  color: #059669 !important; /* emerald-600 */
+}
+
+/* Hover text overrides */
+.hover\:text-violet-300:hover, .hover\:text-indigo-300:hover, .hover\:text-purple-300:hover,
+.hover\:text-violet-400:hover, .hover\:text-indigo-400:hover, .hover\:text-purple-400:hover {
+  color: #10B981 !important; /* emerald-500 */
+}
+
+/* Backgrounds with opacity mapping */
+.bg-violet-500\/10, .bg-indigo-500\/10, .bg-purple-500\/10,
+.bg-violet-500\/5, .bg-indigo-500\/5, .bg-purple-500\/5,
+.bg-violet-600\/10, .bg-indigo-600\/10, .bg-purple-600\/10 {
+  background-color: #ECFDF5 !important; /* light emerald tint */
+  color: #059669 !important;
+  border-color: #D1FAE5 !important;
+}
+
+/* Border color mapping */
+.border-violet-500\/20, .border-indigo-500\/20, .border-purple-500\/20,
+.border-violet-500\/30, .border-indigo-500\/30, .border-purple-500\/30,
+.border-indigo-500\/10, .border-violet-500\/10, .border-purple-500\/10,
+.hover\:border-violet-500\/20:hover, .hover\:border-indigo-500\/20:hover, .hover\:border-purple-500\/20:hover,
+.hover\:border-violet-500\/30:hover, .hover\:border-indigo-500\/30:hover, .hover\:border-purple-500\/30:hover,
+.hover\:border-violet-500\/40:hover, .hover\:border-indigo-500\/40:hover, .hover\:border-purple-500\/40:hover {
+  border-color: #D1FAE5 !important;
+}
+
+/* Focus state border mapping */
+.focus\:border-violet-500\/50:focus, .focus\:border-indigo-500\/50:focus {
+  border-color: #10B981 !important;
+}
+
+/* Button background colors (including opacities like bg-violet-600/80) */
+.bg-violet-600, .bg-indigo-600, .bg-purple-600,
+.bg-violet-600\/80, .bg-indigo-600\/80, .bg-purple-600\/80 {
+  background-color: #10B981 !important; /* emerald-500 */
+  color: #FFFFFF !important;
+  border-color: #10B981 !important;
+}
+
+/* Button hover background colors */
+.bg-violet-600:hover, .bg-indigo-600:hover, .bg-purple-600:hover,
+.bg-violet-600\/80:hover, .bg-indigo-600\/80:hover, .bg-purple-600\/80:hover,
+.hover\:bg-violet-600:hover, .hover\:bg-indigo-600:hover, .hover\:bg-purple-600:hover,
+.hover\:bg-violet-500:hover, .hover\:bg-indigo-500:hover, .hover\:bg-purple-500:hover {
+  background-color: #059669 !important; /* emerald-600 */
+  color: #FFFFFF !important;
+  border-color: #059669 !important;
+}
+
+/* Custom badges style overrides */
+.badge-violet {
+  background-color: #ECFDF5 !important;
+  color: #059669 !important;
+  border: 1px solid #D1FAE5 !important;
+}
+
+.badge-emerald {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+  border: 1px solid #A7F3D0 !important;
+}
+
+/* Gradient backgrounds mapping */
+.from-violet-600\/10, .from-indigo-600\/10, .from-purple-600\/10,
+.from-violet-500\/15, .to-indigo-500\/15, .from-violet-500\/10, .to-indigo-500\/10,
+.from-violet-600\/30, .to-violet-800\/10, .bg-violet-500\/20 {
+  --tw-gradient-from: #ECFDF5 !important;
+  --tw-gradient-to: #D1FAE5 !important;
+  background-color: #ECFDF5 !important;
+}
+
+/* Keep critical warning colors red */
+.text-red-500, .text-red-600, .text-rose-500, .text-rose-400, .bg-red-50, .bg-rose-500\/10 {
+  color: #DC2626 !important;
+}
+
+button.bg-white\/5 {
+  background-color: #ECFDF5 !important;
+  color: #059669 !important;
+  border: 1px solid #D1FAE5 !important;
+}
+
+button.bg-white\/5:hover {
+  background-color: #D1FAE5 !important;
+}
+
+/* Gradient texts mapping */
+.gradient-text-violet {
+  background: linear-gradient(to right, #10B981, #14B8A6) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Make pending / amber text readable on white background */
+.text-amber-400 {
+  color: #D97706 !important; /* amber-600 */
+}
+.text-amber-300 {
+  color: #B45309 !important; /* amber-700 */
+}
+.bg-amber-500\/10 {
+  background-color: #FEF3C7 !important; /* amber-100 */
+  color: #B45309 !important; /* amber-700 */
+  border-color: #FDE68A !important; /* amber-200 */
+}

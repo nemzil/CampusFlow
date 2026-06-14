@@ -131,9 +131,6 @@ export default function TodosPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="badge-violet text-xs">Tasks & Assignments</Badge>
-            </div>
             <h1 className={`${typographyVariants.default.pageTitle} font-bold tracking-tight text-white font-heading`}>
               My Workspace
             </h1>

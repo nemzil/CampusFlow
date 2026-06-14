@@ -112,7 +112,6 @@ export default function StudentResultsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">Academic Records</Badge>
           <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">My Results</h1>
           <p className="text-slate-500 mt-1">
             View assignment, quiz, and exam marks. CGPA and transcript appear when all course marks are published.

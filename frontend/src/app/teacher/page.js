@@ -67,7 +67,6 @@ export default function TeacherDashboard() {
         {/* Header Greeting */}
         <motion.div variants={itemVariants} className="space-y-2">
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="outline" className="badge-violet text-xs">Faculty Portal</Badge>
             <Badge variant="outline" className="badge-cyan font-mono text-xs">{user.employee_id || 'N/A'}</Badge>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white font-heading">

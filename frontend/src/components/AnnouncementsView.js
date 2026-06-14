@@ -171,14 +171,11 @@ export default function AnnouncementsView({ role }) {
       {/* Header Widget */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20">Announcements Channel</Badge>
-            {unreadCount > 0 && (
-              <Badge className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-[10px] animate-bounce">
-                {unreadCount} Unread
-              </Badge>
-            )}
-          </div>
+          {unreadCount > 0 && (
+            <Badge className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-[10px] animate-bounce mb-1.5">
+              {unreadCount} Unread
+            </Badge>
+          )}
           <h1 className="text-3xl font-bold font-heading text-white tracking-tight">University Announcements</h1>
           <p className="text-slate-400 mt-1 font-sans text-sm">
             Read updates, exam schedules, and academic instructions from the university administration office.

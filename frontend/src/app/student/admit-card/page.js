@@ -55,9 +55,6 @@ export default function StudentAdmitCardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200">
-              Official Admit Card
-            </Badge>
             {data?.department && (
               <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
                 {data.department} · Semester {data.semester}

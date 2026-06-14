@@ -361,7 +361,7 @@ async def get_student_attendance_details(student_id: str, course_id: str) -> Dic
 
 async def get_course_attendance_report(course_id: str) -> Dict:
     """
-    Get attendance report for entire course
+    Get attendance report for entire course (optimized)
     """
     # Get course
     course = await Course.get(course_id)
@@ -381,6 +381,33 @@ async def get_course_attendance_report(course_id: str) -> Dict:
         Enrollment.status == "ENROLLED"
     ).to_list()
     
+    if not enrollments:
+        return {
+            "course_code": course.course_code,
+            "course_name": course.course_name,
+            "total_sessions": total_sessions,
+            "average_attendance": 0.0,
+            "students": [],
+            "below_75_count": 0,
+            "above_75_count": 0
+        }
+    
+    # Fetch all students in a single query
+    usernames = [e.student_username for e in enrollments]
+    students = await User.find({"username": {"$in": usernames}}).to_list()
+    students_map = {s.username: s for s in students}
+    
+    # Fetch all attendance records for this course in a single query
+    all_records = await AttendanceRecord.find(
+        AttendanceRecord.course_id == course_id
+    ).to_list()
+    
+    # Group records by student_id
+    from collections import defaultdict
+    records_by_student = defaultdict(list)
+    for record in all_records:
+        records_by_student[record.student_id].append(record)
+    
     # Calculate attendance for each student
     students_data = []
     total_percentage = 0.0
@@ -388,25 +415,30 @@ async def get_course_attendance_report(course_id: str) -> Dict:
     above_75_count = 0
     
     for enrollment in enrollments:
-        student = await User.find_one(User.username == enrollment.student_username)
+        student = students_map.get(enrollment.student_username)
         if student:
-            attendance_stats = await calculate_attendance_percentage(
-                enrollment.student_id,
-                course_id
-            )
+            student_records = records_by_student.get(enrollment.student_id, [])
+            
+            # Calculate stats inline using cached student_records
+            student_total = len(student_records)
+            present_count = sum(1 for r in student_records if r.status == "PRESENT")
+            absent_count = student_total - present_count
+            
+            pct = (present_count / student_total * 100) if student_total > 0 else 0.0
+            meets_req = pct >= 75.0
             
             students_data.append({
                 "registration_no": enrollment.student_username,
                 "student_name": f"{student.first_name} {student.last_name}",
-                "present": attendance_stats["present_count"],
-                "absent": attendance_stats["absent_count"],
-                "percentage": attendance_stats["attendance_percentage"],
-                "meets_requirement": attendance_stats["meets_requirement"]
+                "present": present_count,
+                "absent": absent_count,
+                "percentage": round(pct, 2),
+                "meets_requirement": meets_req
             })
             
-            total_percentage += attendance_stats["attendance_percentage"]
+            total_percentage += pct
             
-            if attendance_stats["meets_requirement"]:
+            if meets_req:
                 above_75_count += 1
             else:
                 below_75_count += 1

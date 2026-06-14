@@ -38,7 +38,7 @@ export default function MessagesPage() {
     return () => {
       // Clear listeners on unmount so stale closures don't accumulate.
       // Keep the socket open so the backend can track presence / deliver messages.
-      chatWS.clearListeners();
+      chatWS.clearListeners('page');
       wsInitialised.current = false;
     };
   }, [user, authLoading, token, router]);
@@ -117,12 +117,12 @@ export default function MessagesPage() {
         // Sort by updated_at (most recent first)
         return updated.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
       });
-    });
+    }, 'page');
 
     // Handle conversation updates - Refresh silently in the background
     chatWS.on('conversation_updated', (data) => {
       fetchConversations(false);
-    });
+    }, 'page');
 
     // Handle presence status updates
     chatWS.on('user_status', (data) => {
@@ -149,7 +149,7 @@ export default function MessagesPage() {
         }
         return prev;
       });
-    });
+    }, 'page');
 
     // Handle message status updates - Update unread count
     chatWS.on('message_status', (data) => {
@@ -162,7 +162,7 @@ export default function MessagesPage() {
           return conv;
         }));
       }
-    });
+    }, 'page');
 
     chatWS.on('message_edited', (data) => {
       // Update last message if it was edited
@@ -180,19 +180,19 @@ export default function MessagesPage() {
           return conv;
         }));
       }
-    });
+    }, 'page');
 
     chatWS.on('message_deleted', (data) => {
       fetchConversations(false);
-    });
+    }, 'page');
 
-    chatWS.on('connected', () => {});
+    chatWS.on('connected', () => {}, 'page');
 
-    chatWS.on('disconnected', () => {});
+    chatWS.on('disconnected', () => {}, 'page');
 
     chatWS.on('error', (data) => {
       console.error('WebSocket error:', data);
-    });
+    }, 'page');
   };
 
   const fetchConversations = async (showLoader = false) => {

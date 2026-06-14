@@ -4,23 +4,13 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginTemplate({ role, title, description, colorVar }) {
     const router = useRouter();
-    // Default credentials for testing
-    const defaultUsernames = {
-        STUDENT: '2024F-BSE-001',
-        TEACHER: 'ahmedkhan',
-        ADMIN: 'admin'
-    };
-    const defaultPasswords = {
-        STUDENT: 'ssuet+001',
-        TEACHER: 'teacher123',
-        ADMIN: 'admin'
-    };
-
-    const [username, setUsername] = useState(defaultUsernames[role] || '');
-    const [password, setPassword] = useState(defaultPasswords[role] || '');
+    const { login } = useAuth();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -34,7 +24,8 @@ export default function LoginTemplate({ role, title, description, colorVar }) {
                 ? username.toUpperCase()
                 : username.toLowerCase();
 
-            const res = await fetch('http://localhost:8000/api/auth/login', {
+            const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api';
+            const res = await fetch(`${apiBase}/auth/login/${role.toLowerCase()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -50,8 +41,7 @@ export default function LoginTemplate({ role, title, description, colorVar }) {
                 throw new Error(data.detail || 'Login failed');
             }
             // Save token securely
-            localStorage.setItem('token', data.access_token);
-            localStorage.setItem('user', JSON.stringify({
+            const userData = {
                 username: data.username,
                 email: data.email,
                 role: data.role,
@@ -76,7 +66,8 @@ export default function LoginTemplate({ role, title, description, colorVar }) {
                 ...(role === 'ADMIN' ? {
                     admin_level: data.admin_level
                 } : {})
-            }));
+            };
+            login(data.access_token, userData);
             
             // Redirect to respective dashboard
             router.push(`/${role.toLowerCase()}`);
@@ -206,23 +197,12 @@ export default function LoginTemplate({ role, title, description, colorVar }) {
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label
-                    htmlFor="password"
-                    className="font-label-caps text-[var(--on-surface-variant)] uppercase tracking-widest text-xs font-bold"
-                  >
-                    Password
-                  </label>
-                  <a
-                    href="#"
-                    className="font-label-caps text-xs font-bold hover:underline"
-                    style={{
-                      color: role === 'STUDENT' ? '#0EA5E9' : role === 'TEACHER' ? '#10B981' : '#6366F1'
-                    }}
-                  >
-                    Forgot?
-                  </a>
-                </div>
+                <label
+                  htmlFor="password"
+                  className="font-label-caps text-[var(--on-surface-variant)] uppercase tracking-widest text-xs font-bold block"
+                >
+                  Password
+                </label>
                 <div className="relative">
                   <input
                     id="password"
@@ -242,6 +222,17 @@ export default function LoginTemplate({ role, title, description, colorVar }) {
                       {showPassword ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
+                </div>
+                <div className="flex justify-end">
+                  <a
+                    href="#"
+                    className="text-xs font-medium hover:underline"
+                    style={{
+                      color: role === 'STUDENT' ? '#0EA5E9' : role === 'TEACHER' ? '#10B981' : '#6366F1'
+                    }}
+                  >
+                    Forgot Password?
+                  </a>
                 </div>
               </div>
               <div className="pt-4">

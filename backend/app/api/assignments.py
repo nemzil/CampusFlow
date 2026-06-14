@@ -154,15 +154,19 @@ async def get_my_assignments(
     """
     Get student's assignments with submission status
     """
+    from app.models.enrollment import Enrollment
+    
     # Get user
     user = await get_current_user_object(current_user)
     if user.role != "STUDENT":
         raise HTTPException(status_code=403, detail="Only students can view their assignments")
     
-    # Resolve term or default to current session
-    resolved_term = resolve_term(term) if term else get_current_academic_term()
+    # Resolve term only if explicitly provided
+    resolved_term = None
+    if term:
+        resolved_term = resolve_term(term)
     
-    # Get assignments
+    # Get assignments (no term filter by default - show all enrolled course assignments)
     assignments = await assignment_service.get_student_assignments(
         student_id=str(user.id),
         course_id=course_id,
@@ -319,6 +323,46 @@ async def submit_assignment(
         "is_late": submission.is_late,
         "status": submission.status
     }
+
+@router.delete("/{assignment_id}/unsubmit")
+async def unsubmit_assignment(
+    assignment_id: str,
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Unsubmit/delete assignment submission (STUDENT)
+    Only allowed if not yet graded
+    """
+    from app.models.assignment import Submission
+    
+    # Get user
+    user = await get_current_user_object(current_user)
+    if user.role != "STUDENT":
+        raise HTTPException(status_code=403, detail="Only students can unsubmit assignments")
+    
+    # Find submission
+    submission = await Submission.find_one(
+        Submission.assignment_id == assignment_id,
+        Submission.student_id == str(user.id)
+    )
+    
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    
+    # Check if already graded
+    if submission.status == "GRADED":
+        raise HTTPException(status_code=400, detail="Cannot unsubmit graded assignment")
+    
+    # Delete submission
+    await submission.delete()
+    
+    # Update assignment submission count
+    assignment = await Assignment.get(assignment_id)
+    if assignment and assignment.submission_count > 0:
+        assignment.submission_count -= 1
+        await assignment.save()
+    
+    return {"message": "Submission removed successfully"}
 
 @router.get("/{assignment_id}/submissions")
 async def get_assignment_submissions(

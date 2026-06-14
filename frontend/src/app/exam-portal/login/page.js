@@ -27,7 +27,7 @@ import { Button } from '@/components/ui/button';
 
 export default function ExamPortalLoginPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -38,13 +38,13 @@ export default function ExamPortalLoginPage() {
   const [loading, setLoading] = useState(false);
 
   // If already logged in as STUDENT, redirect to exams
-  // If logged in as non-student, redirect to main portal
+  // If logged in as non-student, redirect to home page
   useEffect(() => {
     if (!authLoading && user) {
       if (user.role === 'STUDENT') {
         router.replace('/exam-portal/exams');
       } else {
-        router.replace('/login');
+        router.replace('/');
       }
     }
   }, [user, authLoading, router]);
@@ -64,8 +64,9 @@ export default function ExamPortalLoginPage() {
         ? formData.username.toUpperCase()
         : formData.username.toLowerCase();
 
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api';
       const response = await fetch(
-        'http://localhost:8000/api/auth/login',
+        `${apiBase}/auth/login/student`,
         {
           method: 'POST',
           headers: {
@@ -91,7 +92,6 @@ export default function ExamPortalLoginPage() {
 
       // Set portal flag so 401 redirects come back here
       localStorage.setItem('portal', 'exam-portal');
-      localStorage.setItem('token', data.access_token);
 
       const userData = {
         username: data.username,
@@ -107,7 +107,7 @@ export default function ExamPortalLoginPage() {
         current_semester: data.current_semester,
       };
 
-      localStorage.setItem('user', JSON.stringify(userData));
+      login(data.access_token, userData);
 
       // Hard navigate to exam portal exams so AuthContext re-hydrates
       window.location.href = '/exam-portal/exams';
@@ -319,10 +319,10 @@ export default function ExamPortalLoginPage() {
               Forgot your password? Contact administrator.
             </p>
             <button
-              onClick={() => window.location.href = '/login'}
+              onClick={() => window.location.href = '/student/login'}
               className="text-sm text-center text-violet-400 hover:text-violet-300 transition-colors"
             >
-              Go to Main Portal Login
+              Go to Student Portal Login
             </button>
           </CardFooter>
 

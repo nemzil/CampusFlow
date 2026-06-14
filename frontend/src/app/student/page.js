@@ -125,7 +125,6 @@ export default function StudentDashboard() {
       >
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 text-xs">Student Portal</Badge>
             <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 font-mono text-xs">{user.registration_no}</Badge>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 font-heading">

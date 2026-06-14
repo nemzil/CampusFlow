@@ -107,7 +107,6 @@ export default function TeacherProfile() {
       >
         {/* Header */}
         <div className="mb-3">
-          <Badge variant="outline" className="badge-cyan mb-1.5 text-xs">Account Settings</Badge>
           <h1 className="text-xl font-bold tracking-tight text-white font-heading">
             My Profile
           </h1>

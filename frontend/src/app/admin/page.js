@@ -93,9 +93,6 @@ export default function AdminDashboard() {
         {/* Header Greeting */}
         <motion.div variants={itemVariants} className="space-y-2">
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="outline" className="badge-rose text-xs">
-              {isFeeAdmin ? 'Finance Console' : isCourseAdmin ? 'Course Console' : isExamAdmin ? 'Exam Console' : 'System Console'}
-            </Badge>
             <Badge variant="outline" className="badge-violet font-mono text-xs">
               {user.admin_level || 'L1'}
             </Badge>

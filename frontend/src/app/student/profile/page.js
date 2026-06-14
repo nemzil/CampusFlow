@@ -113,7 +113,6 @@ export default function StudentProfile() {
       >
         {/* Header */}
         <div className="mb-4">
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2 font-bold">Account Settings</Badge>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 font-heading">
             My Profile
           </h1>

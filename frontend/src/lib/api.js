@@ -43,7 +43,20 @@ async function apiRequest(url, options = {}) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       const portal = localStorage.getItem('portal');
-      window.location.href = portal === 'exam-portal' ? '/exam-portal/login' : '/login';
+      let redirectUrl = '/';
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (path.startsWith('/student')) {
+          redirectUrl = '/student/login';
+        } else if (path.startsWith('/teacher')) {
+          redirectUrl = '/teacher/login';
+        } else if (path.startsWith('/admin')) {
+          redirectUrl = '/admin/login';
+        } else if (path.startsWith('/exam-portal') || portal === 'exam-portal') {
+          redirectUrl = '/exam-portal/login';
+        }
+      }
+      window.location.href = redirectUrl;
       throw new Error('Session expired');
     }
     
@@ -342,7 +355,20 @@ export async function bulkRegisterUsers(role, file) {
   if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    let redirectUrl = '/';
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/student')) {
+        redirectUrl = '/student/login';
+      } else if (path.startsWith('/teacher')) {
+        redirectUrl = '/teacher/login';
+      } else if (path.startsWith('/admin')) {
+        redirectUrl = '/admin/login';
+      } else if (path.startsWith('/exam-portal')) {
+        redirectUrl = '/exam-portal/login';
+      }
+    }
+    window.location.href = redirectUrl;
     throw new Error('Session expired');
   }
   
@@ -814,9 +840,18 @@ export async function deleteAssignment(assignmentId) {
   });
 }
 
-export async function getStudentAssignments(courseId = null) {
-  const query = courseId ? `?course_id=${courseId}` : '';
+export async function getStudentAssignments(courseId = null, term = null) {
+  const params = [];
+  if (courseId) params.push(`course_id=${courseId}`);
+  if (term) params.push(`term=${term}`);
+  const query = params.length > 0 ? `?${params.join('&')}` : '';
   return apiRequest(`${API_BASE}/assignments/my-assignments/list${query}`);
+}
+
+export async function unsubmitAssignment(assignmentId) {
+  return apiRequest(`${API_BASE}/assignments/${assignmentId}/unsubmit`, {
+    method: 'DELETE',
+  });
 }
 
 export async function uploadPdf(file) {

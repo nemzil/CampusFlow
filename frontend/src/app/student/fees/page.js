@@ -160,7 +160,6 @@ export default function StudentFeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Fee Voucher</Badge>
           <h1 className="text-3xl font-bold font-heading tracking-tight flex items-center gap-2">
             <DollarSign className="w-7 h-7 text-violet-400" />Semester Fee Voucher
           </h1>

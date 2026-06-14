@@ -83,7 +83,6 @@ export default function StudentAttendancePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">Registrar Office</Badge>
           <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">My Attendance</h1>
           <p className="text-slate-500 mt-1">
             Monitor your attendance statistics. Maintain a minimum of <span className="text-red-500 font-bold">75%</span> in each course for exam eligibility.

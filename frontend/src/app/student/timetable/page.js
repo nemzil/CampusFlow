@@ -55,21 +55,39 @@ export default function StudentTimetablePage() {
     else if (!authLoading && user && user.role !== 'STUDENT') router.push('/login');
   }, [user, authLoading, router]);
 
+  const fetchTimetable = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const res = await getMyClassTimetable();
+      setTimetable(res.timetables || []);
+      setMeta({ department: res.department, semester: res.semester, message: res.message });
+      const grouped = groupByDay(res.timetables || []);
+      setActiveDay(prev => {
+        if (prev && grouped[prev]) return prev;
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        return grouped[today] ? today : (Object.keys(grouped)[0] || '');
+      });
+    } catch (e) {
+      if (!isSilent) setError(e.message);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user || user.role !== 'STUDENT') return;
-    getMyClassTimetable()
-      .then(res => {
-        setTimetable(res.timetables || []);
-        setMeta({ department: res.department, semester: res.semester, message: res.message });
-        
-        // Set today's day as default active tab
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-        const grouped = groupByDay(res.timetables || []);
-        setActiveDay(grouped[today] ? today : (Object.keys(grouped)[0] || ''));
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    fetchTimetable(false);
   }, [user]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && user.role === 'STUDENT' && !authLoading) {
+        fetchTimetable(true);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, authLoading]);
 
   if (authLoading || !user) {
     return (
@@ -88,9 +106,6 @@ export default function StudentTimetablePage() {
       {/* Header */}
       <div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200">
-            Class Schedule
-          </Badge>
           {meta.department && (
             <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
               {meta.department} · Semester {meta.semester}

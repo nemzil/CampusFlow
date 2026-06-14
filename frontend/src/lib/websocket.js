@@ -3,7 +3,7 @@
  *
  * Key design decisions:
  * - Listeners are persistent across reconnects (not wiped on close/disconnect).
- * - Pages must call `clearListeners()` on unmount to avoid stale-closure leaks.
+ * - Pages must call `clearListeners(owner)` on unmount to avoid stale-closure leaks.
  * - `connect()` is idempotent: calling it while already connected is a no-op.
  * - Auto-reconnect backs off exponentially but is cancelled on manual disconnect.
  */
@@ -28,9 +28,27 @@ class ChatWebSocket {
     this.manuallyDisconnected = false;
 
     const isClient = typeof window !== 'undefined';
-    const protocol = isClient && window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const hostname = isClient ? window.location.hostname : 'localhost';
-    const wsUrl = `${protocol}://${hostname}:8000/api/ws?token=${token}`;
+    let wsUrl = null;
+
+    // Attempt to resolve from environment variables
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (apiBase) {
+      try {
+        const url = new URL(apiBase);
+        const wsProtocol = url.protocol === 'https:' ? 'wss' : 'ws';
+        // url.host automatically includes hostname and port (e.g. "127.0.0.1:8000")
+        wsUrl = `${wsProtocol}://${url.host}/api/ws?token=${token}`;
+      } catch (err) {
+        console.error('Failed to parse NEXT_PUBLIC_API_BASE_URL:', err);
+      }
+    }
+
+    // Fallback if no env var or parsing fails
+    if (!wsUrl) {
+      const protocol = isClient && window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const hostname = isClient ? window.location.hostname : '127.0.0.1';
+      wsUrl = `${protocol}://${hostname}:8000/api/ws?token=${token}`;
+    }
 
     this.ws = new WebSocket(wsUrl);
 
@@ -61,7 +79,6 @@ class ChatWebSocket {
     this.ws.onerror = (error) => {
       console.error('ws error:', error);
       this.emit('error', { error });
-      // onclose will fire after onerror, which will trigger reconnect
     };
   }
 
@@ -84,31 +101,31 @@ class ChatWebSocket {
   }
 
   /**
-   * Register an event listener.
-   * Listeners persist across reconnects — clear them on page unmount via clearListeners().
+   * Register an event listener with an optional owner to isolate groups of listeners.
    */
-  on(event, callback) {
+  on(event, callback, owner = null) {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
     // Avoid double-registering the same callback
-    if (!this.listeners[event].includes(callback)) {
-      this.listeners[event].push(callback);
+    const exists = this.listeners[event].some(item => item.callback === callback);
+    if (!exists) {
+      this.listeners[event].push({ callback, owner });
     }
   }
 
   off(event, callback) {
     if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+      this.listeners[event] = this.listeners[event].filter(item => item.callback !== callback);
     }
   }
 
   emit(event, data) {
     const handlers = this.listeners[event];
     if (handlers && handlers.length > 0) {
-      handlers.forEach(callback => {
+      [...handlers].forEach(item => {
         try {
-          callback(data);
+          item.callback(data);
         } catch (error) {
           console.error(`Error in "${event}" listener:`, error);
         }
@@ -126,7 +143,6 @@ class ChatWebSocket {
 
   /**
    * Manually disconnect and cancel reconnects.
-   * Does NOT clear listeners so they survive a subsequent connect() call.
    */
   disconnect() {
     this.manuallyDisconnected = true;
@@ -145,11 +161,16 @@ class ChatWebSocket {
   }
 
   /**
-   * Remove all event listeners. Call this on page unmount to prevent
-   * stale-closure memory leaks from captured React state.
+   * Remove event listeners. Optionally filter by owner (e.g. 'page').
    */
-  clearListeners() {
-    this.listeners = {};
+  clearListeners(owner = null) {
+    if (owner === null) {
+      this.listeners = {};
+    } else {
+      for (const event in this.listeners) {
+        this.listeners[event] = this.listeners[event].filter(item => item.owner !== owner);
+      }
+    }
   }
 
   isConnected() {

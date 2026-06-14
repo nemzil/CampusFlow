@@ -326,7 +326,25 @@ async def get_my_enrollments(
         raise HTTPException(status_code=403, detail="Only students can view enrollments")
     
     # Resolve term
-    resolved_term = resolve_term(term) if term else get_current_academic_term()
+    if term:
+        resolved_term = resolve_term(term)
+    else:
+        # Fallback to student's active/completed enrollment term
+        active_enrollments = await Enrollment.find(
+            Enrollment.student_id == str(student.id),
+            Enrollment.status == "ENROLLED"
+        ).to_list()
+        
+        if active_enrollments:
+            enrolled_terms = list(set(e.term for e in active_enrollments if e.term))
+            resolved_term = max(enrolled_terms) if enrolled_terms else get_current_academic_term()
+        else:
+            completed_enrollments = await Enrollment.find(
+                Enrollment.student_id == str(student.id),
+                Enrollment.status == "COMPLETED"
+            ).to_list()
+            completed_terms = list(set(e.term for e in completed_enrollments if e.term))
+            resolved_term = max(completed_terms) if completed_terms else get_current_academic_term()
     
     # Get enrollments — if term is 'ALL', fetch all enrollments for this student
     if resolved_term == "ALL":

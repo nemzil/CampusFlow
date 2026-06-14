@@ -133,7 +133,6 @@ export default function StudentEnrollmentPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">Registrar Office</Badge>
           <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Course Registration</h1>
           <p className="text-slate-500 mt-1 font-sans">
             Enroll in courses for Semester <span className="font-semibold text-slate-800">{user?.current_semester || '4'}</span>.

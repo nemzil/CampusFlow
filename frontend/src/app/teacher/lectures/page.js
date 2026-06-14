@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import FileDropzone from '@/components/ui/file-dropzone';
 
 export default function TeacherLecturesPage() {
   const router = useRouter();
@@ -59,13 +60,6 @@ export default function TeacherLecturesPage() {
     } catch (e) { showError(e.message); }
   };
 
-  const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (f.size > 500 * 1024 * 1024) { showError('Max file size is 500MB'); e.target.value = ''; return; }
-    setFile(f);
-  };
-
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) { showError('Please select a file'); return; }
@@ -110,7 +104,6 @@ export default function TeacherLecturesPage() {
     return (
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-white min-h-screen">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Faculty Portal</Badge>
           <h1 className="text-3xl font-bold font-heading tracking-tight">Lectures</h1>
           <p className="text-slate-400 mt-1 text-sm">Upload recorded lectures for your courses. Files are available for 7 days.</p>
         </div>
@@ -231,21 +224,15 @@ export default function TeacherLecturesPage() {
               </div>
               <div>
                 <label className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block mb-1">Lecture File <span className="text-slate-600 normal-case font-normal">(video, PDF, etc. · max 500MB)</span></label>
-                <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-5 cursor-pointer transition-colors ${file ? 'border-violet-500/40 bg-violet-500/5' : 'border-white/10 hover:border-white/20 bg-white/[0.02]'}`}>
-                  <input type="file" onChange={handleFileChange} className="hidden" />
-                  {file ? (
-                    <>
-                      <Video className="w-5 h-5 text-violet-400" />
-                      <span className="text-xs font-semibold text-violet-300 text-center break-all">{file.name}</span>
-                      <span className="text-[10px] text-slate-500">{(file.size / (1024 * 1024)).toFixed(1)} MB · Click to change</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-5 h-5 text-slate-500" />
-                      <span className="text-xs text-slate-400">Click to select file</span>
-                    </>
-                  )}
-                </label>
+                <FileDropzone
+                  accept="*/*"
+                  maxSize={500 * 1024 * 1024}
+                  selectedFile={file}
+                  onFileSelect={setFile}
+                  onClear={() => setFile(null)}
+                  label="Upload Lecture File"
+                  hint="Video, PDF, PPT, or any file · Click or drag and drop"
+                />
               </div>
               <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3 flex items-start gap-2">
                 <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />

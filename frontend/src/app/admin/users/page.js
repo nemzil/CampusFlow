@@ -139,7 +139,6 @@ export default function UsersManagementPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
-          <Badge variant="outline" className="badge-violet mb-2">Directory</Badge>
           <h1 className="text-3xl font-bold font-heading text-white tracking-tight">User Management</h1>
           <p className="text-slate-400 mt-1">Manage students, faculty, and administrative staff.</p>
         </div>

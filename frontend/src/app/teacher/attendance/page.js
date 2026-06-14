@@ -1,4 +1,4 @@
-v'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -208,7 +208,6 @@ export default function TeacherAttendancePage() {
     return (
       <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-white min-h-screen">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">Faculty Console</Badge>
           <h1 className="text-3xl font-bold font-heading text-white tracking-tight">Attendance Management</h1>
           <p className="text-slate-400 mt-1 font-sans">
             Select a course section to manage attendance sheets and compile reports.

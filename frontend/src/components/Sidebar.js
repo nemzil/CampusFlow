@@ -108,7 +108,7 @@ function SidebarComponent({ role }) {
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push(`/${role.toLowerCase()}/login`);
   };
 
   // Theme specs for student (sky blue), teacher (emerald), admin (indigo)

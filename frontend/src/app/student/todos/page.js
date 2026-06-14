@@ -43,6 +43,26 @@ export default function TodosPage() {
     }
   }, [user, authLoading, router, filters]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && !authLoading) {
+        const refreshTodos = async () => {
+          try {
+            const data = await getTodos(filters);
+            setTodos(data);
+            const statsData = await getTodoStats();
+            setStats(statsData);
+          } catch (e) {
+            console.error('Silent todos refresh failed:', e);
+          }
+        };
+        refreshTodos();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, authLoading, filters]);
+
   const fetchTodos = async () => {
     try {
       setLoading(true);
@@ -124,9 +144,6 @@ export default function TodosPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">
-            Workspace
-          </Badge>
           <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">My Todo Tasks</h1>
           <p className="text-slate-500 mt-1 font-sans">
             Track pending course assignments, study schedules, and exams.

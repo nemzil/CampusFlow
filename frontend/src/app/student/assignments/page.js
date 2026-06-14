@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getStudentAssignments, submitAssignment, getMyEnrollments, uploadPdf } from '@/lib/api';
+import { getStudentAssignments, submitAssignment, getMyEnrollments, uploadPdf, unsubmitAssignment } from '@/lib/api';
 import { getCurrentAcademicTerm } from '@/lib/utils';
 import {
   ClipboardList, Clock, AlertCircle, Loader2, Calendar, Search,
@@ -16,13 +16,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import FileDropzone from '@/components/ui/file-dropzone';
 
 export default function StudentAssignmentsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const term = getCurrentAcademicTerm();
+  const [term, setTerm] = useState(null);
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('ALL');
   const [assignments, setAssignments] = useState([]);
@@ -44,15 +45,41 @@ export default function StudentAssignmentsPage() {
     else if (!authLoading && user) loadInitialData();
   }, [user, authLoading, selectedCourseId]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && !authLoading) {
+        const refreshData = async () => {
+          try {
+            const courseFilterId = selectedCourseId === 'ALL' ? null : selectedCourseId;
+            const data = await getStudentAssignments(courseFilterId, null);
+            setAssignments(data.assignments || data || []);
+          } catch (e) {
+            console.error('Silent refresh failed:', e);
+          }
+        };
+        refreshData();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, authLoading, selectedCourseId]);
+
   const loadInitialData = async () => {
     setLoading(true);
     try {
       const enrollmentsData = await getMyEnrollments(term);
       setCourses(enrollmentsData.enrollments || []);
+      const resolvedTerm = enrollmentsData.term || getCurrentAcademicTerm();
+      if (!term) {
+        setTerm(resolvedTerm);
+      }
       const courseFilterId = selectedCourseId === 'ALL' ? null : selectedCourseId;
-      const data = await getStudentAssignments(courseFilterId);
+      // Don't pass term filter - show all assignments from enrolled courses
+      const data = await getStudentAssignments(courseFilterId, null);
+      console.log('Fetched assignments:', data); // Debug log
       setAssignments(data.assignments || data || []);
     } catch (err) {
+      console.error('Load error:', err); // Debug log
       showError(err.message || 'Failed to load assignments');
     } finally {
       setLoading(false);
@@ -75,20 +102,18 @@ export default function StudentAssignmentsPage() {
     setShowSubmitModal(true);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      showError('Only PDF files are allowed');
-      e.target.value = '';
+  const handleUnsubmit = async (assignment) => {
+    if (!confirm('Are you sure you want to unsubmit this assignment? This action cannot be undone.')) {
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      showError('File too large. Maximum 10MB.');
-      e.target.value = '';
-      return;
+    
+    try {
+      await unsubmitAssignment(assignment.id || assignment._id);
+      showSuccess('Submission removed successfully');
+      await loadInitialData();
+    } catch (err) {
+      showError(err.message || 'Failed to unsubmit');
     }
-    setPdfFile(file);
   };
 
   const handleSubmit = async (e) => {
@@ -123,10 +148,7 @@ export default function StudentAssignmentsPage() {
   };
 
   const filteredAssignments = assignments.filter(a => {
-    // Only show assignments from the current academic term or those the student has already submitted/been graded on
-    const isRealOrSub = (a.term === term) || !!a.my_submission;
-    if (!isRealOrSub) return false;
-
+    // Show all assignments for enrolled courses regardless of term
     const matchesSearch =
       a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.course_code?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -163,14 +185,8 @@ export default function StudentAssignmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">My Assessments</Badge>
           <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Assignments & Quizzes</h1>
           <p className="text-slate-500 mt-1">Submit coursework and view grading results for the current session.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-100 font-bold text-xs">
-            {term}
-          </Badge>
         </div>
       </div>
 
@@ -330,9 +346,19 @@ export default function StudentAssignmentsPage() {
                                   Closed
                                 </Badge>
                               ) : isSubmitted && !isGraded ? (
-                                <Badge className="bg-sky-50 text-sky-600 border border-sky-100 text-[9px] py-1 px-2.5 font-bold uppercase tracking-wider">
-                                  Pending Review
-                                </Badge>
+                                <>
+                                  <Badge className="bg-sky-50 text-sky-600 border border-sky-100 text-[9px] py-1 px-2.5 font-bold uppercase tracking-wider">
+                                    Pending Review
+                                  </Badge>
+                                  <Button
+                                    onClick={() => handleUnsubmit(assignment)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-white hover:bg-red-50 border-red-200 text-red-600 hover:text-red-700 font-bold text-xs h-7 px-2.5 cursor-pointer"
+                                  >
+                                    Unsubmit
+                                  </Button>
+                                </>
                               ) : null}
                             </div>
                           </td>
@@ -459,22 +485,15 @@ export default function StudentAssignmentsPage() {
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                         Upload PDF <span className="text-slate-400 normal-case font-normal">(max 10MB)</span>
                       </label>
-                      <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${pdfFile ? 'border-sky-500/40 bg-sky-50/50' : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'}`}>
-                        <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
-                        {pdfFile ? (
-                          <>
-                            <CheckCircle2 className="w-6 h-6 text-sky-500" />
-                            <span className="text-xs font-bold text-sky-650 truncate max-w-[250px]">{pdfFile.name}</span>
-                            <span className="text-[10px] text-slate-400">{(pdfFile.size / 1024).toFixed(0)} KB · Click to change</span>
-                          </>
-                        ) : (
-                          <>
-                            <FileUp className="w-6 h-6 text-slate-400" />
-                            <span className="text-xs text-slate-500 font-medium">Click to select a PDF file</span>
-                            <span className="text-[10px] text-slate-450">PDF only · Max 10MB</span>
-                          </>
-                        )}
-                      </label>
+                      <FileDropzone
+                        accept="application/pdf"
+                        maxSize={10 * 1024 * 1024}
+                        selectedFile={pdfFile}
+                        onFileSelect={setPdfFile}
+                        onClear={() => setPdfFile(null)}
+                        label="Upload PDF File"
+                        hint="Click to browse or drag and drop"
+                      />
                     </div>
 
                     {/* Text Answer */}

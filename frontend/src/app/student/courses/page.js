@@ -111,9 +111,6 @@ export default function StudentCoursesPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 bg-white text-slate-800 min-h-screen font-sans">
       {/* Header */}
       <div>
-        <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">
-          Academic Year {new Date().getFullYear()}
-        </Badge>
         <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Course Catalog</h1>
         <p className="text-slate-500 mt-1 font-sans">
           Browse and verify core and elective course eligibility for your current semester (Semester {user?.current_semester || 4}).

@@ -518,7 +518,7 @@ async def get_student_assignments(
     Returns:
         List of assignments with submission info
     """
-    # Get student's enrolled courses
+    # Get student's enrolled courses (no term filter - get all enrolled courses)
     from app.models.enrollment import Enrollment
     enrolled_courses = await Enrollment.find(
         Enrollment.student_id == student_id,
@@ -533,11 +533,21 @@ async def get_student_assignments(
     # Build query - only get published assignments
     query = Assignment.find(Assignment.status == "PUBLISHED")
     
+    # Only apply term filter if explicitly provided
+    if term:
+        query = query.find(Assignment.term == term)
+    
     # Optional: filter by specific course
     if course_id:
         query = query.find(Assignment.course_id == course_id)
         
     assignments = await query.to_list()
+    
+    # Batch query all submissions for this student to prevent N+1 queries in loop
+    submissions = await Submission.find(
+        Submission.student_id == student_id
+    ).to_list()
+    submissions_map = {s.assignment_id: s for s in submissions}
     
     # Filter to only enrolled courses
     result = []
@@ -546,11 +556,8 @@ async def get_student_assignments(
         if assignment.course_id not in enrolled_course_ids:
             continue
         
-        # Get student's submission if exists
-        submission = await Submission.find_one(
-            Submission.assignment_id == str(assignment.id),
-            Submission.student_id == student_id
-        )
+        # Get student's submission if exists from cached map
+        submission = submissions_map.get(str(assignment.id))
         
         # Calculate days left (handle both naive and aware datetimes)
         now = datetime.now(timezone.utc)
@@ -573,6 +580,7 @@ async def get_student_assignments(
             "questions": [q.model_dump() for q in assignment.questions],
             "days_left": days_left,
             "is_overdue": is_overdue,
+            "term": assignment.term,
             "my_submission": None
         }
         

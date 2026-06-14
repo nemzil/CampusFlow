@@ -61,7 +61,6 @@ export default function StudentLecturesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">My Lectures</Badge>
           <h1 className="text-3xl font-bold font-heading tracking-tight">Recorded Lectures</h1>
           <p className="text-slate-400 mt-1 text-sm">Download lectures from your enrolled courses. Available for 7 days after upload.</p>
         </div>

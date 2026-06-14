@@ -50,19 +50,39 @@ export default function TeacherTimetablePage() {
     else if (!authLoading && user && user.role !== 'TEACHER') router.push('/login');
   }, [user, authLoading, router]);
 
+  const fetchSchedule = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const res = await getMyTeachingSchedule();
+      setSchedule(res.timetables || []);
+      setTeacherName(res.teacher || '');
+      const grouped = groupByDay(res.timetables || []);
+      setActiveDay(prev => {
+        if (prev && grouped[prev]) return prev;
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        return grouped[today] ? today : (Object.keys(grouped)[0] || '');
+      });
+    } catch (e) {
+      if (!isSilent) setError(e.message);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user || user.role !== 'TEACHER') return;
-    getMyTeachingSchedule()
-      .then(res => {
-        setSchedule(res.timetables || []);
-        setTeacherName(res.teacher || '');
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-        const grouped = groupByDay(res.timetables || []);
-        setActiveDay(grouped[today] ? today : (Object.keys(grouped)[0] || ''));
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    fetchSchedule(false);
   }, [user]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && user.role === 'TEACHER' && !authLoading) {
+        fetchSchedule(true);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, authLoading]);
 
   if (authLoading || !user) {
     return (
