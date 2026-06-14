@@ -2,639 +2,400 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  GraduationCap,
-  BookOpen,
-  Users,
-  Calendar,
-  MessageSquare,
-  TrendingUp,
-  CheckCircle,
-  ArrowRight,
-  Sparkles,
-  Shield,
-  Zap,
-  DollarSign,
-  FileText,
-  BarChart3,
-  Clock,
-} from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
-  const modules = [
-    {
-      icon: Shield,
-      title: 'Authentication & Users',
-      description: 'JWT-based auth with role-based access control for students, teachers, and admins',
-      status: 'Built',
-    },
-    {
-      icon: CheckCircle,
-      title: 'Todo System',
-      description: 'Manual and auto-generated tasks from assignments with priority tracking',
-      status: 'Built',
-    },
-    {
-      icon: MessageSquare,
-      title: 'Chat & Messaging',
-      description: 'Real-time 1:1 messaging with file sharing and conversation history',
-      status: 'Built',
-    },
-    {
-      icon: FileText,
-      title: 'Exams (Manual & AI)',
-      description: 'Create exams manually or generate with AI, auto-grading support',
-      status: 'Built',
-    },
-    {
-      icon: BarChart3,
-      title: 'Results & Statistics',
-      description: 'Exam performance tracking with detailed analytics and insights',
-      status: 'Built',
-    },
-    {
-      icon: BookOpen,
-      title: 'Course Management',
-      description: 'Complete catalog with theory/lab variants, prerequisites, and credit hours',
-      status: 'Planned',
-    },
-    {
-      icon: Users,
-      title: 'Enrollment System',
-      description: 'Flexible registration windows with seat capacity and prerequisite validation',
-      status: 'Planned',
-    },
-    {
-      icon: Calendar,
-      title: 'Attendance Management',
-      description: '9-period daily tracking with 75% threshold for exam eligibility',
-      status: 'Planned',
-    },
-    {
-      icon: FileText,
-      title: 'Assignments & Quizzes',
-      description: '3+3+4 marks pattern with file uploads and deadline management',
-      status: 'Planned',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Grading System',
-      description: 'Automated GPA/CGPA calculation with transcript generation',
-      status: 'Planned',
-    },
-    {
-      icon: DollarSign,
-      title: 'Fee Management',
-      description: 'Rs. 2,350/credit hour with voucher generation and payment tracking',
-      status: 'Planned',
-    },
-    {
-      icon: CheckCircle,
-      title: 'Admit Card Generation',
-      description: 'Per-course eligibility check (75% attendance + fees) with QR codes',
-      status: 'Planned',
-    },
-    {
-      icon: Sparkles,
-      title: 'University Announcements',
-      description: 'Rich text announcements with attachments and category filtering',
-      status: 'Planned',
-    },
-    {
-      icon: MessageSquare,
-      title: 'Discussion Forum',
-      description: 'Discord-like course channels for collaborative learning',
-      status: 'Planned',
-    },
-    {
-      icon: Clock,
-      title: 'Class Timetable',
-      description: 'Weekly schedule with 9 periods and conflict detection',
-      status: 'Planned',
-    },
-  ];
+  // Emil Kowalski inspired snappy easing
+  const customEase = [0.23, 1, 0.32, 1];
 
-  const stats = [
-    { number: '15', label: 'Modules', sublabel: '5 Built, 10 Planned' },
-    { number: '120+', label: 'API Endpoints', sublabel: 'RESTful Design' },
-    { number: '3', label: 'User Roles', sublabel: 'Student, Teacher, Admin' },
-    { number: '100%', label: 'Automated', sublabel: 'No Manual Work' },
-  ];
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+    }
+  };
 
-  const techStack = [
-    'Next.js 15',
-    'FastAPI',
-    'MongoDB',
-    'AI Integration',
-    'Real-time WebSocket',
-    'PDF Generation',
-  ];
+  // Modern entry: scale from 0.95 with opacity 0
+  const fadeScaleUp = {
+    hidden: { opacity: 0, scale: 0.95, y: 16 },
+    show: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0, 
+      transition: { duration: 0.6, ease: customEase } 
+    }
+  };
+
+  const featureCardsStagger = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--bg-base)' }}>
+    <div className="overflow-x-hidden min-h-screen flex flex-col relative bg-[var(--background)]">
 
-      {/* ── Navbar ── */}
-      <motion.nav
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="fixed top-0 w-full z-50 glass-panel"
-        style={{ borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}
-      >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.04 }} style={{ cursor: 'pointer' }}>
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, var(--violet-dark), var(--violet))' }}
-            >
-              <GraduationCap className="w-5 h-5 text-white" />
+      {/* ── Curved Decorative Waves (Themed Palette) ── */}
+      <div className="absolute top-0 right-0 left-0 h-[950px] z-0 pointer-events-none overflow-hidden">
+        {/* Top Right Wave: Beautiful organic swoop matching mockup (Much Larger) */}
+        <svg viewBox="0 0 1440 320" className="absolute top-0 right-0 w-[85%] md:w-[72%] h-auto origin-top-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M500 0 C 650 200, 850 250, 1100 200 C 1250 160, 1360 110, 1440 0 Z" fill="url(#top-wave-grad)" />
+          <defs>
+            <linearGradient id="top-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0.75" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Bottom Left Wave: Organic hill wave matching mockup (Much Larger) */}
+        <svg viewBox="0 0 1440 800" className="absolute bottom-0 left-0 w-[85%] md:w-[72%] h-auto origin-bottom-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 300 C 200 250, 400 450, 580 550 C 780 680, 950 720, 1150 800 L 0 800 Z" fill="url(#bottom-wave-grad)" />
+          <defs>
+            <linearGradient id="bottom-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0.85" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* TopNavBar */}
+      <header className="bg-transparent border-b border-transparent sticky top-0 z-50 transition-all">
+        <nav className="flex justify-between items-center w-full px-[var(--margin-desktop)] py-4 max-w-[1440px] mx-auto">
+          <div className="flex items-center gap-2 group cursor-pointer">
+            <div className="w-8 h-8 rounded-lg bg-[var(--on-background)] flex items-center justify-center group-hover:bg-[var(--primary)] transition-colors duration-300">
+               <span className="material-symbols-outlined text-white text-lg">school</span>
             </div>
-            <span
-              className="text-xl font-bold gradient-text"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              CampusFlow
-            </span>
-          </motion.div>
-
-          <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => (window.location.href = '/login')}
-            className="btn btn-primary"
-            style={{ borderRadius: 'var(--radius-full)', paddingInline: '24px' }}
-          >
-            Get Started
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={() => (window.location.href = '/exam-portal/login')}
-            className="btn btn-ghost"
-            style={{ borderRadius: 'var(--radius-full)', paddingInline: '20px' }}
-          >
-            Exam Portal
-          </motion.button>
+            <div className="font-headline-sm text-[var(--on-background)] font-bold text-xl tracking-tight">CampusFlow</div>
           </div>
-        </div>
-      </motion.nav>
+          
+          <div className="hidden md:flex items-center gap-2">
+            <a href="#features" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Features</a>
+            <a href="#ai-exams" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">AI Engine</a>
+            <a href="#portals" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Portals</a>
+          </div>
 
-      {/* ── Hero ── */}
-      <section className="pt-36 pb-24 px-6 relative overflow-hidden">
-        {/* Background orbs */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-          className="absolute top-16 right-10 w-[480px] h-[480px] rounded-full blur-3xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)' }}
-        />
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
-          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-          className="absolute bottom-10 left-10 w-[400px] h-[400px] rounded-full blur-3xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 70%)' }}
-        />
+          <div className="flex gap-4">
+            <a href="#portals" className="px-6 py-2.5 bg-white border border-[var(--outline-variant)] text-slate-900 rounded-lg font-nav-link btn-active-scale transition-all duration-300 hover:!bg-slate-900 hover:!text-white hover:!border-transparent flex items-center shadow-sm hover:shadow-md">
+              Sign In
+            </a>
+          </div>
+        </nav>
+      </header>
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <main className="flex-grow relative z-10">
+        {/* Hero Section */}
+        <section className="relative w-full min-h-[85vh] flex items-center pt-8 pb-20">
+          <div className="w-full max-w-[1440px] mx-auto px-[var(--margin-desktop)] grid grid-cols-1 md:grid-cols-12 gap-[var(--gutter)] items-center">
 
-            {/* Left — copy */}
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              {/* Badge */}
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8 glass"
-                animate={{
-                  boxShadow: [
-                    '0 0 0 0 rgba(167,139,250,0.35)',
-                    '0 0 0 18px rgba(167,139,250,0)',
-                  ],
-                }}
-                transition={{ duration: 2.2, repeat: Infinity }}
-                style={{ color: 'var(--violet)', borderColor: 'rgba(167,139,250,0.2)' }}
-              >
-                <Sparkles className="w-4 h-4" />
-                Complete University Management System
+            {/* Left Content */}
+            <motion.div className="md:col-span-7 space-y-8 relative z-10" variants={staggerContainer} initial="hidden" animate="show">
+              <motion.div variants={fadeScaleUp} className="space-y-6">
+                <h1 className="font-display-lg text-[var(--on-background)] max-w-2xl mt-4">
+                  Campus operations, <br /> unified.
+                </h1>
+                
+                <p className="font-body-lg text-[var(--on-surface-variant)] max-w-xl">
+                  A high-performance platform for academic management. Streamline administration, grading, and communication in one functional workspace.
+                </p>
               </motion.div>
-
-              <h1
-                className="text-5xl lg:text-7xl font-extrabold mb-6 leading-tight"
-                style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}
-              >
-                Modern Campus
-                <span className="block mt-1 gradient-text">Management</span>
-              </h1>
-
-              <p
-                className="text-lg mb-10 leading-relaxed max-w-xl"
-                style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-sans)' }}
-              >
-                Streamline academics, attendance, exams, and more with our comprehensive
-                platform. Built for universities, designed for excellence.
-              </p>
-
-              <div className="flex flex-wrap gap-4 mb-14">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => (window.location.href = '/login')}
-                  className="btn btn-primary flex items-center gap-2"
-                  style={{ borderRadius: 'var(--radius-full)', padding: '14px 32px', fontSize: '15px' }}
-                >
-                  Get Started <ArrowRight className="w-4 h-4" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="btn btn-ghost"
-                  style={{ borderRadius: 'var(--radius-full)', padding: '14px 32px', fontSize: '15px' }}
-                >
-                  View Documentation
-                </motion.button>
-              </div>
-
-              {/* Mini-stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {stats.map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
-                    className="glass-card text-center p-4"
-                  >
-                    <div
-                      className="text-2xl font-extrabold mb-0.5 gradient-text"
-                      style={{ fontFamily: 'var(--font-heading)' }}
-                    >
-                      {stat.number}
-                    </div>
-                    <div className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                      {stat.label}
-                    </div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                      {stat.sublabel}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              
+              <motion.div variants={fadeScaleUp} className="flex flex-wrap gap-4 pt-4">
+                <Link href="/student/login" className="flex items-center px-6 py-3.5 bg-[var(--primary)]/15 border border-[var(--outline-variant)] rounded-xl hover:border-[var(--primary)] hover:bg-[var(--primary)] hover:text-white text-[var(--on-background)] transition-all duration-300 btn-active-scale shadow-sm font-nav-link">
+                  Student Portal
+                </Link>
+                <Link href="/teacher/login" className="flex items-center px-6 py-3.5 bg-[var(--secondary)]/15 border border-[var(--outline-variant)] rounded-xl hover:border-[var(--secondary)] hover:bg-[var(--secondary)] hover:text-white text-[var(--on-background)] transition-all duration-300 btn-active-scale shadow-sm font-nav-link">
+                  Faculty Portal
+                </Link>
+                <Link href="/admin/login" className="flex items-center px-6 py-3.5 bg-[var(--tertiary)]/15 border border-[var(--outline-variant)] rounded-xl hover:border-[var(--tertiary)] hover:bg-[var(--tertiary)] hover:text-white text-[var(--on-background)] transition-all duration-300 btn-active-scale shadow-sm font-nav-link">
+                  Admin Portal
+                </Link>
+              </motion.div>
             </motion.div>
 
-            {/* Right — floating glass cards */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="relative h-[580px] hidden lg:block"
-            >
-              {/* Card 1 — Attendance */}
-              <motion.div
-                animate={{ y: [0, -18, 0], rotate: [0, 2, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute top-4 right-0 w-72 glass-card p-6 shadow-2xl"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, var(--violet-dark), var(--violet))' }}
-                  >
-                    <Calendar className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                      Attendance
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                      85% Present
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="h-2 rounded-full overflow-hidden"
-                  style={{ background: 'var(--color-border)' }}
-                >
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: '85%' }}
-                    transition={{ duration: 1.5, delay: 0.6 }}
-                    className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg, var(--violet-dark), var(--cyan))' }}
-                  />
-                </div>
-                <div className="mt-3 flex justify-between text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  <span>Target: 75%</span>
-                  <span className="badge badge-emerald">On Track</span>
-                </div>
-              </motion.div>
-
-              {/* Card 2 — CGPA */}
-              <motion.div
-                animate={{ y: [0, 22, 0], rotate: [0, -2, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                className="absolute top-44 left-0 w-60 glass-card p-6 shadow-2xl"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, #059669, var(--emerald))' }}
-                  >
-                    <TrendingUp className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold section-label">CGPA</div>
-                    <div
-                      className="text-2xl font-extrabold"
-                      style={{ color: 'var(--emerald)', fontFamily: 'var(--font-heading)' }}
-                    >
-                      3.85
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  Top 10% of class
-                </div>
-              </motion.div>
-
-              {/* Card 3 — Notification */}
-              <motion.div
-                animate={{ y: [0, -14, 0], rotate: [0, 1.5, 0] }}
-                transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                className="absolute bottom-16 right-8 w-64 glass-card p-5 shadow-2xl"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, var(--indigo), var(--cyan))' }}
-                  >
-                    <MessageSquare className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                    New Announcement
-                  </div>
-                </div>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  Assignment deadline extended to Friday
-                </p>
-              </motion.div>
-
-              {/* Card 4 — Exam Score */}
-              <motion.div
-                animate={{ y: [0, 16, 0], rotate: [0, -1, 0] }}
-                transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-                className="absolute bottom-4 left-12 w-56 glass-card p-5 shadow-2xl"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, var(--amber), #f59e0b)' }}
-                  >
-                    <BarChart3 className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs section-label">Latest Exam</div>
-                    <div className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>
-                      Midterm — 88/100
-                    </div>
-                  </div>
-                </div>
-                <span className="badge badge-violet">A Grade</span>
-              </motion.div>
+            {/* Right Visuals */}
+            <motion.div className="md:col-span-5 relative h-full flex justify-end items-center" variants={fadeScaleUp} initial="hidden" animate="show">
+              <img 
+                src="/Online learning.svg" 
+                alt="Online learning illustration" 
+                className="w-[120%] max-w-[800px] object-contain drop-shadow-xl z-20 relative scale-110 lg:scale-125 origin-center lg:origin-right transform-gpu hover:scale-[1.3] transition-transform duration-700 ease-out" 
+              />
             </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Modules Section ── */}
-      <section className="py-24 px-6 relative">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <span className="badge badge-violet mb-4">Platform Overview</span>
-            <h2
-              className="text-4xl lg:text-5xl font-extrabold mb-4"
-              style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}
-            >
-              15 Powerful Modules
-            </h2>
-            <p
-              className="text-lg max-w-2xl mx-auto"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              Everything you need to manage your university, from authentication to timetables
-            </p>
-          </motion.div>
+        {/* Features Grid */}
+        <section id="features" className="py-24 bg-[var(--surface)] border-y border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
+          {/* Features Wave 1: Top Left */}
+          <div className="absolute top-0 left-0 w-[40%] max-w-[500px] h-auto pointer-events-none opacity-20 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 0 H 600 C 500 150, 300 250, 0 350 Z" fill="url(#feat-wave-1)" />
+              <defs>
+                <linearGradient id="feat-wave-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          {/* Features Wave 2: Bottom Right */}
+          <div className="absolute bottom-0 right-0 w-[40%] max-w-[500px] h-auto pointer-events-none opacity-20 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 800 H 840 C 940 650, 1140 550, 1440 450 Z" fill="url(#feat-wave-2)" />
+              <defs>
+                <linearGradient id="feat-wave-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
+            <motion.div className="mb-16" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.5, ease: customEase }}>
+              <h2 className="font-headline-md text-[var(--on-background)]">Integrated Infrastructure</h2>
+              <p className="font-body-md text-[var(--on-surface-variant)] max-w-2xl mt-4">High-fidelity tools designed for the complete academic lifecycle, from enrollment data to final examinations.</p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {modules.map((module, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className="glass-card p-6 cursor-pointer group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--violet-dark), var(--indigo))',
-                    }}
-                  >
-                    <module.icon className="w-5 h-5 text-white" />
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={featureCardsStagger}>
+              {[
+                { icon: 'auto_awesome', color: 'primary', title: 'Automated Exams', desc: 'Instantly generate comprehensive exams using Google Gemini integration.' },
+                { icon: 'forum', color: 'secondary', title: 'Real-Time Sync', desc: 'Seamless communication with WebSocket-powered infrastructure.' },
+                { icon: 'grading', color: 'tertiary', title: 'Smart Grading', desc: 'Automated evaluation that provides immediate feedback with manual overrides.' },
+                { icon: 'account_tree', color: 'tertiary', title: 'Academic Hub', desc: 'Centralized management of courses, batches, materials, and attendance tracking.' },
+                { icon: 'task_alt', color: 'primary', title: 'Student Workflows', desc: 'Personalized course lists, automated admit cards, and straightforward fee records.' },
+                { icon: 'admin_panel_settings', color: 'secondary', title: 'Admin Oversight', desc: 'A dedicated command center for robust user management and configuration.' },
+              ].map((feature, i) => (
+                <motion.div key={i} variants={fadeScaleUp} className="bg-white border border-[var(--outline-variant)] p-8 rounded-2xl group hover:border-slate-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                  <div className={`w-12 h-12 rounded-xl bg-[var(--${feature.color})]/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[var(--${feature.color})]/20 transition-all duration-300`}>
+                    <span className={`material-symbols-outlined text-[var(--${feature.color})] text-2xl`}>{feature.icon}</span>
                   </div>
-                  <span
-                    className={`badge ${module.status === 'Built' ? 'badge-emerald' : 'badge-indigo'}`}
-                  >
-                    {module.status}
-                  </span>
-                </div>
-                <h3
-                  className="text-base font-bold mb-1.5"
-                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-heading)' }}
-                >
-                  {module.title}
-                </h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  {module.description}
-                </p>
-              </motion.div>
-            ))}
+                  <h3 className="font-headline-sm text-lg mb-3 text-[var(--on-background)]">{feature.title}</h3>
+                  <p className="font-body-sm text-[var(--on-surface-variant)]">{feature.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Tech Stack Section ── */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <motion.div
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(124,58,237,0.07) 0%, transparent 70%)',
-          }}
-        />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="glass-panel rounded-3xl p-10 md:p-14 shadow-2xl">
-            <div className="grid lg:grid-cols-2 gap-14 items-center">
-
-              {/* Left */}
-              <motion.div
-                initial={{ opacity: 0, x: -24 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-              >
-                <span className="badge badge-cyan mb-4">Tech Stack</span>
-                <h2
-                  className="text-4xl font-extrabold mb-5"
-                  style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}
-                >
-                  Built with Modern Technology
-                </h2>
-                <p className="text-base mb-8 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  CampusFlow leverages cutting-edge technologies to deliver a fast, secure, and
-                  reliable experience for everyone.
+        {/* AI Examination System Section */}
+        <section id="ai-exams" className="py-24 bg-white scroll-mt-16 overflow-hidden relative">
+          {/* Emerald Gradient Decorative Wave 1: Top Right */}
+          <div className="absolute top-0 right-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 0 C 1200 100, 1000 300, 1440 500 Z" fill="url(#ai-wave-grad)" />
+              <defs>
+                <linearGradient id="ai-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#059669" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          {/* Emerald Gradient Decorative Wave 2: Bottom Left */}
+          <div className="absolute bottom-0 left-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 800 V 300 C 200 400, 400 500, 600 800 Z" fill="url(#ai-wave-grad-2)" />
+              <defs>
+                <linearGradient id="ai-wave-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#34D399" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <motion.div variants={fadeScaleUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}>
+                <span className="font-label-caps text-[var(--primary)] mb-4 block tracking-wider">Automated Engine</span>
+                <h2 className="font-headline-md text-[var(--on-background)] mb-6">AI-Powered Examination</h2>
+                <p className="font-body-md text-[var(--on-surface-variant)] mb-8 max-w-lg">
+                  Transform how assessments are created and graded. Powered by Google Gemini, CampusFlow allows educators to generate exams on the fly, while smart grading algorithms provide immediate, granular feedback.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  {techStack.map((tech, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.08 }}
-                      whileHover={{ scale: 1.08 }}
-                      className="badge badge-violet"
-                      style={{ fontSize: '12px', padding: '6px 14px' }}
-                    >
-                      {tech}
-                    </motion.span>
-                  ))}
-                </div>
+                <ul className="space-y-4 mb-10">
+                  <li className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[var(--secondary)] text-xl">check_circle</span>
+                    <span className="font-body-md text-[var(--on-background)]">Automatic Question Generation</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[var(--secondary)] text-xl">check_circle</span>
+                    <span className="font-body-md text-[var(--on-background)]">Smart AI Grading & Feedback</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[var(--secondary)] text-xl">check_circle</span>
+                    <span className="font-body-md text-[var(--on-background)]">Manual Review Overrides</span>
+                  </li>
+                </ul>
+                <Link href="/teacher/login" className="inline-flex items-center gap-2 px-6 py-3 bg-transparent border border-black text-black rounded-lg font-nav-link btn-active-scale hover:bg-sky-500 hover:text-white hover:border-transparent transition-colors shadow-sm group">
+                  Explore Engine <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </Link>
               </motion.div>
-
-              {/* Right — feature list */}
-              <motion.div
-                initial={{ opacity: 0, x: 24 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="space-y-4"
-              >
-                {[
-                  { icon: Shield, text: 'Secure & Private', desc: 'JWT authentication with role-based access', color: 'var(--violet)' },
-                  { icon: Zap, text: 'Lightning Fast', desc: 'Optimized for performance and speed', color: 'var(--cyan)' },
-                  { icon: CheckCircle, text: 'Reliable', desc: 'Built with production-grade technologies', color: 'var(--emerald)' },
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ x: 8 }}
-                    className="glass-interactive flex items-start gap-4 p-4 rounded-xl"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `linear-gradient(135deg, ${item.color}55, ${item.color}22)`, border: `1px solid ${item.color}33` }}
-                    >
-                      <item.icon className="w-5 h-5" style={{ color: item.color }} />
-                    </div>
-                    <div>
-                      <div className="font-semibold mb-0.5 text-sm" style={{ color: 'var(--color-text)' }}>
-                        {item.text}
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                        {item.desc}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+              
+              <motion.div variants={fadeScaleUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} className="w-full relative">
+                {/* Visual Representation of Dashboard */}
+                <div className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-2xl p-8 flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-500 transform hover:-translate-y-2">
+                   <div className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--outline-variant)]">
+                     <div className="flex items-center gap-3">
+                       <span className="material-symbols-outlined text-[var(--primary)] animate-pulse">auto_awesome</span>
+                       <span className="font-nav-link text-[var(--on-background)]">Gemini Engine Active</span>
+                     </div>
+                     <span className="font-data-mono text-xs text-[var(--primary)] bg-[var(--primary)]/10 px-2 py-1 rounded border border-[var(--primary)]/20">Processing...</span>
+                   </div>
+                   
+                   <div className="space-y-6">
+                     <div className="p-4 bg-white border border-[var(--outline-variant)] rounded-xl shadow-sm hover:border-[var(--primary)] transition-colors duration-300">
+                       <div className="h-4 w-16 bg-slate-200 rounded mb-4"></div>
+                       <div className="space-y-2">
+                         <div className="h-3 w-full bg-slate-100 rounded"></div>
+                         <div className="h-3 w-5/6 bg-slate-100 rounded"></div>
+                       </div>
+                     </div>
+                     <div className="p-4 bg-white border border-[var(--outline-variant)] rounded-xl opacity-80 hover:opacity-100 shadow-sm transition-opacity duration-300">
+                       <div className="h-4 w-16 bg-slate-200 rounded mb-4"></div>
+                       <div className="space-y-2">
+                         <div className="h-3 w-full bg-slate-100 rounded"></div>
+                         <div className="h-3 w-3/4 bg-slate-100 rounded"></div>
+                       </div>
+                     </div>
+                   </div>
+                </div>
               </motion.div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── CTA Section ── */}
-      <section className="py-24 px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto text-center"
-        >
-          <div className="glass-panel rounded-3xl p-12 md:p-16 shadow-2xl relative overflow-hidden">
-            {/* inner glow */}
-            <div
-              className="absolute inset-0 pointer-events-none rounded-3xl"
-              style={{
-                background:
-                  'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(167,139,250,0.08) 0%, transparent 70%)',
-              }}
-            />
-            <span className="badge badge-violet mb-6">Ready to start?</span>
-            <h2
-              className="text-4xl lg:text-5xl font-extrabold mb-5 relative z-10"
-              style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}
-            >
-              Ready to Transform Your Campus?
-            </h2>
-            <p
-              className="text-lg mb-10 relative z-10"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              Join universities using CampusFlow to streamline their operations.
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => (window.location.href = '/login')}
-              className="btn btn-primary relative z-10"
-              style={{
-                borderRadius: 'var(--radius-full)',
-                padding: '16px 48px',
-                fontSize: '16px',
-              }}
-            >
-              Get Started Today
-            </motion.button>
+        {/* Portal Preview Section */}
+        <section id="portals" className="py-24 bg-[var(--surface)] border-t border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
+          {/* Indigo/Violet Gradient Decorative Wave 1: Bottom Right */}
+          <div className="absolute bottom-0 right-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 800 H 800 C 900 650, 1100 550, 1440 800 Z" fill="url(#portals-wave-grad)" />
+              <defs>
+                <linearGradient id="portals-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
-        </motion.div>
-      </section>
+          {/* Indigo/Violet Gradient Decorative Wave 2: Top Left */}
+          <div className="absolute top-0 left-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 0 H 640 C 540 150, 340 250, 0 350 Z" fill="url(#portals-wave-grad-2)" />
+              <defs>
+                <linearGradient id="portals-wave-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
+            <motion.div className="mb-16 text-center" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: customEase }}>
+               <h2 className="font-headline-md text-[var(--on-background)]">Role-Based Workspaces</h2>
+               <p className="font-body-md text-[var(--on-surface-variant)] max-w-2xl mx-auto mt-4">Dedicated environments tailored to specific workflows.</p>
+            </motion.div>
 
-      {/* ── Footer ── */}
-      <footer className="py-12 px-6 glass-panel" style={{ borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, var(--violet-dark), var(--violet))' }}
-              >
-                <GraduationCap className="w-4 h-4 text-white" />
+            <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-8" initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} variants={featureCardsStagger}>
+              {/* Student Card */}
+              <motion.div variants={fadeScaleUp} className="flex flex-col bg-white border border-[var(--outline-variant)] rounded-2xl overflow-hidden group hover:border-[var(--primary)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="h-48 overflow-hidden relative border-b border-[var(--outline-variant)]">
+                  <div className="absolute inset-0 bg-[var(--primary)]/20 mix-blend-multiply group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+                  <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out" alt="Student studying" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" />
+                </div>
+                <div className="p-8 flex flex-col flex-grow">
+                  <h3 className="font-headline-sm mb-3 text-[var(--on-background)] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--primary)]">person</span> Student Portal
+                  </h3>
+                  <p className="font-body-sm text-[var(--on-surface-variant)] mb-8 flex-grow">Track grades, access learning materials, and manage course enrollments.</p>
+                  <Link href="/student/login" className="w-full py-3 bg-[var(--surface)] text-[var(--on-background)] border border-[var(--outline-variant)] rounded-lg font-nav-link btn-active-scale transition-all duration-300 text-center hover:bg-[var(--primary)] hover:text-white hover:border-[var(--primary)] shadow-sm">Sign In</Link>
+                </div>
+              </motion.div>
+
+              {/* Teacher Card */}
+              <motion.div variants={fadeScaleUp} className="flex flex-col bg-white border border-[var(--outline-variant)] rounded-2xl overflow-hidden group hover:border-[var(--secondary)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="h-48 overflow-hidden relative border-b border-[var(--outline-variant)]">
+                  <div className="absolute inset-0 bg-[var(--secondary)]/20 mix-blend-multiply group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+                  <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out" alt="Teacher lecturing" src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=1000&auto=format&fit=crop" />
+                </div>
+                <div className="p-8 flex flex-col flex-grow">
+                  <h3 className="font-headline-sm mb-3 text-[var(--on-background)] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--secondary)]">assignment_ind</span> Faculty Portal
+                  </h3>
+                  <p className="font-body-sm text-[var(--on-surface-variant)] mb-8 flex-grow">Simplify course management, automate grading, and distribute materials.</p>
+                  <Link href="/teacher/login" className="w-full py-3 bg-[var(--surface)] text-[var(--on-background)] border border-[var(--outline-variant)] rounded-lg font-nav-link btn-active-scale transition-all duration-300 text-center hover:bg-[var(--secondary)] hover:text-white hover:border-[var(--secondary)] shadow-sm">Sign In</Link>
+                </div>
+              </motion.div>
+
+              {/* Admin Card */}
+              <motion.div variants={fadeScaleUp} className="flex flex-col bg-white border border-[var(--outline-variant)] rounded-2xl overflow-hidden group hover:border-[var(--tertiary)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div className="h-48 overflow-hidden relative border-b border-[var(--outline-variant)]">
+                  <div className="absolute inset-0 bg-[var(--tertiary)]/20 mix-blend-multiply group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+                  <img className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out" alt="Admin working" src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1000&auto=format&fit=crop" />
+                </div>
+                <div className="p-8 flex flex-col flex-grow">
+                  <h3 className="font-headline-sm mb-3 text-[var(--on-background)] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[var(--tertiary)]">admin_panel_settings</span> Admin Portal
+                  </h3>
+                  <p className="font-body-sm text-[var(--on-surface-variant)] mb-8 flex-grow">Manage institutional data, user roles, and campus-wide operations.</p>
+                  <Link href="/admin/login" className="w-full py-3 bg-[var(--surface)] text-[var(--on-background)] border border-[var(--outline-variant)] rounded-lg font-nav-link btn-active-scale transition-all duration-300 text-center hover:bg-[var(--tertiary)] hover:text-white hover:border-[var(--tertiary)] shadow-sm">Sign In</Link>
+                </div>
+              </motion.div>
+
+            </motion.div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-[var(--outline-variant)] py-16 mt-auto">
+        <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)]">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 rounded bg-[var(--on-background)] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-sm">school</span>
+                 </div>
+                 <h2 className="font-headline-sm font-bold text-[var(--on-background)] text-lg">CampusFlow</h2>
               </div>
-              <span
-                className="text-lg font-bold gradient-text"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                CampusFlow
-              </span>
+              <p className="font-body-sm text-[var(--on-surface-variant)] max-w-xs">Data-dense academic infrastructure. Built for performance and reliability.</p>
             </div>
-            <div className="text-center md:text-right">
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                © 2025 CampusFlow. University Management System.
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-faint)' }}>
-                Powered by Next.js & FastAPI
-              </p>
+            
+            <div>
+              <h4 className="font-label-caps text-[var(--on-background)] mb-6">Stack</h4>
+              <ul className="space-y-4 font-body-sm text-[var(--on-surface-variant)]">
+                <li><a className="hover:text-[var(--primary)] transition-colors duration-300" href="https://nextjs.org/" target="_blank" rel="noreferrer">Next.js 14</a></li>
+                <li><a className="hover:text-[var(--primary)] transition-colors duration-300" href="https://fastapi.tiangolo.com/" target="_blank" rel="noreferrer">FastAPI</a></li>
+                <li><a className="hover:text-[var(--primary)] transition-colors duration-300" href="https://deepmind.google/technologies/gemini/" target="_blank" rel="noreferrer">Google Gemini</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-label-caps text-[var(--on-background)] mb-6">Workspaces</h4>
+              <ul className="space-y-4 font-body-sm text-[var(--on-surface-variant)]">
+                <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/student/login">Student</Link></li>
+                <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/teacher/login">Faculty</Link></li>
+                <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/admin/login">Admin</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-label-caps text-[var(--on-background)] mb-6">Legal</h4>
+              <ul className="space-y-4 font-body-sm text-[var(--on-surface-variant)]">
+                <li><a className="hover:text-[var(--primary)] transition-colors duration-300" href="#">Privacy</a></li>
+                <li><a className="hover:text-[var(--primary)] transition-colors duration-300" href="#">Terms</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-[var(--outline-variant)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="font-data-mono text-[12px] text-[var(--on-surface-variant)]">© {new Date().getFullYear()} CampusFlow Systems</p>
+            <div className="flex gap-4">
+               <span className="material-symbols-outlined text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer transition-colors duration-300 text-lg">public</span>
+               <span className="material-symbols-outlined text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer transition-colors duration-300 text-lg">mail</span>
             </div>
           </div>
         </div>

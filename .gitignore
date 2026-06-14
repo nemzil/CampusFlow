@@ -51,6 +51,8 @@ Thumbs.db
 *.pem
 .kiro
 .agents
+.agent
+.agent/
 
 # Project Specific Local Directories / Leftovers
 nemdocs
@@ -58,3 +60,4 @@ contextdocs
 frontend.old
 backend/scripts/
 backend/tests/
+scripts/

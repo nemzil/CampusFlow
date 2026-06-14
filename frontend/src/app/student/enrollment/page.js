@@ -14,7 +14,7 @@ import {
 } from '@/lib/api';
 import { 
   BookMarked, Clock, CheckCircle, AlertTriangle, AlertCircle, 
-  Trash2, Plus, Loader2, Calendar, BookOpen, Layers, Search 
+  Trash2, Plus, Loader2, BookOpen, Layers, Search 
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,9 +101,9 @@ export default function StudentEnrollmentPage() {
 
   const getCategoryTheme = (category) => {
     switch (category?.toUpperCase()) {
-      case 'TH': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'LAB': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      case 'TH': return 'bg-sky-50 text-sky-600 border-sky-100';
+      case 'LAB': return 'bg-sky-50 text-sky-700 border-sky-100';
+      default: return 'bg-slate-50 text-slate-500 border-slate-100';
     }
   };
 
@@ -111,10 +111,10 @@ export default function StudentEnrollmentPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#060813]">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
-          <p className="text-slate-400 font-medium">Loading course registration...</p>
+          <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
+          <p className="text-slate-500 font-medium font-sans">Loading course registration...</p>
         </div>
       </div>
     );
@@ -129,39 +129,39 @@ export default function StudentEnrollmentPage() {
   })();
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-white min-h-screen">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-slate-800 bg-white min-h-screen font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 mb-2">SSUET Registrar Office</Badge>
-          <h1 className="text-3xl font-bold font-heading text-white tracking-tight">Course Registration</h1>
-          <p className="text-slate-400 mt-1 font-sans">
-            Enroll in courses for Semester <span className="font-semibold text-white">{user?.current_semester || ''}</span>.
+          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">Registrar Office</Badge>
+          <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Course Registration</h1>
+          <p className="text-slate-500 mt-1 font-sans">
+            Enroll in courses for Semester <span className="font-semibold text-slate-800">{user?.current_semester || '4'}</span>.
           </p>
         </div>
       </div>
 
       {/* Registration Status Indicator Window */}
-      <Card className={`overflow-hidden border-white/5 backdrop-blur-xl ${
+      <Card className={`overflow-hidden border-slate-200 shadow-sm rounded-2xl ${
         isWindowOpen 
-          ? 'bg-gradient-to-r from-emerald-500/[0.04] to-transparent border-emerald-500/20' 
-          : 'bg-gradient-to-r from-rose-500/[0.04] to-transparent border-rose-500/20'
+          ? 'bg-sky-50/10 border-sky-200' 
+          : 'bg-red-50/20 border-red-200'
       }`}>
         <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg ${
-              isWindowOpen ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+              isWindowOpen ? 'bg-sky-50 text-sky-600' : 'bg-red-50 text-red-600'
             }`}>
-              {isWindowOpen ? <Clock className="w-5 h-5 animate-pulse" /> : <AlertTriangle className="w-5 h-5" />}
+              {isWindowOpen ? <Clock className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="font-heading font-bold text-lg flex items-center gap-2">
-                Registration Status: 
-                <span className={isWindowOpen ? 'text-emerald-400' : 'text-rose-400'}>
-                  {isWindowOpen ? 'OPEN' : 'CLOSED'}
+              <h3 className="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                Registration Window: 
+                <span className={isWindowOpen ? 'text-sky-600' : 'text-red-600'}>
+                  {isWindowOpen ? 'ACTIVE' : 'INACTIVE'}
                 </span>
               </h3>
-              <p className="text-slate-400 text-xs mt-1 max-w-2xl font-sans">
+              <p className="text-slate-500 text-xs mt-1 max-w-3xl font-sans">
                 {isWindowOpen 
                   ? `Enrollment window is active. Registration closes on ${new Date(windowStatus.end_date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}. You have ${windowStatus.days_remaining} day(s) remaining to modify enrollments.`
                   : windowStatus?.status === 'OPEN' && windowStatus?.start_date && new Date(windowStatus.start_date) > new Date()
@@ -172,245 +172,236 @@ export default function StudentEnrollmentPage() {
             </div>
           </div>
           {isWindowOpen && (
-            <Badge className="bg-emerald-500/15 border-emerald-500/30 text-emerald-400 text-xs font-semibold px-2.5 py-1 select-none animate-pulse shrink-0">
+            <Badge className="bg-sky-50 border-sky-100 text-sky-600 text-xs font-semibold px-2.5 py-1 select-none shrink-0" variant="outline">
               {windowStatus.days_remaining} Days Remaining
             </Badge>
           )}
         </CardContent>
       </Card>
 
-      {/* Registered Course Enrollments */}
+      {/* Registered Course Enrollments in Table Format */}
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold font-heading flex items-center gap-2">
-            <BookMarked className="w-5 h-5 text-violet-400" /> My Enrolled Courses 
-            <Badge className="bg-violet-500/20 text-violet-400 border border-violet-500/30 text-[10px] ml-1">
-              {totalRegisteredCredits} Credits Total
-            </Badge>
-          </h2>
-        </div>
+        <h2 className="text-lg font-bold font-heading flex items-center gap-2 text-slate-900">
+          <BookMarked className="w-5 h-5 text-sky-500" /> My Enrolled Courses 
+          <Badge className="bg-sky-50 text-sky-600 border border-sky-100 text-[10px] ml-1">
+            {totalRegisteredCredits} Credits Total
+          </Badge>
+        </h2>
 
-        {myEnrollments.length === 0 ? (
-          <Card className="border-white/5 bg-white/[0.01]">
-            <CardContent className="p-8 text-center text-slate-400">
-              <Layers className="w-10 h-10 text-slate-700 mx-auto mb-2" />
-              <p className="text-xs">No active course registrations for this term.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myEnrollments.map((course) => (
-              <Card key={course.id} className="bg-white/[0.03] border-white/5 relative overflow-hidden flex flex-col justify-between">
-                <div className="absolute top-0 left-0 w-full h-1 bg-violet-600/40" />
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <span className="font-mono text-[10px] text-violet-400 font-bold tracking-widest uppercase block">{course.course_code}</span>
-                      <h3 className="font-bold text-sm text-white font-heading mt-1 leading-snug line-clamp-1">{course.course_name}</h3>
-                    </div>
-                    <Badge variant="outline" className="bg-white/5 border-white/10 text-slate-300 text-[9px] font-mono px-1">
-                      {course.credit_hours} CH
-                    </Badge>
-                  </div>
-
-                  <div className="text-xs text-slate-400 border-t border-white/5 pt-3 flex justify-between items-center">
-                    <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Instructor</span>
-                      <span className="font-medium text-slate-300">{course.teacher_name}</span>
-                    </div>
-
-                    {isWindowOpen && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={actionLoading !== null}
-                        onClick={() => handleDrop(course.id)}
-                        className="bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 h-8 px-2.5 text-[11px] font-semibold transition-colors"
-                      >
-                        {actionLoading === course.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <><Trash2 className="w-3.5 h-3.5 mr-1" /> Drop</>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Available Registration Catalog — only shown when window is open */}
-      {isWindowOpen && <div className="space-y-4 pt-4">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <h2 className="text-lg font-bold font-heading flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-violet-400" /> Available Registration Catalog
-          </h2>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-60">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search course code, title..."
-                className="h-8 pl-9 bg-background/50 border-white/10 text-white placeholder-slate-500 text-xs"
-              />
-            </div>
-
-            {/* Category Select tabs */}
-            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-              {['ALL', 'TH', 'LAB'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-semibold border tracking-wider transition-all shrink-0 ${
-                    categoryFilter === cat
-                      ? 'bg-violet-600/25 border-violet-500/50 text-white shadow-sm'
-                      : 'bg-white/[0.02] border-white/5 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {cat === 'ALL' ? 'ALL CATEGORIES' : cat}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {filteredAvailable.length === 0 ? (
-          <Card className="border-white/5 bg-transparent">
-            <CardContent className="p-16 text-center">
-              <Layers className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-              <h3 className="font-bold text-white text-base">No available registration courses found</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
-                There are no unregistered courses matching your criteria or prerequisites.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAvailable.map((course) => {
-              const isEnrolled = course.is_enrolled || myEnrollments.some(e => e.course_code === course.course_code);
-              const isEligible = course.is_eligible !== false && course.prerequisites_met !== false;
-              const seatsLeft = course.seats_available !== undefined ? course.seats_available : (course.max_students - (course.enrolled_count || 0));
-              const isFull = seatsLeft <= 0;
-
-              return (
-                <Card 
-                  key={course.id} 
-                  className={`relative overflow-hidden bg-white/[0.03] hover:bg-white/[0.05] border-white/5 hover:border-violet-500/25 transition-all duration-300 flex flex-col justify-between ${
-                    isEnrolled ? 'ring-1 ring-violet-500/20' : ''
-                  }`}
-                >
-                  <div className={`absolute top-0 left-0 w-full h-1 ${
-                    isEnrolled ? 'bg-violet-600/40' : (isEligible ? (isFull ? 'bg-amber-500/40' : 'bg-emerald-500/40') : 'bg-rose-500/40')
-                  }`} />
-
-                  <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    {/* Header */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-mono text-xs font-bold text-violet-400 tracking-wider uppercase block">{course.course_code}</span>
-                        <div className="flex gap-1">
-                          <Badge variant="outline" className={`${getCategoryTheme(course.category)} text-[8px] uppercase font-mono px-1`}>
+        <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Code</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Title</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Credit Hours</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Category</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Instructor</th>
+                    {isWindowOpen && <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {myEnrollments.length > 0 ? (
+                    myEnrollments.map((course) => (
+                      <tr key={course.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4 text-xs font-bold font-mono text-slate-700">{course.course_code}</td>
+                        <td className="p-4 text-xs font-bold text-slate-800">{course.course_name}</td>
+                        <td className="p-4 text-xs font-bold font-mono text-slate-700 text-center">{course.credit_hours} CH</td>
+                        <td className="p-4 text-center">
+                          <Badge variant="outline" className={`${getCategoryTheme(course.category)} text-[8.5px] uppercase font-mono px-2 py-0.5`}>
                             {course.category || 'TH'}
                           </Badge>
-                          <Badge variant="outline" className="bg-white/5 border-white/10 text-slate-300 text-[8px] font-mono px-1">
-                            {course.credit_hours} CH
-                          </Badge>
-                        </div>
-                      </div>
-                      <h3 className="font-heading font-bold text-sm text-white mt-1 leading-snug line-clamp-1">{course.course_name}</h3>
-                      <p className="text-[10px] text-slate-500 leading-normal font-sans">Instructor: {course.teacher_name || 'TBA'}</p>
-                    </div>
-
-                    {/* Prerequisite chips */}
-                    <div className="space-y-1">
-                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Prerequisites</span>
-                      {course.prerequisites && course.prerequisites.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {course.prerequisites.map(p => {
-                            const isMissing = course.missing_prerequisites?.includes(p);
-                            return (
-                              <Badge 
-                                key={p} 
-                                variant="outline" 
-                                className={`text-[8px] font-mono px-1 ${
-                                  isMissing ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-white/5 border-white/10 text-slate-400'
-                                }`}
-                              >
-                                {p}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-medium text-emerald-400">None</span>
-                      )}
-                    </div>
-
-                    {/* Eligibility notification banner */}
-                    <div className={`p-2 rounded-lg border text-[10px] ${
-                      isEnrolled 
-                        ? 'bg-violet-600/5 border-violet-500/10 text-violet-300' 
-                        : (isEligible ? (isFull ? 'bg-amber-500/5 border-amber-500/10 text-amber-300' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-300') : 'bg-rose-500/5 border-rose-500/10 text-rose-300')
-                    }`}>
-                      <div className="flex items-center gap-1.5">
-                        {isEnrolled ? (
-                          <>
-                            <CheckCircle className="w-3.5 h-3.5 shrink-0 text-violet-400" />
-                            <span>Already Enrolled</span>
-                          </>
-                        ) : isEligible ? (
-                          isFull ? (
-                            <>
-                              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-                              <span>Course section is full.</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                              <span>Eligible ({seatsLeft} seats left)</span>
-                            </>
-                          )
-                        ) : (
-                          <>
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
-                            <span>Missing: {course.missing_prerequisites?.join(', ')}</span>
-                          </>
+                        </td>
+                        <td className="p-4 text-xs font-medium text-slate-600">{course.teacher_name}</td>
+                        {isWindowOpen && (
+                          <td className="p-4 text-center">
+                            <Button
+                              variant="ghost"
+                              disabled={actionLoading !== null}
+                              onClick={() => handleDrop(course.id)}
+                              className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 h-8 px-3 text-[11px] font-semibold transition-colors mx-auto cursor-pointer"
+                            >
+                              {actionLoading === course.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <><Trash2 className="w-3.5 h-3.5 mr-1" /> Drop</>
+                              )}
+                            </Button>
+                          </td>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Register button */}
-                    {!isEnrolled && isWindowOpen && (
-                      <Button
-                        disabled={!isEligible || isFull || actionLoading !== null}
-                        onClick={() => handleRegister(course.id)}
-                        className={`w-full h-8 text-xs font-semibold shrink-0 mt-2 ${
-                          isEligible && !isFull
-                            ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-600/10'
-                            : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {actionLoading === course.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <><Plus className="w-3.5 h-3.5 mr-1" /> Register Course</>
-                        )}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={isWindowOpen ? 6 : 5} className="p-8 text-center text-xs text-slate-400 font-sans">
+                        No active course registrations for this term.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      }
+
+      {/* Available Registration Catalog — Table Format */}
+      {isWindowOpen && (
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <h2 className="text-lg font-bold font-heading flex items-center gap-2 text-slate-900">
+              <BookOpen className="w-5 h-5 text-sky-500" /> Available Registration Catalog
+            </h2>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto shrink-0">
+              {/* Search Input */}
+              <div className="relative w-full sm:w-60">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search course code, title..."
+                  className="h-8 pl-9 bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 text-xs"
+                />
+              </div>
+
+              {/* Category Select tabs */}
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                {['ALL', 'TH', 'LAB'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-semibold border tracking-wider transition-all shrink-0 cursor-pointer ${
+                      categoryFilter === cat
+                        ? 'bg-sky-100 border-sky-200 text-sky-700 shadow-sm'
+                        : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {cat === 'ALL' ? 'ALL CATEGORIES' : cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Code</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Title</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Credit Hours</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Category</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Instructor</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Prerequisites</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredAvailable.length > 0 ? (
+                      filteredAvailable.map((course) => {
+                        const isEnrolled = course.is_enrolled || myEnrollments.some(e => e.course_code === course.course_code);
+                        const isEligible = course.is_eligible !== false && course.prerequisites_met !== false;
+                        const seatsLeft = course.seats_available !== undefined ? course.seats_available : (course.max_students - (course.enrolled_count || 0));
+                        const isFull = seatsLeft <= 0;
+
+                        return (
+                          <tr key={course.id} className={`hover:bg-slate-50/50 transition-colors ${isEnrolled ? 'bg-sky-50/10' : ''}`}>
+                            <td className="p-4 text-xs font-bold font-mono text-slate-700">{course.course_code}</td>
+                            <td className="p-4 text-xs font-bold text-slate-800">{course.course_name}</td>
+                            <td className="p-4 text-xs font-bold font-mono text-slate-700 text-center">{course.credit_hours} CH</td>
+                            <td className="p-4 text-center">
+                              <Badge variant="outline" className={`${getCategoryTheme(course.category)} text-[8.5px] uppercase font-mono px-2 py-0.5`}>
+                                {course.category || 'TH'}
+                              </Badge>
+                            </td>
+                            <td className="p-4 text-xs font-medium text-slate-600">{course.teacher_name || 'TBA'}</td>
+                            <td className="p-4">
+                              {course.prerequisites && course.prerequisites.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {course.prerequisites.map(p => {
+                                    const isMissing = course.missing_prerequisites?.includes(p);
+                                    return (
+                                      <Badge 
+                                        key={p} 
+                                        variant="outline" 
+                                        className={`text-[8.5px] font-mono px-1.5 py-0.5 ${
+                                          isMissing ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+                                        }`}
+                                      >
+                                        {p}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <span className="text-[11px] font-bold text-sky-650">None</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-xs">
+                              {isEnrolled ? (
+                                <Badge className="bg-sky-50 text-sky-600 border-sky-100 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                  Enrolled
+                                </Badge>
+                              ) : isEligible ? (
+                                isFull ? (
+                                  <Badge className="bg-red-50 text-red-600 border-red-100 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                    Section Full
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-sky-50 text-sky-600 border-sky-100 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                    Eligible ({seatsLeft} seats)
+                                  </Badge>
+                                )
+                              ) : (
+                                <Badge className="bg-red-50 text-red-600 border-red-150 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                  Blocked
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="p-4 text-center">
+                              {!isEnrolled ? (
+                                <Button
+                                  disabled={!isEligible || isFull || actionLoading !== null}
+                                  onClick={() => handleRegister(course.id)}
+                                  className={`h-8 text-[11px] font-bold shrink-0 cursor-pointer ${
+                                    isEligible && !isFull
+                                      ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-sm'
+                                      : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                                  }`}
+                                >
+                                  {actionLoading === course.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <><Plus className="w-3.5 h-3.5 mr-1" /> Register</>
+                                  )}
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-sky-500 font-bold font-sans">Enrolled</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-xs text-slate-400 font-sans">
+                          No available courses match the filter.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

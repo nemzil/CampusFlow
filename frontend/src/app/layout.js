@@ -1,31 +1,17 @@
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
-import { Sora, DM_Sans } from 'next/font/google';
+import { Inter, IBM_Plex_Mono } from 'next/font/google';
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 
-const sora = Sora({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-heading-next',
-});
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-body',
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
 const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm-plex',
 });
 
 export const metadata = {
@@ -35,9 +21,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`dark ${sora.variable} ${dmSans.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${inter.variable} ${ibmPlexMono.variable}`}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+      </head>
       <body suppressHydrationWarning
-        className={`${plusJakarta.variable} ${inter.variable} antialiased`}
+        className={`antialiased bg-background text-on-background`}
       >
         <AuthProvider>
           <ToastProvider>
@@ -48,3 +37,5 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+

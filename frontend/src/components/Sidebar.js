@@ -30,9 +30,7 @@ function SidebarComponent({ role }) {
     const [linkPathname, linkQuery] = linkPath.split('?');
     if (pathname !== linkPathname) return false;
     if (!linkQuery) {
-      // plain path — active only if no conflicting query tab
       const tab = searchParams.get('tab');
-      // if siblings have ?tab= params, don't match the plain path
       return !tab || linkPath === linkPathname;
     }
     const params = new URLSearchParams(linkQuery);
@@ -106,7 +104,6 @@ function SidebarComponent({ role }) {
     return baseLinks;
   };
 
-
   const links = getNavigationLinks();
 
   const handleLogout = () => {
@@ -114,29 +111,80 @@ function SidebarComponent({ role }) {
     router.push('/login');
   };
 
+  // Theme specs for student (sky blue), teacher (emerald), admin (indigo)
+  const theme = {
+    STUDENT: {
+      accent: 'text-sky-500',
+      activeText: 'text-sky-600',
+      activeBg: 'bg-sky-50/70 border border-sky-100/50',
+      indicator: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]',
+      logoGrad: 'from-sky-500 to-blue-600',
+      logoText: 'from-sky-500 to-blue-600',
+      subtext: 'text-sky-600',
+      btnBg: 'bg-sky-500 hover:bg-sky-600',
+      avatarBorder: 'border-sky-500/30',
+      avatarBg: 'from-sky-500 to-blue-600'
+    },
+    TEACHER: {
+      accent: 'text-emerald-500',
+      activeText: 'text-emerald-600',
+      activeBg: 'bg-emerald-50/70 border border-emerald-100/60',
+      indicator: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+      logoGrad: 'from-emerald-500 to-teal-600',
+      logoText: 'from-emerald-500 to-teal-600',
+      subtext: 'text-emerald-600',
+      btnBg: 'bg-emerald-500 hover:bg-emerald-600',
+      avatarBorder: 'border-emerald-500/30',
+      avatarBg: 'from-emerald-500 to-teal-600'
+    },
+    ADMIN: {
+      accent: 'text-indigo-500',
+      activeText: 'text-indigo-600',
+      activeBg: 'bg-indigo-50/70 border border-indigo-100/60',
+      indicator: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]',
+      logoGrad: 'from-indigo-500 to-violet-600',
+      logoText: 'from-indigo-500 to-violet-600',
+      subtext: 'text-indigo-600',
+      btnBg: 'bg-indigo-500 hover:bg-indigo-600',
+      avatarBorder: 'border-indigo-500/30',
+      avatarBg: 'from-indigo-500 to-violet-600'
+    }
+  }[role] || {
+    accent: 'text-sky-500',
+    activeText: 'text-sky-600',
+    activeBg: 'bg-sky-50/70 border border-sky-100/60',
+    indicator: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]',
+    logoGrad: 'from-sky-500 to-blue-600',
+    logoText: 'from-sky-500 to-blue-600',
+    subtext: 'text-sky-600',
+    btnBg: 'bg-sky-500 hover:bg-sky-600',
+    avatarBorder: 'border-sky-500/30',
+    avatarBg: 'from-sky-500 to-blue-600'
+  };
+
   return (
     <ShadcnSidebar 
       collapsible="icon" 
-      className="border-r-0 bg-[rgba(10,15,30,0.4)] backdrop-blur-[24px] shadow-[10px_0_30px_rgba(0,0,0,0.3)] !sticky !top-0 !h-screen"
+      className="border-r border-slate-200/80 bg-slate-50/80 backdrop-blur-[24px] !sticky !top-0 !h-screen overflow-visible [&_[data-sidebar=sidebar]]:overflow-visible [&_[data-slot=sidebar-inner]]:overflow-visible"
     >
-      {/* Floating Collapse Toggle Button */}
+      {/* Floating Collapse Toggle Button - Positioned clear of header */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-violet-600 hover:bg-violet-500 flex items-center justify-center text-white shadow-lg z-50 transition-colors"
+        className={`absolute -right-3 top-20 w-6 h-6 rounded-full ${theme.btnBg} flex items-center justify-center text-white shadow-md z-50 transition-all cursor-pointer border border-white`}
       >
-        {state === 'collapsed' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        {state === 'collapsed' ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
-      <SidebarHeader className="border-b border-white/5 p-4">
+      <SidebarHeader className="border-b border-slate-200/60 p-4">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
+          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.avatarBg} flex items-center justify-center shadow-md flex-shrink-0`}>
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div className="group-data-[collapsible=icon]:hidden min-w-0">
-            <h2 className="text-lg font-bold font-heading text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500 tracking-tight">
+            <h2 className={`text-base font-bold font-heading text-transparent bg-clip-text bg-gradient-to-r ${theme.logoText} tracking-tight`}>
               CampusFlow
             </h2>
-            <p className="text-[9px] uppercase font-bold tracking-widest text-violet-400">SSUET Portal</p>
+            <p className={`text-[9px] uppercase font-bold tracking-widest ${theme.subtext}`}>SSUET Portal</p>
           </div>
         </div>
       </SidebarHeader>
@@ -153,7 +201,7 @@ function SidebarComponent({ role }) {
                     <motion.div
                       key="active-bg"
                       layoutId="active-nav-bg"
-                      className="absolute h-10 bg-gradient-to-r from-violet-500/15 to-indigo-500/15 border border-violet-500/25 rounded-xl shadow-[0_0_20px_rgba(139,92,246,0.1)]"
+                      className={`absolute h-10 ${theme.activeBg} rounded-xl`}
                       initial={false}
                       transition={{ 
                         type: "spring", 
@@ -184,17 +232,17 @@ function SidebarComponent({ role }) {
                       isActive={isActive}
                       tooltip={link.label}
                       className={`
-                        relative rounded-xl transition-all duration-300 h-10
+                        relative rounded-xl transition-all duration-300 h-10 cursor-pointer
                         ${isActive 
-                          ? 'text-white' 
-                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          ? `${theme.activeText} font-semibold` 
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
                         }
-                        ${isActive ? 'before:absolute before:left-0 before:top-[20%] before:bottom-[20%] before:w-1 before:bg-gradient-to-b before:from-violet-500 before:to-indigo-500 before:rounded-r before:shadow-[0_0_10px_rgba(139,92,246,0.8)] group-data-[collapsible=icon]:before:hidden' : ''}
+                        ${isActive ? `before:absolute before:left-0 before:top-[20%] before:bottom-[20%] before:w-1 ${theme.indicator} before:rounded-r group-data-[collapsible=icon]:before:hidden` : ''}
                       `}
                     >
                       <Link href={link.path} className="flex items-center gap-3 w-full">
-                        <LinkIcon className="w-6 h-6 flex-shrink-0" />
-                        <span className="font-medium">{link.label}</span>
+                        <LinkIcon className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm">{link.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -205,68 +253,15 @@ function SidebarComponent({ role }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/5 p-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="relative">
-              <SidebarMenuButton 
-                size="lg" 
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="data-[state=open]:bg-white/5 hover:bg-white/5 border border-white/5 rounded-xl bg-white/[0.03] transition-all duration-300 w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
-              >
-                <Avatar className="h-10 w-10 rounded-full border-2 border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.2)] flex-shrink-0">
-                  <AvatarImage src={user?.profile_picture_url} alt={user?.first_name} />
-                  <AvatarFallback className="rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white font-bold">
-                    {user?.first_name?.[0]}{user?.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold text-white">{user?.first_name} {user?.last_name}</span>
-                  <span className="truncate text-xs text-violet-400 uppercase tracking-wider font-semibold">{role}</span>
-                </div>
-              </SidebarMenuButton>
-              
-              {/* Dropdown Menu */}
-              <AnimatePresence>
-                {isMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: 'auto' }}
-                    exit={{ opacity: 0, y: 8, height: 0 }}
-                    transition={{ 
-                      duration: 0.2,
-                      ease: [0.25, 0.1, 0.25, 1]
-                    }}
-                    className="absolute bottom-full left-0 right-0 mb-2 rounded-xl bg-[#0a0b14] border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden"
-                    style={{ willChange: 'transform, opacity' }}
-                  >
-                    <Link href={`/${role.toLowerCase()}/profile`}>
-                      <motion.div
-                        whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                        className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white transition-colors cursor-pointer border-b border-white/5"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <User className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm font-medium">Edit Profile</span>
-                      </motion.div>
-                    </Link>
-                    <motion.div
-                      whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-                      className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        handleLogout();
-                      }}
-                    >
-                      <LogOut className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-sm font-medium">Logout</span>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="border-t border-slate-200/60 p-3 bg-white/40">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-red-50 hover:bg-red-100/60 border border-red-200 text-red-600 font-bold text-xs transition-all duration-300 cursor-pointer shadow-sm group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:rounded-full mx-auto"
+          title="Logout"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span className="group-data-[collapsible=icon]:hidden font-semibold">Logout</span>
+        </button>
       </SidebarFooter>
 
       <SidebarRail />

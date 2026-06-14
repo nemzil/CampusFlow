@@ -9,17 +9,20 @@ import {
   CalendarDays, Clock, BookOpen, User, Loader2,
   Building2, GraduationCap, AlertCircle
 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-const DAY_META = {
-  monday:    { label: 'Monday',    short: 'Mon', color: 'from-violet-600/30 to-violet-800/10 border-violet-500/30', badge: 'bg-violet-500/20 text-violet-300 border-violet-500/30' },
-  tuesday:   { label: 'Tuesday',   short: 'Tue', color: 'from-cyan-600/30 to-cyan-800/10 border-cyan-500/30',       badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
-  wednesday: { label: 'Wednesday', short: 'Wed', color: 'from-emerald-600/30 to-emerald-800/10 border-emerald-500/30', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  thursday:  { label: 'Thursday',  short: 'Thu', color: 'from-amber-600/30 to-amber-800/10 border-amber-500/30',    badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
-  friday:    { label: 'Friday',    short: 'Fri', color: 'from-pink-600/30 to-pink-800/10 border-pink-500/30',       badge: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
-  saturday:  { label: 'Saturday',  short: 'Sat', color: 'from-orange-600/30 to-orange-800/10 border-orange-500/30', badge: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
-  sunday:    { label: 'Sunday',    short: 'Sun', color: 'from-rose-600/30 to-rose-800/10 border-rose-500/30',       badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30' },
+const DAY_LABELS = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday'
 };
 
 // Group timetable entries by day
@@ -58,6 +61,7 @@ export default function StudentTimetablePage() {
       .then(res => {
         setTimetable(res.timetables || []);
         setMeta({ department: res.department, semester: res.semester, message: res.message });
+        
         // Set today's day as default active tab
         const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
         const grouped = groupByDay(res.timetables || []);
@@ -69,8 +73,8 @@ export default function StudentTimetablePage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
       </div>
     );
   }
@@ -78,165 +82,174 @@ export default function StudentTimetablePage() {
   const grouped = groupByDay(timetable);
   const activeDays = DAYS_ORDER.filter(d => grouped[d]);
 
-  const containerV = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
-  const itemV      = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90 } } };
-
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <motion.div variants={containerV} initial="hidden" animate="show" className="space-y-6">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-slate-800 bg-white min-h-screen font-sans">
+      
+      {/* Header */}
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200">
+            Class Schedule
+          </Badge>
+          {meta.department && (
+            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+              {meta.department} · Semester {meta.semester}
+            </Badge>
+          )}
+        </div>
+        <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Student Timetable</h1>
+        <p className="text-slate-500 mt-1 font-sans">
+          Your active weekly schedule showing classes, timing, and room locations.
+        </p>
+      </div>
 
-        {/* Header */}
-        <motion.div variants={itemV} className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/20">
-              My Timetable
-            </span>
-            {meta.department && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">
-                {meta.department} · Sem {meta.semester}
-              </span>
-            )}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-sky-150/40 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+            <CalendarDays className="w-5 h-5" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
-            Class <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">Schedule</span>
-          </h1>
-          <p className="text-slate-400 text-sm">Your weekly timetable based on your department and semester.</p>
-        </motion.div>
-
-        {/* Summary cards */}
-        <motion.div variants={itemV} className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Classes / Week', value: timetable.length, icon: CalendarDays, color: 'text-violet-400 bg-violet-500/10 border-violet-500/20' },
-            { label: 'Department',     value: meta.department || '—', icon: Building2, color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
-            { label: 'Semester',       value: meta.semester ? `Sem ${meta.semester}` : '—', icon: GraduationCap, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 ${color}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
-                <p className="text-white font-bold text-sm truncate">{value}</p>
-              </div>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Error */}
-        {error && (
-          <div className="flex items-center gap-2 px-4 py-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Classes / Week</p>
+            <p className="text-xl font-extrabold text-slate-800 font-mono">{timetable.length}</p>
           </div>
-        )}
+        </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex items-center justify-center py-16 gap-3 text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
-            <span className="text-sm">Loading your timetable…</span>
+        <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-sky-150/40 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+            <Building2 className="w-5 h-5" />
           </div>
-        )}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Department</p>
+            <p className="text-sm font-extrabold text-slate-800 truncate">{meta.department || '—'}</p>
+          </div>
+        </div>
 
-        {/* Empty */}
-        {!loading && !error && timetable.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white/5 border border-white/5 rounded-xl">
-            <CalendarDays className="w-12 h-12 text-slate-600" />
-            <p className="text-slate-400 font-medium">
-              {meta.message || "No timetable set for your class yet."}
+        <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-sky-150/40 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+            <GraduationCap className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Semester</p>
+            <p className="text-xl font-extrabold text-slate-800 font-mono">{meta.semester ? `Sem ${meta.semester}` : '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-650 text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+          <span className="text-sm text-slate-400">Loading schedule...</span>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && timetable.length === 0 && (
+        <Card className="border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
+          <CardContent className="p-16 flex flex-col items-center justify-center text-center">
+            <CalendarDays className="w-16 h-16 text-slate-200 mb-4" />
+            <h3 className="text-xl font-bold text-slate-850 mb-2 font-heading">No schedule found</h3>
+            <p className="text-slate-500 max-w-sm mb-6">
+              {meta.message || "No timetable has been configured for your department yet."}
             </p>
-            {meta.message && meta.message.includes('enrolled') ? (
-              <div className="text-center space-y-2">
-                <p className="text-slate-500 text-sm">Please enroll in courses first to view your timetable.</p>
-                <button 
-                  onClick={() => router.push('/student/enrollment')}
-                  className="mt-3 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-semibold transition-colors"
-                >
-                  Go to Course Enrollment
-                </button>
-              </div>
-            ) : (
-              <p className="text-slate-600 text-sm">Your admin hasn't configured a schedule yet.</p>
+            {meta.message && meta.message.includes('enrolled') && (
+              <Button onClick={() => router.push('/student/enrollment')} className="bg-sky-500 hover:bg-sky-650 text-white font-bold text-xs h-9 px-6 rounded-xl cursor-pointer">
+                Go to Course Enrollment
+              </Button>
             )}
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Day tabs + cards */}
-        {!loading && !error && timetable.length > 0 && (
-          <motion.div variants={itemV} className="space-y-4">
-            {/* Tab bar */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {activeDays.map(day => {
-                const dm = DAY_META[day] || { label: day, badge: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
-                const isActive = activeDay === day;
-                return (
-                  <button
-                    key={day}
-                    onClick={() => setActiveDay(day)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-lg border text-xs font-semibold transition-all duration-200
-                      ${isActive ? `${dm.badge} scale-105` : 'bg-white/5 border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/8'}`}
-                  >
-                    {dm.label}
-                    <span className="ml-1.5 text-[10px] opacity-70">({grouped[day].length})</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Cards for active day */}
-            <AnimatePresence mode="wait">
-              {activeDay && grouped[activeDay] && (
-                <motion.div
-                  key={activeDay}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="grid gap-3"
+      {/* Day tabs + Schedule rows */}
+      {!loading && !error && timetable.length > 0 && (
+        <div className="space-y-6">
+          {/* Tabs bar */}
+          <div className="flex gap-2 overflow-x-auto pb-1 border-b border-slate-100">
+            {activeDays.map(day => {
+              const isActive = activeDay === day;
+              return (
+                <button
+                  key={day}
+                  onClick={() => setActiveDay(day)}
+                  className={`px-4 py-2 text-xs font-bold transition-all duration-200 border-b-2 tracking-wide cursor-pointer ${
+                    isActive
+                      ? 'border-sky-500 text-sky-600 font-extrabold'
+                      : 'border-transparent text-slate-400 hover:text-slate-600'
+                  }`}
                 >
-                  {grouped[activeDay].map((entry, i) => {
-                    const dm = DAY_META[activeDay] || {};
-                    return (
-                      <motion.div
-                        key={entry.tt_id}
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.07 }}
-                        className={`relative overflow-hidden rounded-xl border bg-gradient-to-r ${dm.color || 'from-slate-700/30 to-slate-800/10 border-slate-600/30'} p-4 flex items-center gap-4`}
-                      >
-                        {/* Time block */}
-                        <div className="flex-shrink-0 text-center min-w-[64px]">
-                          <p className="text-white font-bold text-sm leading-tight">{entry.time_start}</p>
-                          <div className="w-6 h-px bg-slate-500 mx-auto my-1" />
-                          <p className="text-slate-400 text-xs">{entry.time_end}</p>
-                        </div>
-                        <div className="w-px h-12 bg-white/10 flex-shrink-0" />
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm truncate">
-                            {entry.subject || 'Class'}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            <span className="flex items-center gap-1 text-slate-400 text-xs">
-                              <User className="w-3 h-3" /> {entry.teacher_name}
-                            </span>
-                            <span className="flex items-center gap-1 text-slate-400 text-xs">
-                              <BookOpen className="w-3 h-3" /> Class {entry.class_no}
-                            </span>
-                            <span className="flex items-center gap-1 text-slate-400 text-xs">
-                              <Clock className="w-3 h-3" /> {entry.time_start}–{entry.time_end}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
+                  {DAY_LABELS[day] || day}
+                  <span className="ml-1.5 text-[9px] opacity-75 font-mono">({grouped[day].length})</span>
+                </button>
+              );
+            })}
+          </div>
 
-      </motion.div>
+          {/* Schedule list/table format (NO SLOP CARDS with top colored lines) */}
+          <AnimatePresence mode="wait">
+            {activeDay && grouped[activeDay] && (
+              <motion.div
+                key={activeDay}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 w-32">Time</th>
+                            <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Subject</th>
+                            <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Instructor</th>
+                            <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Classroom</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {grouped[activeDay].map((entry) => (
+                            <tr key={entry.tt_id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-4 text-xs font-bold text-slate-700">
+                                <div className="flex items-center gap-1.5 font-mono">
+                                  <Clock className="w-3.5 h-3.5 text-sky-500" />
+                                  <span>{entry.time_start} - {entry.time_end}</span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-xs font-bold text-slate-800">
+                                {entry.subject || 'Class'}
+                              </td>
+                              <td className="p-4 text-xs font-medium text-slate-600">
+                                <div className="flex items-center gap-1.5">
+                                  <User className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{entry.teacher_name}</span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-xs font-bold font-mono text-center text-slate-700">
+                                <Badge variant="outline" className="bg-sky-50 border-sky-100 text-sky-600 text-[10px] font-bold">
+                                  Class {entry.class_no}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

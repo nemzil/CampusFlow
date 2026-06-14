@@ -4,191 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getMyAdmitCard } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ClipboardList, Loader2, AlertCircle, CheckCircle2,
   XCircle, Calendar, Clock, DoorOpen, UserCircle2,
   BookOpen, Tag, Lock, CreditCard, ChevronRight,
-  GraduationCap, Building2, ShieldAlert, TrendingUp,
+  ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-// ── Attendance bar ────────────────────────────────────────────────────────────
-function AttBar({ pct }) {
-  const allowed = pct >= 75;
-  const color = pct >= 75 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-      <div style={{
-        flex: 1, height: 5, borderRadius: 99,
-        background: 'rgba(255,255,255,0.07)',
-        overflow: 'hidden',
-      }}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.min(pct, 100)}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          style={{ height: '100%', background: color, borderRadius: 99 }}
-        />
-      </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color, minWidth: 40, textAlign: 'right' }}>
-        {pct.toFixed(1)}%
-      </span>
-    </div>
-  );
-}
-
-// ── Course Admit Row ──────────────────────────────────────────────────────────
-function CourseRow({ course, index }) {
-  const allowed = course.allowed;
-  const hasExam = Boolean(course.exam);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${allowed
-          ? (hasExam ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.07)')
-          : 'rgba(239,68,68,0.25)'}`,
-        background: allowed
-          ? (hasExam ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)')
-          : 'rgba(239,68,68,0.04)',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Top info */}
-      <div style={{
-        padding: '16px 20px 12px',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        display: 'flex', alignItems: 'flex-start', gap: 14,
-      }}>
-        {/* Number */}
-        <div style={{
-          flexShrink: 0, width: 28, height: 28, borderRadius: 8,
-          background: allowed ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-          border: `1px solid ${allowed ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 11, fontWeight: 800,
-          color: allowed ? '#4ade80' : '#f87171', marginTop: 2,
-        }}>
-          {index + 1}
-        </div>
-
-        {/* Course info — vertical */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {/* Name */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BookOpen size={13} style={{ color: '#94a3b8', flexShrink: 0 }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
-              {course.course_name}
-            </span>
-            <span style={{
-              padding: '2px 7px', borderRadius: 5,
-              background: course.category === 'LAB' ? 'rgba(20,184,166,0.15)' : 'rgba(99,102,241,0.15)',
-              border: `1px solid ${course.category === 'LAB' ? 'rgba(20,184,166,0.3)' : 'rgba(99,102,241,0.3)'}`,
-              color: course.category === 'LAB' ? '#5eead4' : '#a5b4fc',
-              fontSize: 10, fontWeight: 800, textTransform: 'uppercase', flexShrink: 0,
-            }}>
-              {course.category}
-            </span>
-          </div>
-
-          {/* Code */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Tag size={11} style={{ color: '#7c3aed', flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#c4b5fd', fontFamily: 'monospace' }}>
-              {course.course_code}
-            </span>
-            <span style={{ fontSize: 11, color: '#475569' }}>·</span>
-            <span style={{ fontSize: 11, color: '#64748b' }}>{course.credit_hours} cr</span>
-          </div>
-
-          {/* Attendance bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-            <TrendingUp size={11} style={{ color: '#64748b', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, color: '#64748b', fontWeight: 600, minWidth: 74 }}>
-              Attendance:
-            </span>
-            <AttBar pct={course.attendance_pct} />
-          </div>
-        </div>
-
-        {/* Status badge */}
-        {allowed ? (
-          <div style={{
-            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 12px', borderRadius: 20,
-            background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-            color: '#4ade80', fontSize: 11, fontWeight: 700,
-          }}>
-            <CheckCircle2 size={11} /> Eligible
-          </div>
-        ) : (
-          <div style={{
-            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 12px', borderRadius: 20,
-            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-            color: '#f87171', fontSize: 11, fontWeight: 700,
-          }}>
-            <XCircle size={11} /> Not Eligible
-          </div>
-        )}
-      </div>
-
-      {/* Exam details or blocked message */}
-      <div style={{ padding: '12px 20px', background: 'rgba(0,0,0,0.1)' }}>
-        {!allowed ? (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 14px', borderRadius: 10,
-            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-            color: '#fca5a5', fontSize: 12,
-          }}>
-            <ShieldAlert size={14} style={{ flexShrink: 0 }} />
-            <span>
-              Attendance {course.attendance_pct.toFixed(1)}% is below the required <strong>75%</strong>.
-              You are not allowed to sit this exam.
-            </span>
-          </div>
-        ) : !hasExam ? (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            color: '#64748b', fontSize: 12,
-          }}>
-            <Clock size={13} style={{ flexShrink: 0 }} />
-            <span>Exam schedule not yet configured by admin.</span>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-            {[
-              { icon: Calendar, label: 'Date', value: `${course.exam.exam_date} (${course.exam.exam_day ? course.exam.exam_day.charAt(0).toUpperCase() + course.exam.exam_day.slice(1) : ''})`, color: '#818cf8' },
-              { icon: Clock,    label: 'Time', value: `${course.exam.exam_time_start} – ${course.exam.exam_time_end}`, color: '#34d399' },
-              { icon: DoorOpen, label: 'Room', value: course.exam.room_no, color: '#fbbf24' },
-              { icon: UserCircle2, label: 'Invigilator', value: course.exam.invigilator, color: '#67e8f9' },
-            ].map(({ icon: Icon, label, value, color }) => (
-              <div key={label} style={{
-                display: 'flex', alignItems: 'flex-start', gap: 8,
-                padding: '8px 12px', borderRadius: 10,
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                <Icon size={13} style={{ color, flexShrink: 0, marginTop: 2 }} />
-                <div>
-                  <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentAdmitCardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -211,185 +38,224 @@ export default function StudentAdmitCardPage() {
 
   if (authLoading || !user) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Loader2 size={32} className="animate-spin" style={{ color: '#7c3aed' }} />
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
       </div>
     );
   }
-
-  const containerV = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
-  const itemV = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 90 } } };
 
   const allowedCount  = data?.courses?.filter(c => c.allowed).length || 0;
   const blockedCount  = data?.courses?.filter(c => !c.allowed).length || 0;
   const scheduledCount = data?.courses?.filter(c => c.allowed && c.exam).length || 0;
 
   return (
-    <div style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
-      <motion.div variants={containerV} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-        {/* Header */}
-        <motion.div variants={itemV}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{
-              padding: '3px 10px', borderRadius: 20,
-              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)',
-              color: '#fbbf24', fontSize: 11, fontWeight: 700,
-            }}>
-              Admit Card
-            </span>
+    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-slate-800 bg-white min-h-screen font-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200">
+              Official Admit Card
+            </Badge>
             {data?.department && (
-              <span style={{
-                padding: '3px 10px', borderRadius: 20,
-                background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)',
-                color: '#a5b4fc', fontSize: 11, fontWeight: 700,
-              }}>
-                {data.department} · Sem {data.semester}
-              </span>
+              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                {data.department} · Semester {data.semester}
+              </Badge>
             )}
           </div>
-          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 800, color: '#f1f5f9' }}>
-            Exam <span style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Admit Card</span>
-          </h1>
-          <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13 }}>
-            Shows courses where your attendance meets the 75% requirement.
+          <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">Exam Admit Card</h1>
+          <p className="text-slate-500 mt-1 font-sans">
+            Lists enrolled courses and schedules. Attendance of at least <span className="font-semibold text-slate-800">75%</span> is required to sit exams.
           </p>
-        </motion.div>
+        </div>
+      </div>
 
-        {/* Loading */}
-        {loading && (
-          <motion.div variants={itemV} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12, color: '#64748b' }}>
-            <Loader2 size={22} className="animate-spin" style={{ color: '#f59e0b' }} />
-            <span style={{ fontSize: 14 }}>Loading admit card…</span>
-          </motion.div>
-        )}
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+          <p className="text-slate-500 text-sm">Loading admit card details...</p>
+        </div>
+      )}
 
-        {/* Error */}
-        {!loading && error && (
-          <motion.div variants={itemV} style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '14px 18px', borderRadius: 12,
-            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-            color: '#fca5a5', fontSize: 13,
-          }}>
-            <AlertCircle size={16} style={{ flexShrink: 0 }} />
-            {error}
-          </motion.div>
-        )}
+      {/* Error */}
+      {!loading && error && (
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-650 text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {/* Fee gate */}
-        {!loading && !error && data && !data.fee_paid && (
-          <motion.div
-            variants={itemV}
-            style={{
-              borderRadius: 20,
-              background: 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(220,38,38,0.04))',
-              border: '1px solid rgba(239,68,68,0.25)',
-              padding: '40px 32px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 16, textAlign: 'center',
-            }}
-          >
-            <div style={{
-              width: 72, height: 72, borderRadius: 20,
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Lock size={32} style={{ color: '#f87171' }} />
+      {/* Fee Lock Gate */}
+      {!loading && !error && data && !data.fee_paid && (
+        <Card className="border-red-200 bg-red-50/10 shadow-sm rounded-2xl overflow-hidden max-w-2xl mx-auto">
+          <CardContent className="p-8 flex flex-col items-center text-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-red-650">
+              <Lock className="w-8 h-8 text-red-600" />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>
-                Fees Not Paid
-              </h2>
-              <p style={{ margin: '8px 0 0', color: '#94a3b8', fontSize: 14, maxWidth: 420, lineHeight: 1.6 }}>
-                Your admit card is locked. Please pay your semester fees first to access exam schedules and admit card.
+              <h2 className="text-xl font-bold font-heading text-slate-900">Semester Fees Unpaid</h2>
+              <p className="text-slate-550 text-sm mt-2 max-w-md leading-relaxed font-sans">
+                Your examination admit card is currently locked. You must clear your semester outstanding dues to access exam schedules.
               </p>
             </div>
             <Link href="/student/fees">
-              <motion.div
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '12px 24px', borderRadius: 12,
-                  background: 'rgba(239,68,68,0.8)', color: '#fff',
-                  fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                  border: '1px solid rgba(239,68,68,0.4)',
-                }}
-              >
-                <CreditCard size={16} />
-                Pay Fees Now
-                <ChevronRight size={16} />
-              </motion.div>
+              <Button className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs h-9 px-6 rounded-xl flex items-center gap-2 cursor-pointer shadow-sm">
+                <CreditCard className="w-4 h-4" /> Clear Fee Voucher <ChevronRight className="w-4 h-4" />
+              </Button>
             </Link>
-          </motion.div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Stats (when fees paid) */}
-        {!loading && !error && data && data.fee_paid && (
-          <>
-            {/* Fee paid banner */}
-            <motion.div variants={itemV} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '12px 18px', borderRadius: 12,
-              background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
-              color: '#4ade80', fontSize: 13, fontWeight: 600,
-            }}>
-              <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
-              Fees paid — your admit card is active.
-              <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: 12, fontWeight: 400 }}>
-                {data.student} · {data.reg_no}
-              </span>
-            </motion.div>
+      {/* Main Content (when fees paid) */}
+      {!loading && !error && data && data.fee_paid && (
+        <div className="space-y-6">
+          
+          {/* Status Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-sky-50/50 border border-sky-100 rounded-2xl">
+            <div className="flex items-center gap-2.5 text-sky-700 text-sm font-semibold">
+              <CheckCircle2 className="w-5 h-5 text-sky-500 shrink-0" />
+              <span>Fees Verified & Paid — Admit Card Active</span>
+            </div>
+            <div className="text-xs text-slate-500 font-mono">
+              Student: <span className="font-semibold text-slate-700">{data.student}</span> ({data.reg_no})
+            </div>
+          </div>
 
-            {/* Summary cards */}
-            <motion.div variants={itemV} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {[
-                { label: 'Eligible Courses', value: allowedCount, color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.2)', icon: CheckCircle2 },
-                { label: 'Not Eligible', value: blockedCount, color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: XCircle },
-                { label: 'Exams Scheduled', value: scheduledCount, color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: ClipboardList },
-              ].map(({ label, value, color, bg, border, icon: Icon }) => (
-                <div key={label} style={{
-                  background: bg, border: `1px solid ${border}`,
-                  borderRadius: 14, padding: '16px 20px',
-                  display: 'flex', alignItems: 'center', gap: 14,
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 11,
-                    background: `${color}20`, border: `1px solid ${color}40`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <Icon size={18} style={{ color }} />
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
-                    <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color }}>{value}</p>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
+          {/* Stats Bar (No Purple/Yellow, clean sky-blue and slate) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-sky-150/40 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Eligible Courses</p>
+                <p className="text-xl font-extrabold text-slate-800 font-mono">{allowedCount}</p>
+              </div>
+            </div>
 
-            {/* Course rows */}
-            <motion.div variants={itemV} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(data.courses || []).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#475569', fontSize: 14 }}>
-                  No courses found. Please check your enrollment.
-                </div>
-              ) : (
-                (data.courses || []).map((course, idx) => (
-                  <CourseRow key={course.course_code} course={course} index={idx} />
-                ))
-              )}
-            </motion.div>
-          </>
-        )}
+            <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 border border-red-100 flex items-center justify-center shrink-0">
+                <XCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Not Eligible</p>
+                <p className="text-xl font-extrabold text-red-600 font-mono">{blockedCount}</p>
+              </div>
+            </div>
 
-      </motion.div>
+            <div className="bg-slate-50 border border-slate-250/15 p-4 rounded-xl flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-sky-150/40 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Scheduled Exams</p>
+                <p className="text-xl font-extrabold text-slate-800 font-mono">{scheduledCount}</p>
+              </div>
+            </div>
+          </div>
 
-      <style jsx global>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-      `}</style>
+          {/* Courses & Exams Table Layout */}
+          <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Code</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Name</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Category</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Attendance</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Status</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Exam Date & Time</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Location</th>
+                      <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Invigilator</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data.courses && data.courses.length > 0 ? (
+                      data.courses.map((c) => {
+                        const allowed = c.allowed;
+                        const hasExam = Boolean(c.exam);
+
+                        return (
+                          <tr key={c.course_code} className={`hover:bg-slate-50/50 transition-colors ${!allowed ? 'bg-red-50/10' : ''}`}>
+                            <td className="p-4 text-xs font-bold font-mono text-slate-700">{c.course_code}</td>
+                            <td className="p-4 text-xs font-bold text-slate-800">{c.course_name}</td>
+                            <td className="p-4 text-center">
+                              <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-650 text-[9px] uppercase font-mono px-1.5 py-0.5">
+                                {c.category || 'TH'}
+                              </Badge>
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className={`text-xs font-bold font-mono ${allowed ? 'text-slate-700' : 'text-red-600'}`}>
+                                {c.attendance_pct.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              {allowed ? (
+                                <Badge className="bg-sky-50 border-sky-100 text-sky-650 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                  Eligible
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-50 border-red-100 text-red-600 text-[9px] font-bold uppercase tracking-wider" variant="outline">
+                                  Ineligible
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="p-4 text-xs font-medium text-slate-700">
+                              {!allowed ? (
+                                <span className="text-red-500 font-semibold flex items-center gap-1">
+                                  <ShieldAlert className="w-3.5 h-3.5" /> Attendance shortage
+                                </span>
+                              ) : hasExam ? (
+                                <div className="space-y-0.5">
+                                  <div className="font-semibold">{c.exam.exam_date}</div>
+                                  <div className="text-[10px] text-slate-400">{c.exam.exam_time_start} - {c.exam.exam_time_end}</div>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">Not scheduled</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-xs font-medium text-slate-700">
+                              {allowed && hasExam ? (
+                                <div className="flex items-center gap-1">
+                                  <DoorOpen className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>Room {c.exam.room_no}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-xs font-medium text-slate-750">
+                              {allowed && hasExam ? (
+                                <div className="flex items-center gap-1">
+                                  <UserCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{c.exam.invigilator}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-xs text-slate-400 font-sans">
+                          No active courses found. Please contact administration.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

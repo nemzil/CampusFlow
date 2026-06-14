@@ -147,6 +147,7 @@ class AdminCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+    role: Optional[str] = None
 
 # ═══ Response Schema ═══
 class UserResponse(BaseModel):

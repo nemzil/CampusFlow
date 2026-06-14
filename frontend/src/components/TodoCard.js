@@ -25,77 +25,73 @@ export default function TodoCard({ todo, onToggleComplete, onEdit, onDelete }) {
   const isOverdue = !todo.completed && todo.due_date && new Date(todo.due_date) < new Date();
 
   const priorityConfig = {
-    high: { label: 'High Priority', class: 'badge-rose' },
-    medium: { label: 'Medium Priority', class: 'badge-amber' },
-    low: { label: 'Low Priority', class: 'badge-emerald' },
+    high: { label: 'High Priority', class: 'bg-red-50 text-red-600 border-red-100' },
+    medium: { label: 'Medium Priority', class: 'bg-amber-50 text-amber-700 border-amber-100' },
+    low: { label: 'Low Priority', class: 'bg-slate-50 text-slate-500 border-slate-250/15' },
   };
 
-  const pConfig = priorityConfig[todo.priority] || { label: 'Priority', class: 'bg-slate-500/20 text-slate-400' };
+  const pConfig = priorityConfig[todo.priority] || { label: 'Priority', class: 'bg-slate-50 text-slate-400 border-slate-100' };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       layout
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -1 }}
     >
-      <Card className={`glass-card overflow-hidden transition-all duration-300 ${
-        todo.completed ? 'opacity-60 grayscale-[0.3]' : isOverdue ? 'border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'border-white/5'
+      <Card className={`relative overflow-hidden bg-white border-slate-200 transition-all duration-200 ${
+        todo.completed ? 'opacity-65 grayscale-[0.2]' : isOverdue ? 'border-red-350 shadow-sm' : 'shadow-sm'
       }`}>
-        {isOverdue && <div className="absolute top-0 left-0 w-1 h-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]" />}
-        {!isOverdue && !todo.completed && <div className="absolute top-0 left-0 w-1 h-full bg-violet-500 shadow-[0_0_10px_rgba(167,139,250,0.5)]" />}
-        {todo.completed && <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />}
-
-        <CardContent className="p-2 flex gap-3">
-          <div className="pt-0.5">
+        <CardContent className="p-3 flex gap-4 items-center">
+          <div className="flex items-center shrink-0">
             <Checkbox 
               checked={todo.completed} 
               onCheckedChange={() => onToggleComplete(todo.id, todo.completed)}
-              className="w-4 h-4 rounded-md border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+              className="w-4.5 h-4.5 rounded border-slate-300 data-[state=checked]:bg-sky-500 data-[state=checked]:border-sky-500 cursor-pointer"
             />
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3 mb-0.5">
-              <h4 className={`text-sm font-bold font-heading truncate ${todo.completed ? 'line-through text-slate-400' : 'text-white'}`}>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <h4 className={`text-sm font-bold font-heading truncate ${todo.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                 {todo.title}
               </h4>
-              <div className="flex gap-1.5 shrink-0">
+              <div className="flex gap-1 shrink-0">
                 {!todo.is_auto_generated && (
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-full" onClick={() => onEdit(todo)}>
-                    <Edit2 className="w-3 h-3" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg cursor-pointer" onClick={() => onEdit(todo)}>
+                    <Edit2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-full" onClick={() => onDelete(todo.id)}>
-                  <Trash2 className="w-3 h-3" />
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer" onClick={() => onDelete(todo.id)}>
+                  <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
             
             {todo.description && (
-              <p className="text-xs text-slate-400 mb-2 line-clamp-2">
+              <p className="text-xs text-slate-550 mb-2.5 line-clamp-1 font-sans">
                 {todo.description}
               </p>
             )}
             
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <Badge variant="outline" className={`${isOverdue ? 'badge-rose' : 'badge-violet'} flex items-center gap-1 text-[10px] px-1.5 py-0.5`}>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant="outline" className={`${isOverdue ? 'bg-red-50 text-red-600 border-red-100' : 'bg-sky-50 text-sky-600 border-sky-100'} flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold`}>
                 {isOverdue ? <AlertCircle className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
                 {formatDate(todo.due_date)}
               </Badge>
               
-              <Badge variant="outline" className={`${pConfig.class} text-[10px] px-1.5 py-0.5`}>
+              <Badge variant="outline" className={`${pConfig.class} text-[9px] px-1.5 py-0.5 rounded-full font-bold`}>
                 {pConfig.label}
               </Badge>
               
-              <Badge variant="outline" className="badge-indigo flex items-center gap-1 text-[10px] px-1.5 py-0.5">
-                {todo.source === 'manual' ? <Edit2 className="w-2.5 h-2.5" /> : <Bot className="w-2.5 h-2.5" />}
+              <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+                {todo.source === 'manual' ? <Edit2 className="w-2.5 h-2.5 text-slate-400" /> : <Bot className="w-2.5 h-2.5 text-slate-400" />}
                 {todo.source.toUpperCase()}
               </Badge>
               
               {todo.source_course && (
-                <Badge variant="outline" className="badge-cyan flex items-center gap-1 text-[10px] px-1.5 py-0.5">
+                <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-100/55 flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold">
                   <BookOpen className="w-2.5 h-2.5" />
                   {todo.source_course}
                 </Badge>
