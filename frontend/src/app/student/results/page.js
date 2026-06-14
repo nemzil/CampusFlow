@@ -6,10 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { getMyResults, getMyTranscript } from '@/lib/api';
 import { getCurrentAcademicTerm } from '@/lib/utils';
-import { GraduationCap, Loader2, Download, FileText } from 'lucide-react';
+import { GraduationCap, Loader2, Download, FileText, X, Award, Eye, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const COMPONENT_LABELS = {
   quiz1: 'Quiz 1', quiz2: 'Quiz 2', quiz3: 'Quiz 3',
@@ -59,10 +60,17 @@ export default function StudentResultsPage() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Detail modal state
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'STUDENT')) router.push('/login');
-    else if (!authLoading && user) loadResults();
-  }, [user, authLoading, router, term]); // Added term to dependencies
+    if (!authLoading && (!user || user.role !== 'STUDENT')) {
+      router.push('/login');
+    } else if (!authLoading && user) {
+      loadResults();
+    }
+  }, [user, authLoading, router, term]);
 
   const loadResults = async () => {
     setLoading(true);
@@ -87,97 +95,232 @@ export default function StudentResultsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
+          <p className="text-slate-500 font-medium font-sans">Loading Academic Results...</p>
+        </div>
       </div>
     );
   }
 
+  const allComplete = results?.all_courses_complete;
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 text-slate-800 bg-white min-h-screen font-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Badge variant="outline" className="badge-violet mb-2">Student Portal</Badge>
-          <h1 className="text-3xl font-bold text-white font-heading">My Results</h1>
-          <p className="text-slate-400 mt-1">
+          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200 mb-2">Academic Records</Badge>
+          <h1 className="text-3xl font-extrabold font-heading text-slate-900 tracking-tight">My Results</h1>
+          <p className="text-slate-500 mt-1">
             View assignment, quiz, and exam marks. CGPA and transcript appear when all course marks are published.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-lg">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Term</span>
-            <span className="px-3 py-1 rounded-md text-xs font-semibold font-mono tracking-wider bg-violet-600 text-white">{term}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Term</span>
+            <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-sky-100 text-sky-700 border border-sky-200">{term}</span>
           </div>
           {results?.transcript_available && (
-            <Button onClick={handleDownloadTranscript} className="bg-emerald-600">
-              <Download className="w-4 h-4 mr-2" /> Download Transcript
+            <Button 
+              onClick={handleDownloadTranscript} 
+              className="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs h-9 shadow-sm cursor-pointer"
+            >
+              <Download className="w-4 h-4 mr-1.5" /> Download Transcript
             </Button>
           )}
         </div>
       </div>
 
-      {results?.all_courses_complete ? (
-        <Card className="glass-card border-emerald-500/30 bg-emerald-500/5">
-          <CardContent className="p-6 flex flex-wrap items-center gap-6">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Semester GPA</p>
-              <p className="text-3xl font-bold text-white">{results.semester_gpa?.toFixed(2) ?? '—'}</p>
+      {/* GPA & CGPA Banner */}
+      {allComplete ? (
+        <Card className="border-emerald-200 bg-emerald-50/30 rounded-2xl overflow-hidden shadow-sm">
+          <CardContent className="p-6 flex flex-wrap items-center gap-8">
+            <div className="flex items-center gap-3">
+              <Award className="w-8 h-8 text-emerald-600" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Semester GPA</p>
+                <p className="text-3xl font-black text-slate-900 font-mono leading-none mt-1">
+                  {results.semester_gpa?.toFixed(2) ?? '0.00'}
+                </p>
+              </div>
             </div>
+            <div className="h-8 w-[1px] bg-emerald-200 hidden md:block" />
             <div>
-              <p className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">CGPA</p>
-              <p className="text-3xl font-bold text-emerald-400">{results.cgpa?.toFixed(2) ?? '—'}</p>
+              <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Cumulative CGPA</p>
+              <p className="text-3xl font-black text-emerald-600 font-mono leading-none mt-1">
+                {results.cgpa?.toFixed(2) ?? '0.00'}
+              </p>
             </div>
-            <p className="text-sm text-slate-400 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> All {results.enrolled_courses} courses complete — transcript available
-            </p>
+            <div className="flex-1 text-right text-xs text-slate-500 font-medium flex items-center justify-end gap-2">
+              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" />
+              All {results.enrolled_courses} courses complete — Transcript unlocked
+            </div>
           </CardContent>
         </Card>
       ) : (
-        <Card className="glass-card border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-4 text-sm text-amber-200">
-            CGPA and transcript will be shown when marks for all {results?.enrolled_courses || 0} enrolled courses are published
-            ({results?.published_courses || 0} of {results?.enrolled_courses || 0} published so far).
+        <Card className="border-red-200 bg-red-50/40 rounded-2xl overflow-hidden shadow-sm">
+          <CardContent className="p-5 flex items-center gap-3 text-xs text-red-600 leading-normal font-sans">
+            <AlertCircle className="w-4.5 h-4.5 text-red-500 shrink-0" />
+            <div>
+              <strong>CGPA & Transcript Status: Locked</strong>
+              <p className="text-slate-500 mt-0.5">
+                Marks for all {results?.enrolled_courses || 0} enrolled courses must be published
+                ({results?.published_courses || 0} of {results?.enrolled_courses || 0} published currently).
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {(results?.courses || []).length === 0 ? (
-        <Card className="glass-card border-white/10">
-          <CardContent className="p-8 text-center text-slate-400">No published results yet.</CardContent>
+      {/* Published Courses Grade Table */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold font-heading flex items-center gap-2 text-slate-900">
+          <GraduationCap className="w-5 h-5 text-sky-500" /> Semester Grades Summary
+        </h2>
+
+        <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Code</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400">Course Name</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Total Marks</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Grade</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">GPA Points</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Status</th>
+                    <th className="p-4 text-xs font-bold uppercase tracking-wider text-slate-400 text-center">Breakdown</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {results?.courses && results.courses.length > 0 ? (
+                    results.courses.map((course, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4 text-xs font-bold font-mono text-slate-700">{course.course_code}</td>
+                        <td className="p-4 text-xs font-bold text-slate-800">{course.course_name}</td>
+                        <td className="p-4 text-xs text-slate-600 font-mono text-center font-bold">
+                          {course.is_complete ? `${course.total_marks || 0}/100` : '—'}
+                        </td>
+                        <td className="p-4 text-center">
+                          {course.is_complete && course.letter_grade ? (
+                            <Badge className="bg-sky-50 text-sky-700 border-sky-200 font-mono font-extrabold text-xs px-2.5 py-0.5" variant="outline">
+                              {course.letter_grade}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-slate-400">Pending</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-xs font-bold font-mono text-slate-700 text-center">
+                          {course.is_complete ? (course.grade_points || 0.0).toFixed(2) : '—'}
+                        </td>
+                        <td className="p-4 text-center">
+                          <Badge 
+                            className={`text-[9px] uppercase font-bold tracking-wider ${
+                              course.is_complete 
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                : 'bg-amber-50 text-amber-600 border-amber-100'
+                            }`} 
+                            variant="outline"
+                          >
+                            {course.is_complete ? 'Published' : 'Under Review'}
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-center">
+                          <Button
+                            onClick={() => {
+                              setSelectedCourse(course);
+                              setShowDetailDialog(true);
+                            }}
+                            size="sm"
+                            className="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs h-7 px-3 flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View Marks
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="p-8 text-center text-xs text-slate-400 font-sans">
+                        No results published for this semester yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
         </Card>
-      ) : (
-        results.courses.map((course) => (
-          <Card key={course.course_code} className="glass-card border-white/10">
-            <CardContent className="p-5">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <GraduationCap className="w-5 h-5 text-violet-400" />
+      </div>
+
+      {/* Marks Breakdown Dialog */}
+      <AnimatePresence>
+        {showDetailDialog && selectedCourse && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="h-1 bg-sky-500 shrink-0" />
+              
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 flex justify-between items-start shrink-0">
                 <div>
-                  <h2 className="font-bold text-white">{course.course_code}</h2>
-                  <p className="text-sm text-slate-400">{course.course_name}</p>
+                  <span className="font-mono text-xs font-bold text-sky-600 tracking-wider uppercase block">{selectedCourse.course_code}</span>
+                  <h3 className="font-heading font-extrabold text-slate-900 text-base mt-1">{selectedCourse.course_name}</h3>
                 </div>
-                {course.is_complete && course.letter_grade && (
-                  <Badge className="badge-emerald ml-auto">{course.letter_grade} — {course.total_marks}/100</Badge>
+                <button 
+                  onClick={() => setShowDetailDialog(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Components List */}
+              <div className="p-5 overflow-y-auto space-y-4 flex-1">
+                <div className="grid grid-cols-2 gap-3.5">
+                  {Object.entries(COMPONENT_LABELS).map(([key, label]) => {
+                    const mark = selectedCourse.components?.[key];
+                    return (
+                      <div 
+                        key={key} 
+                        className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex flex-col justify-between"
+                      >
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{label}</span>
+                        <span className="text-base font-extrabold text-slate-800 mt-1 font-mono">
+                          {mark !== undefined && mark !== null ? mark : '—'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {selectedCourse.teacher_remarks && (
+                  <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-xs text-sky-800 leading-normal font-sans">
+                    <span className="font-bold">Feedback / Remarks:</span>
+                    <p className="text-slate-600 mt-1">{selectedCourse.teacher_remarks}</p>
+                  </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Object.entries(COMPONENT_LABELS).map(([key, label]) => (
-                  <div key={key} className="rounded-lg bg-white/5 border border-white/5 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{label}</p>
-                    <p className="text-lg font-bold text-white">{course.components?.[key] ?? '—'}</p>
-                  </div>
-                ))}
+              {/* Footer */}
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
+                <Button onClick={() => setShowDetailDialog(false)} size="sm" className="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs h-8">
+                  Close Breakdown
+                </Button>
               </div>
-
-              {course.teacher_remarks && (
-                <p className="mt-4 text-sm text-slate-400 border-t border-white/5 pt-3">
-                  <span className="text-slate-300 font-medium">Feedback: </span>{course.teacher_remarks}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))
-      )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

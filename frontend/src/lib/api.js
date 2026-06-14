@@ -87,10 +87,10 @@ async function apiRequest(url, options = {}) {
     }
     // Handle network / connection failures (backend not running, DNS, etc.)
     if (error instanceof TypeError || (error.message && error.message.includes('Failed to fetch'))) {
-      console.error('Network error — backend unreachable:', url, error);
+      console.warn('Network error — backend unreachable:', url, error);
       throw new Error('Unable to connect to the backend server. Please make sure it is running on the expected URL (' + API_BASE + ').');
     }
-    console.error('API Error:', error);
+    console.warn('API Error:', error);
     throw error;
   }
 }

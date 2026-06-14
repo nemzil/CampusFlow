@@ -38,16 +38,33 @@ export default function Home() {
   return (
     <div className="overflow-x-hidden min-h-screen flex flex-col relative bg-[var(--background)]">
 
-      {/* ── Background Geometric Grid ── */}
-      <div className="absolute top-0 left-0 w-full h-[600px] z-0 overflow-hidden pointer-events-none opacity-40" style={{
-        backgroundImage: `linear-gradient(var(--surface-container-highest) 1px, transparent 1px), linear-gradient(90deg, var(--surface-container-highest) 1px, transparent 1px)`,
-        backgroundSize: '40px 40px',
-        maskImage: 'linear-gradient(to bottom, white 0%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, white 0%, transparent 100%)'
-      }}></div>
+      {/* ── Curved Decorative Waves (Themed Palette) ── */}
+      <div className="absolute top-0 right-0 left-0 h-[950px] z-0 pointer-events-none overflow-hidden">
+        {/* Top Right Wave: Beautiful organic swoop matching mockup (Much Larger) */}
+        <svg viewBox="0 0 1440 320" className="absolute top-0 right-0 w-[85%] md:w-[72%] h-auto origin-top-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M500 0 C 650 200, 850 250, 1100 200 C 1250 160, 1360 110, 1440 0 Z" fill="url(#top-wave-grad)" />
+          <defs>
+            <linearGradient id="top-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0.75" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Bottom Left Wave: Organic hill wave matching mockup (Much Larger) */}
+        <svg viewBox="0 0 1440 800" className="absolute bottom-0 left-0 w-[85%] md:w-[72%] h-auto origin-bottom-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 300 C 200 250, 400 450, 580 550 C 780 680, 950 720, 1150 800 L 0 800 Z" fill="url(#bottom-wave-grad)" />
+          <defs>
+            <linearGradient id="bottom-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0.85" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
 
       {/* TopNavBar */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-[var(--outline-variant)] sticky top-0 z-50 transition-all">
+      <header className="bg-transparent border-b border-transparent sticky top-0 z-50 transition-all">
         <nav className="flex justify-between items-center w-full px-[var(--margin-desktop)] py-4 max-w-[1440px] mx-auto">
           <div className="flex items-center gap-2 group cursor-pointer">
             <div className="w-8 h-8 rounded-lg bg-[var(--on-background)] flex items-center justify-center group-hover:bg-[var(--primary)] transition-colors duration-300">
@@ -57,13 +74,13 @@ export default function Home() {
           </div>
           
           <div className="hidden md:flex items-center gap-2">
-            <a href="#features" className="font-nav-link text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors duration-300">Features</a>
-            <a href="#ai-exams" className="font-nav-link text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors duration-300">AI Engine</a>
-            <a href="#portals" className="font-nav-link text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors duration-300">Portals</a>
+            <a href="#features" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Features</a>
+            <a href="#ai-exams" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">AI Engine</a>
+            <a href="#portals" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Portals</a>
           </div>
 
           <div className="flex gap-4">
-            <a href="#portals" className="px-6 py-2.5 bg-transparent border border-black text-black rounded-lg font-nav-link btn-active-scale transition-colors hover:bg-sky-500 hover:text-white hover:border-transparent flex items-center shadow-md">
+            <a href="#portals" className="px-6 py-2.5 bg-white border border-[var(--outline-variant)] text-slate-900 rounded-lg font-nav-link btn-active-scale transition-all duration-300 hover:!bg-slate-900 hover:!text-white hover:!border-transparent flex items-center shadow-sm hover:shadow-md">
               Sign In
             </a>
           </div>
@@ -112,8 +129,32 @@ export default function Home() {
         </section>
 
         {/* Features Grid */}
-        <section id="features" className="py-24 bg-[var(--surface)] border-y border-[var(--outline-variant)] scroll-mt-16">
-          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)]">
+        <section id="features" className="py-24 bg-[var(--surface)] border-y border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
+          {/* Features Wave 1: Top Left */}
+          <div className="absolute top-0 left-0 w-[40%] max-w-[500px] h-auto pointer-events-none opacity-20 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 0 H 600 C 500 150, 300 250, 0 350 Z" fill="url(#feat-wave-1)" />
+              <defs>
+                <linearGradient id="feat-wave-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          {/* Features Wave 2: Bottom Right */}
+          <div className="absolute bottom-0 right-0 w-[40%] max-w-[500px] h-auto pointer-events-none opacity-20 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 800 H 840 C 940 650, 1140 550, 1440 450 Z" fill="url(#feat-wave-2)" />
+              <defs>
+                <linearGradient id="feat-wave-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
             <motion.div className="mb-16" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.5, ease: customEase }}>
               <h2 className="font-headline-md text-[var(--on-background)]">Integrated Infrastructure</h2>
               <p className="font-body-md text-[var(--on-surface-variant)] max-w-2xl mt-4">High-fidelity tools designed for the complete academic lifecycle, from enrollment data to final examinations.</p>
@@ -141,8 +182,32 @@ export default function Home() {
         </section>
 
         {/* AI Examination System Section */}
-        <section id="ai-exams" className="py-24 bg-white scroll-mt-16 overflow-hidden">
-          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)]">
+        <section id="ai-exams" className="py-24 bg-white scroll-mt-16 overflow-hidden relative">
+          {/* Emerald Gradient Decorative Wave 1: Top Right */}
+          <div className="absolute top-0 right-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 0 C 1200 100, 1000 300, 1440 500 Z" fill="url(#ai-wave-grad)" />
+              <defs>
+                <linearGradient id="ai-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#059669" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          {/* Emerald Gradient Decorative Wave 2: Bottom Left */}
+          <div className="absolute bottom-0 left-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 800 V 300 C 200 400, 400 500, 600 800 Z" fill="url(#ai-wave-grad-2)" />
+              <defs>
+                <linearGradient id="ai-wave-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#34D399" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <motion.div variants={fadeScaleUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}>
                 <span className="font-label-caps text-[var(--primary)] mb-4 block tracking-wider">Automated Engine</span>
@@ -203,8 +268,32 @@ export default function Home() {
         </section>
 
         {/* Portal Preview Section */}
-        <section id="portals" className="py-24 bg-[var(--surface)] border-t border-[var(--outline-variant)] scroll-mt-16">
-          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)]">
+        <section id="portals" className="py-24 bg-[var(--surface)] border-t border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
+          {/* Indigo/Violet Gradient Decorative Wave 1: Bottom Right */}
+          <div className="absolute bottom-0 right-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-bottom-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 800 H 800 C 900 650, 1100 550, 1440 800 Z" fill="url(#portals-wave-grad)" />
+              <defs>
+                <linearGradient id="portals-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          {/* Indigo/Violet Gradient Decorative Wave 2: Top Left */}
+          <div className="absolute top-0 left-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-25 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-left scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 0 H 640 C 540 150, 340 250, 0 350 Z" fill="url(#portals-wave-grad-2)" />
+              <defs>
+                <linearGradient id="portals-wave-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
             <motion.div className="mb-16 text-center" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease: customEase }}>
                <h2 className="font-headline-md text-[var(--on-background)]">Role-Based Workspaces</h2>
                <p className="font-body-md text-[var(--on-surface-variant)] max-w-2xl mx-auto mt-4">Dedicated environments tailored to specific workflows.</p>

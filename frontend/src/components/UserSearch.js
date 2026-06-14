@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Loader2, UserX } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function UserSearch({ isOpen, onClose, onSelectUser }) {
   const [query, setQuery] = useState('');
@@ -56,61 +57,58 @@ export default function UserSearch({ isOpen, onClose, onSelectUser }) {
 
   const getRoleBadgeColor = (role) => {
     switch (role?.toUpperCase()) {
-      case 'ADMIN': return 'badge-rose';
-      case 'TEACHER': return 'badge-cyan';
-      case 'STUDENT': return 'badge-violet';
-      default: return 'badge-indigo';
+      case 'ADMIN': return 'bg-red-50 text-red-600 border-red-100';
+      case 'TEACHER': return 'bg-slate-50 text-slate-700 border-slate-200';
+      case 'STUDENT': return 'bg-sky-50 text-sky-600 border-sky-100';
+      default: return 'bg-slate-50 text-slate-550 border-slate-200';
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] glass border-white/10 text-white shadow-2xl p-0 overflow-hidden rounded-2xl">
-        {/* Header gradient bar */}
-        <div className="h-2 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
-        
+      <DialogContent className="sm:max-w-[500px] bg-white border border-slate-250/20 text-slate-800 shadow-2xl p-0 overflow-hidden rounded-2xl">
         <div className="p-6">
-          <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-bold font-heading text-white tracking-tight">
+          <DialogHeader className="mb-5">
+            <DialogTitle className="text-xl font-bold font-heading text-slate-900 tracking-tight">
               New Message
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-500 text-xs">
               Search for students or faculty members to start a conversation.
             </DialogDescription>
           </DialogHeader>
 
           {/* Search Input */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <div className="relative mb-5">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by name or username..."
-              className="pl-10 h-12 bg-background/50 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-violet-500 rounded-xl"
+              className="pl-9 h-11 bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-sky-500 rounded-xl text-xs"
               autoFocus
             />
           </div>
 
           {/* Results Area */}
-          <div className="bg-black/20 rounded-xl border border-white/5 h-[300px] overflow-hidden">
+          <div className="bg-slate-50 rounded-xl border border-slate-200 h-[280px] overflow-hidden">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
-                <p className="text-sm">Searching directory...</p>
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+                <p className="text-xs">Searching directory...</p>
               </div>
             ) : error ? (
-              <div className="flex items-center justify-center h-full text-rose-400 text-sm px-4 text-center">
+              <div className="flex items-center justify-center h-full text-red-500 text-xs px-4 text-center">
                 {error}
               </div>
             ) : query.trim().length < 2 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-500 text-sm">
-                <Search className="w-8 h-8 mb-2 opacity-50" />
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs">
+                <Search className="w-6 h-6 mb-2 opacity-50 text-slate-450" />
                 Type at least 2 characters to search
               </div>
             ) : results.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 text-sm">
-                <UserX className="w-8 h-8 mb-2 opacity-50 text-slate-500" />
+              <div className="flex flex-col items-center justify-center h-full text-slate-450 text-xs">
+                <UserX className="w-6 h-6 mb-2 opacity-50" />
                 No users found matching "{query}"
               </div>
             ) : (
@@ -120,31 +118,31 @@ export default function UserSearch({ isOpen, onClose, onSelectUser }) {
                     {results.map((user) => (
                       <motion.div
                         key={user.username}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
+                        whileHover={{ scale: 1.005 }}
+                        whileTap={{ scale: 0.995 }}
                         onClick={() => handleSelect(user)}
-                        className="flex items-center gap-4 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors group"
+                        className="flex items-center gap-3 p-2.5 rounded-xl cursor-pointer hover:bg-white border border-transparent hover:border-slate-150 transition-all group"
                       >
-                        <Avatar className="w-10 h-10 border border-white/10 group-hover:border-violet-500/50 transition-colors">
+                        <Avatar className="w-9 h-9 border border-slate-200 group-hover:border-sky-350 transition-colors">
                           <AvatarImage src={user.profile_picture_url} />
-                          <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white font-heading font-semibold text-xs">
+                          <AvatarFallback className="bg-sky-500 text-white font-heading font-bold text-xs">
                             {user.first_name?.[0]}{user.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
                         
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-bold text-white truncate font-heading group-hover:text-violet-300 transition-colors">
+                          <h4 className="text-xs font-bold text-slate-800 truncate font-heading group-hover:text-sky-600 transition-colors">
                             {user.first_name} {user.last_name}
                           </h4>
-                          <p className="text-xs text-slate-400 truncate">@{user.username}</p>
+                          <p className="text-[10px] text-slate-450 truncate">@{user.username}</p>
                         </div>
 
-                        <div className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${getRoleBadgeColor(user.role)}`}>
+                        <Badge variant="outline" className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${getRoleBadgeColor(user.role)}`}>
                           {user.role}
-                        </div>
+                        </Badge>
                       </motion.div>
                     ))}
                   </AnimatePresence>
