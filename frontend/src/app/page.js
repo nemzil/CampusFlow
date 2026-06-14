@@ -76,6 +76,7 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-2">
             <a href="#features" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Features</a>
             <a href="#ai-exams" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">AI Engine</a>
+            <a href="#exam-portal-section" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Exam Portal</a>
             <a href="#portals" className="font-nav-link text-[var(--on-surface-variant)] border border-slate-200 bg-white/50 backdrop-blur-md px-4 py-2 rounded-lg transition-all duration-300 hover:text-[var(--on-background)] hover:bg-white hover:border-[var(--primary)] shadow-sm">Portals</a>
           </div>
 
@@ -267,6 +268,84 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Exam Portal Overview Section */}
+        <section id="exam-portal-section" className="py-24 bg-white border-t border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-[45%] max-w-[600px] h-auto pointer-events-none overflow-hidden opacity-20 z-0">
+            <svg viewBox="0 0 1440 800" className="w-full h-auto origin-top-right scale-110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1440 0 C 1200 100, 1000 300, 1440 500 Z" fill="url(#exam-wave-grad)" />
+              <defs>
+                <linearGradient id="exam-wave-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="max-w-[1440px] mx-auto px-[var(--margin-desktop)] relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <motion.div variants={fadeScaleUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} className="order-2 lg:order-1 relative">
+                {/* Visual Representation */}
+                <div className="w-full bg-[var(--surface)] border border-[var(--outline-variant)] rounded-2xl p-8 flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-500 transform hover:-translate-y-2">
+                   <div className="flex justify-between items-center mb-8 pb-4 border-b border-[var(--outline-variant)]">
+                     <div className="flex items-center gap-3">
+                       <span className="material-symbols-outlined text-[var(--primary)]">lock</span>
+                       <span className="font-nav-link text-[var(--on-background)]">Secure Environment</span>
+                     </div>
+                     <span className="font-data-mono text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded border border-emerald-200">Live</span>
+                   </div>
+                   <div className="space-y-6">
+                     <div className="p-4 bg-white border border-[var(--outline-variant)] rounded-xl shadow-sm">
+                       <div className="flex items-center justify-between mb-4">
+                         <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                         <div className="h-4 w-12 bg-sky-100 rounded"></div>
+                       </div>
+                       <div className="space-y-3">
+                         <div className="h-3 w-full bg-slate-100 rounded"></div>
+                         <div className="h-3 w-5/6 bg-slate-100 rounded"></div>
+                       </div>
+                     </div>
+                     <div className="flex gap-4">
+                       <div className="flex-1 p-3 bg-white border border-[var(--outline-variant)] rounded-lg flex items-center gap-3 shadow-sm">
+                         <div className="w-4 h-4 rounded-full border-2 border-slate-300"></div>
+                         <div className="h-3 w-1/2 bg-slate-200 rounded"></div>
+                       </div>
+                       <div className="flex-1 p-3 bg-sky-50 border border-sky-200 rounded-lg flex items-center gap-3 shadow-sm">
+                         <div className="w-4 h-4 rounded-full bg-sky-500 border-2 border-sky-200"></div>
+                         <div className="h-3 w-1/2 bg-sky-300 rounded"></div>
+                       </div>
+                     </div>
+                   </div>
+                </div>
+              </motion.div>
+
+              <motion.div variants={fadeScaleUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} className="order-1 lg:order-2">
+                <span className="font-label-caps text-[var(--primary)] mb-4 block tracking-wider">Evaluation Hub</span>
+                <h2 className="font-headline-md text-[var(--on-background)] mb-6">Dedicated Exam Portal</h2>
+                <p className="font-body-md text-[var(--on-surface-variant)] mb-8 max-w-lg">
+                  A specialized, distraction-free environment built for taking formal examinations. Whether manual or AI-generated, the portal ensures integrity, timer enforcement, and secure submission.
+                </p>
+                <ul className="space-y-4 mb-10">
+                  <li className="flex items-center gap-3">
+                     <span className="material-symbols-outlined text-[var(--primary)] text-xl">timer</span>
+                     <span className="font-body-md text-[var(--on-background)]">Strict Time Management & Auto-Submission</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                     <span className="material-symbols-outlined text-[var(--primary)] text-xl">security</span>
+                     <span className="font-body-md text-[var(--on-background)]">Secure & Isolated Testing Interface</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                     <span className="material-symbols-outlined text-[var(--primary)] text-xl">analytics</span>
+                     <span className="font-body-md text-[var(--on-background)]">Real-time Result Processing</span>
+                  </li>
+                </ul>
+                <Link href="/exam-portal/login" className="inline-flex items-center gap-2 px-6 py-3 bg-transparent border border-black text-black rounded-lg font-nav-link btn-active-scale hover:bg-sky-500 hover:text-white hover:border-transparent transition-colors shadow-sm group">
+                  Access Exam Portal <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* Portal Preview Section */}
         <section id="portals" className="py-24 bg-[var(--surface)] border-t border-[var(--outline-variant)] scroll-mt-16 relative overflow-hidden">
           {/* Indigo/Violet Gradient Decorative Wave 1: Bottom Right */}
@@ -379,6 +458,7 @@ export default function Home() {
                 <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/student/login">Student</Link></li>
                 <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/teacher/login">Faculty</Link></li>
                 <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/admin/login">Admin</Link></li>
+                <li><Link className="hover:text-[var(--primary)] transition-colors duration-300" href="/exam-portal/login">Exam Portal</Link></li>
               </ul>
             </div>
             
