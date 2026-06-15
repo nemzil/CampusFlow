@@ -56,7 +56,8 @@ export default function StudentResultsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showError } = useToast();
-  const [term, setTerm] = useState(getCurrentAcademicTerm());
+  // Changed to 2026S since all grade data is in Spring 2026 term
+  const [term, setTerm] = useState('2026S');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -75,9 +76,13 @@ export default function StudentResultsPage() {
   const loadResults = async () => {
     setLoading(true);
     try {
+      console.log(`[Results] Fetching results for term: ${term}`);
       const data = await getMyResults(term);
+      console.log('[Results] API Response:', data);
+      console.log(`[Results] Courses: ${data.courses?.length || 0}, GPA: ${data.semester_gpa}, CGPA: ${data.cgpa}`);
       setResults(data);
     } catch (e) {
+      console.error('[Results] Error:', e);
       showError(e.message || 'Failed to load results');
     } finally {
       setLoading(false);

@@ -1057,7 +1057,11 @@ export async function examDeptPublishResults(courseId, term) {
 
 export async function getMyResults(term) {
   const params = new URLSearchParams({ term });
-  return apiRequest(`${API_BASE}/grades/my-results?${params}`);
+  const url = `${API_BASE}/grades/my-results?${params}`;
+  console.log('[API] getMyResults - URL:', url);
+  const result = await apiRequest(url);
+  console.log('[API] getMyResults - Response:', result);
+  return result;
 }
 
 export async function getMyTranscript(term) {
@@ -1123,8 +1127,9 @@ export async function downloadFeeStatement(type, year, month = null) {
 // COURSES (helper for timetable)
 // ═══════════════════════════════════════════════════════════════════
 
-export async function getCoursesBySemester(semester) {
+export async function getCoursesBySemester(semester, department = null) {
   const params = new URLSearchParams({ semester, is_active: true, limit: 200 });
+  if (department) params.append('department', department);
   return apiRequest(`${API_BASE}/courses/?${params.toString()}`);
 }
 

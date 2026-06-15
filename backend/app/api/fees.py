@@ -620,6 +620,8 @@ async def get_my_fee_voucher(current_user: str = Depends(get_current_user)):
             "lab_charges": lab_charges if status != "paid" else 0,
             "security_deposit": security_deposit if status != "paid" else 0,
             "grand_total": grand_total,
+            "status": status.upper(),  # Add status to summary for frontend
+            "due_date": fee_record.deadline.isoformat() if fee_record and fee_record.deadline else None,  # Add due_date to summary
         },
         "fee_structure_found": structure is not None,
         "fee_structure": {

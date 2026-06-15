@@ -41,6 +41,7 @@ async def list_courses(
     term: Optional[str] = None,
     type: Optional[str] = None,
     category: Optional[str] = None,
+    department: Optional[str] = None,
     is_active: Optional[bool] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
@@ -61,6 +62,8 @@ async def list_courses(
         query["course_type"] = type.lower()
     if category:
         query["category"] = category.upper()
+    if department:
+        query["department"] = department.upper()
     if is_active is not None:
         query["is_active"] = is_active
     

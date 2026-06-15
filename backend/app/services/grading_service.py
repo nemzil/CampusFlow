@@ -1102,7 +1102,7 @@ async def _get_enrolled_course_ids(student_id: str, term: str) -> list:
     enrollments = await Enrollment.find(
         Enrollment.student_id == student_id,
         In(Enrollment.term, [term, "ALL", "all"]),
-        Enrollment.status == "ENROLLED",
+        In(Enrollment.status, ["ENROLLED", "COMPLETED"]),  # Include both active and completed enrollments
     ).to_list()
     return [e.course_id for e in enrollments]
 
@@ -1204,10 +1204,27 @@ async def get_student_results_summary(student_id: str, term: str) -> Dict:
             "is_complete": grade.is_complete,
         })
 
+    # Only consider completed semester courses (semester <= 3) for the "all complete" check
+    # Semester 4 (current semester) courses are in progress and won't have grades yet
     enrolled_count = len(enrolled_course_ids)
-    # Count published+complete grades among enrolled courses
-    complete_published = sum(1 for g in grades if g.is_complete)
-    all_courses_complete = enrolled_count > 0 and complete_published >= enrolled_count
+    
+    # Get semester info for each grade
+    completed_semester_grades = []
+    for g in grades:
+        course = await Course.get(g.course_id)
+        if course and course.semester <= 3:  # Only semesters 1-3
+            completed_semester_grades.append(g)
+    
+    # Count how many enrolled courses are from completed semesters
+    completed_semester_course_ids = []
+    for course_id in enrolled_course_ids:
+        course = await Course.get(course_id)
+        if course and course.semester <= 3:
+            completed_semester_course_ids.append(course_id)
+    
+    completed_semester_count = len(completed_semester_course_ids)
+    complete_published = sum(1 for g in completed_semester_grades if g.is_complete)
+    all_courses_complete = completed_semester_count > 0 and complete_published >= completed_semester_count
 
     semester_gpa = None
     cgpa = None

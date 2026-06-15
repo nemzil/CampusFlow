@@ -14,7 +14,7 @@ import {
   ClipboardList, Save, Loader2, X, Building2,
   GraduationCap, Tag, UserCircle2, BookOpen,
   CheckCircle2, AlertCircle, Search, Calendar,
-  Clock, DoorOpen, Hash, ChevronRight,
+  Clock, DoorOpen, Hash, ChevronRight, Trash2,
 } from 'lucide-react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ function dayFromDate(dateStr) {
 }
 
 // ── Vertical Course Row ────────────────────────────────────────────────────────
-function CourseRow({ course, slot, teachers, onChange, onSave, saving, index, readOnly = false }) {
+function CourseRow({ course, slot, teachers, onChange, onSave, onDelete, saving, deleting, index, readOnly = false }) {
   const saved = Boolean(slot?.schedule_id);
   const catStyle = CATEGORY_STYLE[course.category] || { bg: 'rgba(100,116,139,0.15)', border: 'rgba(100,116,139,0.3)', text: '#94a3b8' };
 
@@ -247,26 +247,50 @@ function CourseRow({ course, slot, teachers, onChange, onSave, saving, index, re
               readOnly={readOnly}
             />
             {!readOnly && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={onSave}
-              disabled={saving}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 14px', borderRadius: 9,
-                background: saved ? 'rgba(245,158,11,0.75)' : 'rgba(217,119,6,0.85)',
-                border: 'none', color: '#fff',
-                fontSize: 12, fontWeight: 700,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.5 : 1,
-                transition: 'all 0.2s ease', whiteSpace: 'nowrap',
-              }}
-            >
-              {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-              {saved ? 'Update' : 'Save'}
-            </motion.button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={onSave}
+                  disabled={saving}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', borderRadius: 9,
+                    background: saved ? 'rgba(245,158,11,0.75)' : 'rgba(217,119,6,0.85)',
+                    border: 'none', color: '#fff',
+                    fontSize: 12, fontWeight: 700,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.5 : 1,
+                    transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                  {saved ? 'Update' : 'Save'}
+                </motion.button>
+                {saved && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="button"
+                    onClick={onDelete}
+                    disabled={deleting}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '6px 14px', borderRadius: 9,
+                      background: 'rgba(239,68,68,0.85)',
+                      border: 'none', color: '#fff',
+                      fontSize: 12, fontWeight: 700,
+                      cursor: deleting ? 'not-allowed' : 'pointer',
+                      opacity: deleting ? 0.5 : 1,
+                      transition: 'all 0.2s ease', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                    Delete
+                  </motion.button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -289,6 +313,7 @@ export default function AdmitCardAdminPanel({ onClose, readOnly = false }) {
   const [teachers, setTeachers] = useState([]);
   const [slots, setSlots]       = useState({});
   const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [loading, setLoading]   = useState(false);
   const [toast, setToast]       = useState(null);
   const [search, setSearch]     = useState('');
@@ -302,7 +327,7 @@ export default function AdmitCardAdminPanel({ onClose, readOnly = false }) {
     setSlots({});
     try {
       const [courseList, teachList, schedRes] = await Promise.all([
-        getCoursesBySemester(parseInt(sem)),
+        getCoursesBySemester(parseInt(sem), dept),
         adminGetExamTeachersList(),
         adminGetExamSchedules(dept || undefined, parseInt(sem)),
       ]);
@@ -377,6 +402,28 @@ export default function AdmitCardAdminPanel({ onClose, readOnly = false }) {
       notify(err.message || 'Save failed', 'error');
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const deleteSlot = async (course) => {
+    const slot = slots[course.course_code];
+    if (!slot?.schedule_id) return;
+
+    if (!confirm(`Delete exam schedule for ${course.course_code}?`)) return;
+
+    setDeletingId(course.course_code);
+    try {
+      await adminDeleteExamSchedule(slot.schedule_id);
+      setSlots(prev => {
+        const updated = { ...prev };
+        delete updated[course.course_code];
+        return updated;
+      });
+      notify(`${course.course_code} removed from exam schedule ✓`);
+    } catch (err) {
+      notify(err.message || 'Delete failed', 'error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -559,7 +606,9 @@ export default function AdmitCardAdminPanel({ onClose, readOnly = false }) {
                   teachers={teachers}
                   onChange={patch => updateSlot(course.course_code, patch)}
                   onSave={() => saveSlot(course)}
+                  onDelete={() => deleteSlot(course)}
                   saving={savingId === course.course_code}
+                  deleting={deletingId === course.course_code}
                   readOnly={readOnly}
                 />
               ))}
