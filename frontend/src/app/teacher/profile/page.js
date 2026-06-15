@@ -32,9 +32,9 @@ export default function TeacherProfile() {
 
   useEffect(() => {
     if (!authLoading && !authUser) {
-      router.push('/login');
+      router.push('/teacher/login');
     } else if (!authLoading && authUser && authUser.role !== 'TEACHER') {
-      router.push('/login');
+      router.push('/teacher/login');
     } else if (!authLoading && authUser) {
       fetchProfile();
     }
@@ -88,9 +88,9 @@ export default function TeacherProfile() {
 
   if (authLoading || loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-[80vh] flex items-center justify-center bg-slate-50/50">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
+          <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
           <p className="text-slate-400 font-medium animate-pulse">Loading profile...</p>
         </div>
       </div>
@@ -98,74 +98,74 @@ export default function TeacherProfile() {
   }
 
   return (
-    <div className="p-3 md:p-4 max-w-5xl mx-auto min-h-screen">
+    <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="space-y-3"
+        className="space-y-4"
       >
         {/* Header */}
-        <div className="mb-3">
-          <h1 className="text-xl font-bold tracking-tight text-white font-heading">
+        <div className="mb-4">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 font-heading">
             My Profile
           </h1>
-          <p className="text-slate-400 mt-0.5 text-sm">View and manage your professional information.</p>
+          <p className="text-slate-500 mt-1 text-sm font-medium">View and manage your professional information.</p>
         </div>
 
         {/* Alerts */}
         {success && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-2.5 text-sm">
-            <Check className="w-4 h-4 flex-shrink-0" />
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2.5 text-sm font-medium shadow-sm">
+            <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
             {success}
           </motion.div>
         )}
 
         {error && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-2.5 text-sm">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2.5 text-sm font-medium shadow-sm">
+            <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
             {error}
           </motion.div>
         )}
 
         {/* Hero Profile Card */}
-        <Card className="glass-card border-white/5 overflow-hidden border-t-4 border-t-cyan-500">
-          <CardContent className="p-3.5 pt-3 relative sm:flex sm:items-center sm:gap-3.5">
+        <Card className="bg-white border-slate-200 shadow-sm overflow-hidden border-t-4 border-t-emerald-500">
+          <CardContent className="p-5 relative sm:flex sm:items-center sm:gap-5">
             <div className="relative group inline-block">
-              <Avatar className="w-14 h-14 border-4 border-[#0d1017] shadow-xl bg-background">
+              <Avatar className="w-16 h-16 border-4 border-white shadow-md bg-slate-50">
                 <AvatarImage src={profile.profile_picture_url} />
-                <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-blue-600 text-white font-heading text-lg">
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-heading text-xl">
                   {profile.first_name?.[0]}{profile.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <button className="absolute bottom-0 right-0 p-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full shadow-lg transition-transform hover:scale-110" title="Upload coming soon">
-                <Camera className="w-2.5 h-2.5" />
+              <button className="absolute bottom-0 right-0 p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg transition-transform hover:scale-110" title="Upload coming soon">
+                <Camera className="w-3 h-3" />
               </button>
             </div>
             
-            <div className="mt-2 sm:mt-0 flex-1 pb-1">
-              <h2 className="text-base font-bold text-white font-heading">{profile.first_name} {profile.last_name}</h2>
-              <p className="text-cyan-400 font-medium tracking-wide text-xs">{profile.employee_id}</p>
-              <p className="text-slate-400 text-xs mt-0.5">{profile.email}</p>
+            <div className="mt-3 sm:mt-0 flex-1">
+              <h2 className="text-xl font-bold text-slate-900 font-heading tracking-tight">{profile.first_name} {profile.last_name}</h2>
+              <p className="text-emerald-600 font-bold tracking-wide text-xs uppercase mt-0.5">{profile.employee_id}</p>
+              <p className="text-slate-500 text-sm mt-1">{profile.email}</p>
             </div>
             
-            <div className="mt-2 sm:mt-0 pb-1">
-              <Badge variant="outline" className="badge-emerald uppercase tracking-widest text-xs px-2 py-0.5">Active</Badge>
+            <div className="mt-3 sm:mt-0">
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 uppercase tracking-widest text-[10px] px-3 py-1 font-bold">Active</Badge>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Read-Only Information (Left Column) */}
-          <div className="lg:col-span-1 space-y-3">
-            <Card className="glass-card border-white/5 h-full">
-              <CardHeader className="pb-2.5 border-b border-white/5">
-                <CardTitle className="text-sm flex items-center gap-2 text-white font-heading">
-                  <Briefcase className="w-4 h-4 text-cyan-400" />
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="bg-white border-slate-200 shadow-sm h-full">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-sm flex items-center gap-2 text-slate-800 font-bold font-heading uppercase tracking-wider">
+                  <Briefcase className="w-4 h-4 text-emerald-500" />
                   Professional Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3.5 space-y-3.5">
+              <CardContent className="p-4 space-y-4">
                 <InfoRow label="Employee ID" value={profile.employee_id || 'N/A'} Icon={Briefcase} />
                 <InfoRow label="Department" value={profile.department || 'N/A'} Icon={Building} />
                 <InfoRow label="Designation" value={profile.designation || 'N/A'} Icon={User} />
@@ -177,21 +177,21 @@ export default function TeacherProfile() {
           </div>
 
           {/* Editable Information (Right Column) */}
-          <div className="lg:col-span-2 space-y-3">
-            <Card className="glass-card border-white/5">
-              <CardHeader className="pb-2.5 border-b border-white/5 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2 text-white font-heading">
-                  <Phone className="w-4 h-4 text-cyan-400" />
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2 text-slate-800 font-bold font-heading uppercase tracking-wider">
+                  <Phone className="w-4 h-4 text-emerald-500" />
                   Contact Information
                 </CardTitle>
                 {!editing && (
-                  <Button variant="outline" onClick={() => setEditing(true)} className="h-8 text-xs border-white/10 text-slate-300 hover:text-white hover:bg-white/10">
+                  <Button variant="outline" onClick={() => setEditing(true)} className="h-8 text-xs border-slate-200 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors font-semibold shadow-sm">
                     Edit Details
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="p-3.5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     label="Cell Phone"
                     value={formData.cell_no}
@@ -214,12 +214,12 @@ export default function TeacherProfile() {
                 </div>
 
                 {editing && (
-                  <div className="flex justify-end gap-2.5 mt-4 pt-3 border-t border-white/5">
-                    <Button variant="ghost" onClick={handleCancel} disabled={saving} className="text-slate-300 hover:text-white hover:bg-white/5 h-8 text-sm">
+                  <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-slate-100">
+                    <Button variant="ghost" onClick={handleCancel} disabled={saving} className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 h-9 text-sm font-semibold">
                       Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={saving} className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] h-8 text-sm">
-                      {saving ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : null}
+                    <Button onClick={handleSave} disabled={saving} className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-[0_4px_10px_rgba(16,185,129,0.3)] h-9 text-sm font-bold">
+                      {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {saving ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </div>
@@ -228,18 +228,18 @@ export default function TeacherProfile() {
             </Card>
 
             {/* Security Settings */}
-            <Card className="glass-card border-white/5 bg-gradient-to-br from-[#0d1017] to-rose-950/10">
-              <CardContent className="p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <Card className="bg-rose-50/50 border-rose-100 shadow-sm">
+              <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                  <div className="p-2.5 rounded-full bg-rose-100 text-rose-600 border border-rose-200">
                     <Lock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white mb-0.5">Security Settings</h3>
-                    <p className="text-xs text-slate-400 max-w-md">Update your password regularly to keep your account secure.</p>
+                    <h3 className="text-sm font-bold text-slate-800 mb-0.5">Security Settings</h3>
+                    <p className="text-xs font-medium text-slate-500 max-w-md leading-relaxed">Update your password regularly to keep your account secure and prevent unauthorized access.</p>
                   </div>
                 </div>
-                <Button onClick={() => setShowPasswordModal(true)} variant="outline" className="shrink-0 h-8 text-sm border-rose-500/30 text-rose-300 hover:bg-rose-500/10 hover:text-rose-200">
+                <Button onClick={() => setShowPasswordModal(true)} variant="outline" className="shrink-0 h-9 text-xs font-bold border-rose-200 text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 transition-colors shadow-sm bg-white">
                   Change Password
                 </Button>
               </CardContent>
@@ -261,13 +261,13 @@ export default function TeacherProfile() {
 // Helper Components
 function InfoRow({ label, value, Icon }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
-        <Icon className="w-3.5 h-3.5 text-slate-400" />
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+        <Icon className="w-4 h-4 text-slate-400" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{label}</p>
-        <p className="text-sm text-slate-200 font-medium truncate">{value}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="text-sm text-slate-800 font-semibold truncate">{value}</p>
       </div>
     </div>
   );
@@ -275,8 +275,8 @@ function InfoRow({ label, value, Icon }) {
 
 function FormField({ label, value, editing, onChange, placeholder, Icon, multiline }) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 ml-1">
+    <div className="space-y-2">
+      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 ml-1">
         <Icon className="w-3 h-3" />
         {label}
       </label>
@@ -286,19 +286,19 @@ function FormField({ label, value, editing, onChange, placeholder, Icon, multili
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="bg-black/30 border-white/10 text-white focus-visible:ring-cyan-500 min-h-[60px] resize-none text-sm"
+            className="bg-white border-slate-200 text-slate-800 focus-visible:ring-emerald-500 min-h-[80px] resize-none text-sm shadow-sm"
           />
         ) : (
           <Input
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="bg-black/30 border-white/10 text-white focus-visible:ring-cyan-500 h-9 text-sm"
+            className="bg-white border-slate-200 text-slate-800 focus-visible:ring-emerald-500 h-10 text-sm shadow-sm"
           />
         )
       ) : (
-        <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/5 min-h-[36px] flex items-center">
-          <p className={`text-sm ${value ? 'text-white font-medium' : 'text-slate-500 italic'}`}>
+        <div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100 min-h-[40px] flex items-center shadow-sm">
+          <p className={`text-sm ${value ? 'text-slate-800 font-semibold' : 'text-slate-400 italic font-medium'}`}>
             {value || 'Not provided'}
           </p>
         </div>

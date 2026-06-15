@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { usePathname } from 'next/navigation';
+import TeacherHeader from '@/components/TeacherHeader';
 import './dashboard.css';
 
 export default function TeacherLayout({ children }) {
@@ -26,7 +27,8 @@ export default function TeacherLayout({ children }) {
       <TooltipProvider>
         <SidebarProvider>
           <Sidebar role="TEACHER" />
-          <SidebarInset>
+          <SidebarInset className="bg-white text-[var(--on-background)] min-h-screen border-l border-slate-200 flex flex-col">
+            <TeacherHeader />
             <div className="flex-1 overflow-y-auto">
               {children}
             </div>
