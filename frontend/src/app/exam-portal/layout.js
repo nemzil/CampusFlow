@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/context/AuthContext';
 import ExamPortalSidebar from '@/components/ExamPortalSidebar';
+import ExamPortalHeader from '@/components/ExamPortalHeader';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import '../student/dashboard.css';
 
 export default function ExamPortalLayout({ children }) {
   const pathname = usePathname();
@@ -26,7 +26,8 @@ export default function ExamPortalLayout({ children }) {
       <TooltipProvider>
         <SidebarProvider>
           <ExamPortalSidebar />
-          <SidebarInset>
+          <SidebarInset className="bg-slate-50 text-[var(--on-background)] min-h-screen border-l border-slate-200 flex flex-col">
+            <ExamPortalHeader />
             <div className="flex-1 overflow-y-auto">{children}</div>
           </SidebarInset>
         </SidebarProvider>

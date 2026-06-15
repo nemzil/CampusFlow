@@ -122,7 +122,7 @@ export default function ExamPortalLoginPage() {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
           <p className="text-slate-400 font-medium animate-pulse">Loading...</p>
@@ -137,37 +137,7 @@ export default function ExamPortalLoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-6 py-12 overflow-hidden bg-background">
-
-      {/* Animated Background Orbs */}
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 90, 0],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-        className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-30 pointer-events-none"
-        style={{ background: 'var(--amber-glow, #f59e0b)' }}
-      />
-
-      <motion.div
-        animate={{
-          scale: [1, 1.3, 1],
-          rotate: [0, -90, 0],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-        className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 pointer-events-none"
-        style={{ background: 'var(--orange-glow, #ea580c)' }}
-      />
-
+    <div className="min-h-screen relative flex items-center justify-center px-6 py-12 overflow-hidden bg-slate-50">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -177,7 +147,6 @@ export default function ExamPortalLoginPage() {
         }}
         className="w-full max-w-md relative z-10"
       >
-
         {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
@@ -186,52 +155,35 @@ export default function ExamPortalLoginPage() {
             className="inline-flex items-center gap-3 mb-6 cursor-pointer"
             onClick={() => window.location.href = '/'}
           >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-amber-600 to-orange-600 shadow-lg shadow-amber-500/30">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-amber-500 to-orange-600 shadow-sm">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
-
-            <span className="text-3xl font-bold font-heading gradient-text">
+            <span className="text-3xl font-bold font-heading text-slate-900 tracking-tight">
               Exam Portal
             </span>
           </motion.div>
         </div>
 
         {/* Login Card */}
-        <Card className="glass-card border-white/10 shadow-2xl backdrop-blur-xl">
-
-          <CardHeader className="space-y-1 text-center pb-6">
-            <CardTitle className="text-2xl font-bold tracking-tight text-white">
-              Student Login
+        <Card className="bg-white border-slate-200 shadow-lg rounded-2xl overflow-hidden">
+          <CardHeader className="space-y-1 text-center pb-6 bg-slate-50/50 border-b border-slate-100">
+            <CardTitle className="text-2xl font-extrabold tracking-tight text-slate-900 font-heading">
+              Secure Login
             </CardTitle>
-
-            <CardDescription className="text-slate-400">
-              Sign in to access your exams
+            <CardDescription className="text-slate-500 font-sans">
+              Authenticate to access your examination dashboard
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
-
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-
               <AnimatePresence mode="wait">
                 {error && (
                   <motion.div
-                    initial={{
-                      opacity: 0,
-                      height: 0,
-                      y: -10
-                    }}
-                    animate={{
-                      opacity: 1,
-                      height: 'auto',
-                      y: 0
-                    }}
-                    exit={{
-                      opacity: 0,
-                      height: 0,
-                      y: -10
-                    }}
-                    className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm overflow-hidden"
+                    initial={{ opacity: 0, height: 0, y: -10 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -10 }}
+                    className="flex items-center gap-2 p-3 rounded-lg bg-red-50 text-red-600 border border-red-100 text-sm overflow-hidden font-medium"
                   >
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <p>{error}</p>
@@ -241,18 +193,14 @@ export default function ExamPortalLoginPage() {
 
               {/* Username */}
               <div className="space-y-2">
-
-                <label className="text-sm font-medium text-slate-300 ml-1">
-                  Username
+                <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wider">
+                  Registration Number
                 </label>
-
                 <div className="relative">
-
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder="2024F-BSE-001"
                     value={formData.username}
                     onChange={(e) =>
                       setFormData({
@@ -260,7 +208,7 @@ export default function ExamPortalLoginPage() {
                         username: e.target.value
                       })
                     }
-                    className="pl-10 bg-white/5 border-white/10 text-white focus:border-amber-500/50 focus:ring-amber-500/30 h-11"
+                    className="pl-10 bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-amber-500 focus:ring-amber-500 h-11 rounded-xl"
                     required
                     disabled={loading}
                   />
@@ -269,15 +217,11 @@ export default function ExamPortalLoginPage() {
 
               {/* Password */}
               <div className="space-y-2">
-
-                <label className="text-sm font-medium text-slate-300 ml-1">
+                <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-wider">
                   Password
                 </label>
-
                 <div className="relative">
-
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     type="password"
                     placeholder="••••••••"
@@ -288,7 +232,7 @@ export default function ExamPortalLoginPage() {
                         password: e.target.value
                       })
                     }
-                    className="pl-10 bg-white/5 border-white/10 text-white focus:border-amber-500/50 focus:ring-amber-500/30 h-11"
+                    className="pl-10 bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-amber-500 focus:ring-amber-500 h-11 rounded-xl"
                     required
                     disabled={loading}
                   />
@@ -298,7 +242,7 @@ export default function ExamPortalLoginPage() {
               {/* Submit */}
               <Button
                 type="submit"
-                className="w-full h-11 mt-2 bg-amber-600 hover:bg-amber-700 text-white shadow-[0_0_20px_rgba(217,119,6,0.3)] transition-all"
+                className="w-full h-11 mt-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-sm transition-all"
                 disabled={loading}
               >
                 {loading ? (
@@ -307,25 +251,23 @@ export default function ExamPortalLoginPage() {
                     Authenticating...
                   </>
                 ) : (
-                  'Sign In'
+                  'Sign In to Portal'
                 )}
               </Button>
-
             </form>
           </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4 border-t border-white/5 pt-6 pb-6">
-            <p className="text-sm text-center text-slate-400">
-              Forgot your password? Contact administrator.
+          <CardFooter className="flex flex-col space-y-4 border-t border-slate-100 pt-6 pb-6 bg-slate-50/50">
+            <p className="text-xs text-center text-slate-500">
+              Having trouble? Contact the examination department.
             </p>
             <button
               onClick={() => window.location.href = '/student/login'}
-              className="text-sm text-center text-violet-400 hover:text-violet-300 transition-colors"
+              className="text-xs font-bold text-center text-amber-600 hover:text-amber-700 transition-colors"
             >
-              Go to Student Portal Login
+              ← Back to Main Student Portal
             </button>
           </CardFooter>
-
         </Card>
 
         {/* Test Credentials */}
@@ -333,18 +275,14 @@ export default function ExamPortalLoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm shadow-lg text-center"
+          className="mt-8 p-4 rounded-xl border border-slate-200 bg-white shadow-sm text-center"
         >
-
-          <p className="text-xs font-semibold text-slate-300 mb-3 uppercase tracking-wider">
-            Test Credentials
+          <p className="text-[9px] font-bold text-slate-400 mb-3 uppercase tracking-widest">
+            Demo Credentials
           </p>
-
-          <div className="flex flex-col gap-2 text-xs text-slate-400 font-mono">
-
+          <div className="flex flex-col gap-2 text-xs text-slate-600 font-mono font-medium">
             <div className="flex justify-between px-4">
-              <span>Student:</span>
-
+              <span>Student Account:</span>
               <button
                 type="button"
                 onClick={() =>
@@ -353,16 +291,13 @@ export default function ExamPortalLoginPage() {
                     'ssuet+001'
                   )
                 }
-                className="text-amber-300 hover:text-amber-200 transition-colors" style={{ cursor: "pointer" }}
+                className="text-amber-600 hover:text-amber-700 transition-colors" style={{ cursor: "pointer" }}
               >
                 2024F-BSE-001 / ssuet+001
               </button>
             </div>
-
           </div>
-
         </motion.div>
-
       </motion.div>
     </div>
   );

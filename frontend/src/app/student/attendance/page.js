@@ -91,7 +91,7 @@ export default function StudentAttendancePage() {
       </div>
 
       {/* Analytics Summary Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
@@ -100,28 +100,6 @@ export default function StudentAttendancePage() {
             </div>
             <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 shadow-sm">
               <Activity className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Admit Card Eligibility</span>
-              <h2 className={`text-xl font-bold font-heading mt-1 flex items-center gap-1.5 ${
-                overallMeets ? 'text-emerald-600' : 'text-red-600'
-              }`}>
-                {overallMeets ? (
-                  <><CheckCircle2 className="w-5 h-5 shrink-0" /> CLEARED</>
-                ) : (
-                  <><AlertTriangle className="w-5 h-5 shrink-0" /> BLOCKED</>
-                )}
-              </h2>
-            </div>
-            <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shadow-sm ${
-              overallMeets ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'
-            }`}>
-              <Calendar className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>

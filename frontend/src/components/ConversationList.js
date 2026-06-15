@@ -1,5 +1,7 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +26,63 @@ export default function ConversationList({
 }) {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedUserInfo, setSelectedUserInfo] = useState(null);
+
+  const pathname = usePathname();
+  const isExamPortal = pathname?.includes('/exam-portal');
+
+  const t = isExamPortal ? {
+    bgActive: 'bg-amber-500/15',
+    borderActive: 'border-amber-500/30',
+    shadowActive: 'shadow-[0_0_20px_rgba(245,158,11,0.1)]',
+    indicator: 'bg-amber-500 shadow-[0_0_10px_rgba(251,191,36,0.8)]',
+    borderAvatarActive: 'border-amber-500/50',
+    avatarFallback: 'from-amber-500 to-orange-600',
+    textUnreadTime: 'text-amber-500',
+    badge: 'bg-amber-500 hover:bg-amber-600 shadow-[0_0_10px_rgba(245,158,11,0.5)]',
+    iconHeader: 'text-amber-500',
+    buttonNew: 'bg-amber-500 hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]',
+    btnOutlineText: 'text-amber-500',
+    btnOutlineBorder: 'border-amber-500/30',
+    btnOutlineHover: 'hover:bg-amber-500/20',
+    textHeader: 'text-slate-800',
+    textNameUnread: 'text-slate-900 font-bold',
+    textNameRead: 'text-slate-700',
+    textPreviewUnread: 'text-slate-800 font-bold',
+    textPreviewRead: 'text-slate-500',
+    bgHover: 'hover:bg-slate-50 hover:border-slate-200',
+    bgDefault: 'bg-white border border-slate-100',
+    headerBg: 'bg-slate-50 border-slate-200',
+    emptyTitle: 'text-slate-800',
+    emptySubtitle: 'text-slate-500',
+    iconEmpty: 'text-amber-500 bg-amber-50',
+    mainBg: 'bg-white border-slate-200',
+  } : {
+    bgActive: 'bg-sky-500/15',
+    borderActive: 'border-sky-500/30',
+    shadowActive: 'shadow-[0_0_20px_rgba(14,165,233,0.1)]',
+    indicator: 'bg-sky-500 shadow-[0_0_10px_rgba(56,189,248,0.8)]',
+    borderAvatarActive: 'border-sky-500/50',
+    avatarFallback: 'from-sky-500 to-sky-600',
+    textUnreadTime: 'text-sky-400',
+    badge: 'bg-sky-500 hover:bg-sky-600 shadow-[0_0_10px_rgba(14,165,233,0.5)]',
+    iconHeader: 'text-sky-400',
+    buttonNew: 'bg-sky-500 hover:bg-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.4)]',
+    btnOutlineText: 'text-sky-300',
+    btnOutlineBorder: 'border-sky-500/30',
+    btnOutlineHover: 'hover:bg-sky-500/20',
+    textHeader: 'text-white',
+    textNameUnread: 'text-white',
+    textNameRead: 'text-slate-200',
+    textPreviewUnread: 'text-white font-medium',
+    textPreviewRead: 'text-slate-400',
+    bgHover: 'hover:bg-white/10 hover:border-white/10',
+    bgDefault: 'bg-white/5 border-transparent',
+    headerBg: 'bg-white/5 border-white/5',
+    emptyTitle: 'text-white',
+    emptySubtitle: 'text-slate-400',
+    iconEmpty: 'text-slate-500 bg-white/5',
+    mainBg: 'bg-background/50 border-white/5 glass-panel',
+  };
 
   // Separate archived and active conversations
   const activeConversations = conversations.filter(conv => !conv.is_archived);
@@ -65,12 +124,12 @@ export default function ConversationList({
         className={`
           relative p-2.5 rounded-xl cursor-pointer transition-all duration-300 flex gap-3 items-center group
           ${isActive 
-            ? 'bg-violet-500/15 border border-violet-500/30 shadow-[0_0_20px_rgba(124,58,237,0.1)]' 
-            : 'bg-white/5 border border-transparent hover:bg-white/10 hover:border-white/10'}
+            ? `${t.bgActive} border ${t.borderActive} ${t.shadowActive}` 
+            : `${t.bgDefault} border ${t.bgHover}`}
         `}
       >
         {/* Active Indicator Strip */}
-        {isActive && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-violet-500 rounded-r-full shadow-[0_0_10px_rgba(167,139,250,0.8)]" />}
+        {isActive && <div className={`absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-full ${t.indicator}`} />}
 
         {/* Avatar - clickable to show user info */}
         <div 
@@ -81,9 +140,9 @@ export default function ConversationList({
           }}
         >
           <div className="relative">
-            <Avatar className={`w-10 h-10 border-2 ${isActive ? 'border-violet-500/50' : 'border-white/10'} shadow-lg transition-colors`}>
+            <Avatar className={`w-10 h-10 border-2 ${isActive ? t.borderAvatarActive : 'border-white/10'} shadow-lg transition-colors`}>
               <AvatarImage src={otherUser?.profile_picture_url} />
-              <AvatarFallback className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white font-heading font-semibold text-xs">
+              <AvatarFallback className={`bg-gradient-to-br ${t.avatarFallback} text-white font-heading font-semibold text-xs`}>
                 {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -101,22 +160,22 @@ export default function ConversationList({
         {/* Content - clickable */}
         <div className="flex-1 min-w-0" onClick={() => onSelectConversation(conv)}>
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className={`text-xs font-semibold truncate font-heading ${hasUnread ? 'text-white' : 'text-slate-200'}`}>
+            <h4 className={`text-xs truncate font-heading ${hasUnread ? t.textNameUnread : t.textNameRead}`}>
               {otherUser?.first_name} {otherUser?.last_name}
             </h4>
-            <span className={`text-[10px] shrink-0 font-medium ${hasUnread ? 'text-violet-400' : 'text-slate-500'}`}>
+            <span className={`text-[10px] shrink-0 font-medium ${hasUnread ? t.textUnreadTime : 'text-slate-500'}`}>
               {formatTimestamp(conv.updated_at)}
             </span>
           </div>
           
           <div className="flex items-center justify-between gap-2">
-            <p className={`text-[11px] truncate ${hasUnread ? 'text-white font-medium' : 'text-slate-400'}`}>
-              {conv.last_message?.sender_username === otherUser?.username ? '' : <span className="text-slate-500 font-medium">You: </span>}
+            <p className={`text-[11px] truncate ${hasUnread ? t.textPreviewUnread : t.textPreviewRead}`}>
+              {conv.last_message?.sender_username === otherUser?.username ? '' : <span className={`${t.textPreviewRead} font-medium`}>You: </span>}
               {truncateText(conv.last_message?.text || 'No messages yet')}
             </p>
             
             {hasUnread && (
-              <Badge variant="default" className="shrink-0 bg-violet-500 hover:bg-violet-600 text-white border-0 shadow-[0_0_10px_rgba(139,92,246,0.5)] px-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[9px]">
+              <Badge variant="default" className={`shrink-0 ${t.badge} text-white border-0 px-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[9px]`}>
                 {conv.unread_count}
               </Badge>
             )}
@@ -188,12 +247,12 @@ export default function ConversationList({
   };
 
   return (
-    <div className="flex flex-col h-full w-full glass-panel border-white/5 rounded-2xl overflow-hidden bg-background/50">
+    <div className={`flex flex-col h-full w-full border rounded-2xl overflow-hidden ${t.mainBg}`}>
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-white/5 bg-white/5 backdrop-blur-md z-10 shrink-0">
+      <div className={`p-4 flex items-center justify-between border-b backdrop-blur-md z-10 shrink-0 ${t.headerBg}`}>
         <div>
-          <h2 className="text-lg font-bold font-heading text-white tracking-tight flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-violet-400" />
+          <h2 className={`text-lg font-bold font-heading tracking-tight flex items-center gap-2 ${t.textHeader}`}>
+            <MessageSquare className={`w-4 h-4 ${t.iconHeader}`} />
             Chats
           </h2>
           <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">
@@ -203,7 +262,7 @@ export default function ConversationList({
         <Button 
           onClick={onNewChat}
           size="icon"
-          className="rounded-full bg-violet-600 hover:bg-violet-500 shadow-[0_0_15px_rgba(124,58,237,0.4)] transition-all shrink-0 w-9 h-9"
+          className={`rounded-full ${t.buttonNew} transition-all shrink-0 w-9 h-9`}
         >
           <MessageSquarePlus className="w-4 h-4 text-white" />
         </Button>
@@ -213,12 +272,12 @@ export default function ConversationList({
       <ScrollArea className="flex-1 w-full h-full">
         {activeConversations.length === 0 && archivedConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-            <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-3">
-              <MessageSquare className="w-7 h-7 text-slate-500" />
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${t.iconEmpty}`}>
+              <MessageSquare className="w-7 h-7" />
             </div>
-            <p className="text-white font-medium mb-1 text-sm">No conversations yet</p>
-            <p className="text-xs text-slate-400 mb-5">Start a new chat to connect.</p>
-            <Button onClick={onNewChat} variant="outline" className="border-violet-500/30 text-violet-300 hover:bg-violet-500/20 hover:text-white text-xs h-8">
+            <p className={`font-medium mb-1 text-sm ${t.emptyTitle}`}>No conversations yet</p>
+            <p className={`text-xs mb-5 ${t.emptySubtitle}`}>Start a new chat to connect.</p>
+            <Button onClick={onNewChat} variant="outline" className={`border ${t.btnOutlineBorder} ${t.btnOutlineText} ${t.btnOutlineHover} hover:text-white text-xs h-8`}>
               Start a chat
             </Button>
           </div>

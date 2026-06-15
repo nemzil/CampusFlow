@@ -1,5 +1,7 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMessages, sendMessage, editMessage, deleteMessage, markConversationAsRead } from '@/lib/api';
@@ -13,6 +15,37 @@ import { Send, MoreVertical, Edit2, Trash2, Check, CheckCheck, MessageSquare, Lo
 import UserInfoModal from '@/components/UserInfoModal';
 
 export default function MessageView({ conversationId, otherUser, currentUsername, onMessageSent, onClearChat, onClose }) {
+  const pathname = usePathname();
+  const isExamPortal = pathname?.includes('/exam-portal');
+
+  const t = isExamPortal ? {
+    avatarFallback: 'bg-amber-500',
+    hoverBorder: 'hover:border-amber-400',
+    textRole: 'text-amber-600',
+    iconHover: 'hover:text-amber-600',
+    bgIcon: 'bg-amber-500',
+    bgIconHover: 'hover:bg-amber-600',
+    textPrimary: 'text-amber-500',
+    bgPrimary: 'bg-amber-500',
+    bgPrimaryHover: 'hover:bg-amber-600',
+    ringPrimary: 'focus-visible:ring-amber-500',
+    bgLight: 'bg-amber-50',
+    textDark: 'text-amber-600',
+  } : {
+    avatarFallback: 'bg-sky-500',
+    hoverBorder: 'hover:border-sky-350',
+    textRole: 'text-sky-600',
+    iconHover: 'hover:text-sky-600',
+    bgIcon: 'bg-sky-500',
+    bgIconHover: 'hover:bg-sky-600',
+    textPrimary: 'text-sky-500',
+    bgPrimary: 'bg-sky-500',
+    bgPrimaryHover: 'hover:bg-sky-600',
+    ringPrimary: 'focus-visible:ring-sky-500',
+    bgLight: 'bg-sky-50',
+    textDark: 'text-sky-600',
+  };
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -281,7 +314,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
     if (message.sender_info?.username !== currentUsername) return null;
     
     // Check if message has been read (read_at timestamp exists)
-    if (message.read_at) return <CheckCheck className="w-3.5 h-3.5 text-sky-500" />;
+    if (message.read_at) return <CheckCheck className={`w-3.5 h-3.5 ${t.textPrimary}`} />;
     // Check if delivered (delivered_at timestamp exists)
     if (message.delivered_at) return <CheckCheck className="w-3.5 h-3.5 text-slate-400" />;
     // Just sent
@@ -306,9 +339,9 @@ export default function MessageView({ conversationId, otherUser, currentUsername
       <div className="p-4 flex items-center justify-between border-b border-slate-200 bg-slate-50 z-20 shrink-0">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="w-10 h-10 border border-slate-200 shadow-sm cursor-pointer hover:border-sky-350 transition-colors" onClick={() => setShowUserInfo(true)}>
+            <Avatar className={`w-10 h-10 border border-slate-200 shadow-sm cursor-pointer ${t.hoverBorder} transition-colors`} onClick={() => setShowUserInfo(true)}>
               <AvatarImage src={otherUser?.profile_picture_url} />
-              <AvatarFallback className="bg-sky-500 text-white font-heading font-semibold">
+              <AvatarFallback className={`${t.avatarFallback} text-white font-heading font-semibold`}>
                 {otherUser?.first_name?.[0]}{otherUser?.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
@@ -321,7 +354,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
               {otherUser?.first_name} {otherUser?.last_name}
             </h3>
             <div className="flex items-center gap-2 text-[10px] mt-0.5">
-              <span className="text-sky-600 uppercase tracking-wider font-bold">
+              <span className={`${t.textRole} uppercase tracking-wider font-bold`}>
                 {otherUser?.role}
               </span>
               {otherUser?.is_online && (
@@ -355,7 +388,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-white border-slate-200">
               <DropdownMenuItem onClick={() => setShowUserInfo(true)} className="text-slate-700 focus:bg-slate-50 cursor-pointer text-xs py-1.5 font-bold">
-                <User className="w-3.5 h-3.5 mr-1.5 text-sky-500" /> View Profile
+                <User className={`w-3.5 h-3.5 mr-1.5 ${t.textPrimary}`} /> View Profile
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={async () => {
@@ -389,7 +422,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
           <div className="p-6">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+                <Loader2 className={`w-8 h-8 animate-spin ${t.textPrimary}`} />
                 <p className="text-sm">Loading messages...</p>
               </div>
             ) : messages.length === 0 ? (
@@ -430,7 +463,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
                             <Input
                               value={editText}
                               onChange={(e) => setEditText(e.target.value)}
-                              className="bg-slate-50 border-slate-200 text-slate-800 focus-visible:ring-sky-500 text-sm h-9"
+                              className={`bg-slate-50 border-slate-200 text-slate-800 ${t.ringPrimary} text-sm h-9`}
                               autoFocus
                               onKeyDown={(e) => {
                                   if (e.key === 'Enter') handleEdit(message.id);
@@ -441,7 +474,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
                               <Button size="sm" variant="ghost" onClick={() => setEditingMessageId(null)} className="h-7 text-xs hover:bg-slate-50 cursor-pointer">
                                 <X className="w-3 h-3 mr-1" /> Cancel
                               </Button>
-                              <Button size="sm" onClick={() => handleEdit(message.id)} className="h-7 text-xs bg-sky-500 hover:bg-sky-600 text-white font-bold cursor-pointer">
+                              <Button size="sm" onClick={() => handleEdit(message.id)} className={`h-7 text-xs ${t.bgPrimary} ${t.bgPrimaryHover} text-white font-bold cursor-pointer`}>
                                 <Check className="w-3 h-3 mr-1" /> Save
                               </Button>
                             </div>
@@ -454,7 +487,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
                                 isDeleted 
                                   ? 'bg-slate-100 border border-slate-200 text-slate-400 italic' 
                                   : isOwn 
-                                    ? 'bg-sky-500 text-white shadow-sm rounded-br-sm' 
+                                    ? `${t.bgPrimary} text-white shadow-sm rounded-br-sm` 
                                     : 'bg-white text-slate-800 border border-slate-200 rounded-bl-sm shadow-sm'
                               }`}
                             >
@@ -472,10 +505,10 @@ export default function MessageView({ conversationId, otherUser, currentUsername
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align={isOwn ? "end" : "start"} className="bg-white border-slate-250/20 shadow-lg">
                                     <DropdownMenuItem onClick={() => setShowMessageInfo(message)} className="text-slate-700 focus:bg-slate-50 cursor-pointer text-[10px] py-1.5 font-bold">
-                                      <Info className="w-3.5 h-3.5 mr-1.5 text-sky-500" /> Message Info
+                                      <Info className={`w-3.5 h-3.5 mr-1.5 ${t.textPrimary}`} /> Message Info
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => { setEditingMessageId(message.id); setEditText(message.text); }} className="text-slate-700 focus:bg-slate-50 cursor-pointer text-[10px] py-1.5 font-bold">
-                                      <Edit2 className="w-3.5 h-3.5 mr-1.5 text-sky-500" /> Edit Message
+                                      <Edit2 className={`w-3.5 h-3.5 mr-1.5 ${t.textPrimary}`} /> Edit Message
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleDelete(message.id, 'for_everyone')} className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer text-[10px] py-1.5 font-bold">
                                       <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete for Everyone
@@ -542,7 +575,7 @@ export default function MessageView({ conversationId, otherUser, currentUsername
               type="button"
               size="icon"
               variant="ghost"
-              className="w-9 h-9 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-slate-100 cursor-pointer"
+              className={`w-9 h-9 rounded-lg text-slate-400 ${t.iconHover} hover:bg-slate-100 cursor-pointer`}
               onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip className="w-4 h-4" />
@@ -562,14 +595,14 @@ export default function MessageView({ conversationId, otherUser, currentUsername
             value={newMessage}
             onChange={handleInputChange}
             placeholder="Type your message here..."
-            className="flex-1 bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-sky-500 h-11 rounded-xl pr-14"
+            className={`flex-1 bg-white border border-slate-200 text-slate-800 placeholder:text-slate-400 ${t.ringPrimary} h-11 rounded-xl pr-14`}
             disabled={sending}
           />
           <Button
             type="submit"
             disabled={!newMessage.trim() || sending}
             size="icon"
-            className="absolute right-1 top-1 h-9 w-9 bg-sky-500 hover:bg-sky-600 text-white rounded-lg disabled:opacity-50 disabled:shadow-none transition-all cursor-pointer shadow-sm"
+            className={`absolute right-1 top-1 h-9 w-9 ${t.bgPrimary} ${t.bgPrimaryHover} text-white rounded-lg disabled:opacity-50 disabled:shadow-none transition-all cursor-pointer shadow-sm`}
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 ml-0.5" />}
           </Button>
@@ -626,8 +659,8 @@ export default function MessageView({ conversationId, otherUser, currentUsername
                 {/* Timestamps */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shrink-0">
-                      <Check className="w-4 h-4 text-sky-500" />
+                    <div className={`w-8 h-8 rounded-full ${t.bgLight} flex items-center justify-center shrink-0`}>
+                      <Check className={`w-4 h-4 ${t.textPrimary}`} />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-bold text-slate-600">Sent</p>
@@ -649,8 +682,8 @@ export default function MessageView({ conversationId, otherUser, currentUsername
 
                   {showMessageInfo.read_at && (
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shrink-0">
-                        <CheckCheck className="w-4 h-4 text-sky-600" />
+                      <div className={`w-8 h-8 rounded-full ${t.bgLight} flex items-center justify-center shrink-0`}>
+                        <CheckCheck className={`w-4 h-4 ${t.textDark}`} />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-bold text-slate-600">Read</p>
